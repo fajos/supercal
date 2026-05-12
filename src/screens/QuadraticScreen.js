@@ -3,18 +3,19 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
-  ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';      // 🆕 Import
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
+import { SolveButton } from '../components/SolveButton';  // 🆕 Import
+import { ErrorCard } from '../components/ErrorCard';      // 🆕 Import
 import { solveQuadratic } from '../solvers/quadraticSolver';
 import { useHistory } from '../utils/history';
 
@@ -37,7 +38,6 @@ export default function QuadraticScreen() {
       const aNum = parseFloat(a) || 0;
       const bNum = parseFloat(b) || 0;
       const cNum = parseFloat(c) || 0;
-
       const result = solveQuadratic(aNum, bNum, cNum);
       setSolution(result);
 
@@ -103,86 +103,47 @@ export default function QuadraticScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          {/* Header */}
           <View style={styles.header}>
             <Text style={styles.title}>📐 Quadratic Solver</Text>
             <Text style={styles.subtitle}>ax² + bx + c = 0</Text>
           </View>
 
-          {/* Input Card */}
-          <View style={styles.inputCard}>
+          {/* 🆕 Using InputCard component */}
+          <InputCard>
             <View style={styles.coeffRow}>
-              <TextInput
-                style={styles.input}
-                value={a}
-                onChangeText={setA}
-                keyboardType="decimal-pad"
-                placeholder="a"
-                placeholderTextColor={colors.textSecondary}
-              />
+              <TextInput style={styles.input} value={a} onChangeText={setA}
+                keyboardType="decimal-pad" placeholder="a" placeholderTextColor={colors.textSecondary} />
               <Text style={styles.separator}>x² +</Text>
-              <TextInput
-                style={styles.input}
-                value={b}
-                onChangeText={setB}
-                keyboardType="decimal-pad"
-                placeholder="b"
-                placeholderTextColor={colors.textSecondary}
-              />
+              <TextInput style={styles.input} value={b} onChangeText={setB}
+                keyboardType="decimal-pad" placeholder="b" placeholderTextColor={colors.textSecondary} />
               <Text style={styles.separator}>x +</Text>
-              <TextInput
-                style={styles.input}
-                value={c}
-                onChangeText={setC}
-                keyboardType="decimal-pad"
-                placeholder="c"
-                placeholderTextColor={colors.textSecondary}
-              />
+              <TextInput style={styles.input} value={c} onChangeText={setC}
+                keyboardType="decimal-pad" placeholder="c" placeholderTextColor={colors.textSecondary} />
               <Text style={styles.separator}>= 0</Text>
             </View>
 
-            <TouchableOpacity
-              style={[styles.solveBtn, loading && styles.solveBtnDisabled]}
+            {/* 🆕 Using SolveButton component */}
+            <SolveButton
               onPress={handleSolve}
-              disabled={loading}
-              activeOpacity={0.8}
-            >
-              {loading ? (
-                <ActivityIndicator color={colors.black} />
-              ) : (
-                <Text style={styles.solveBtnText}>⚡ SOLVE & SHOW STEPS</Text>
-              )}
-            </TouchableOpacity>
-          </View>
+              label="⚡ SOLVE & SHOW STEPS"
+              loading={loading}
+            />
+          </InputCard>
 
-          {/* Error */}
-          {error && (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            </View>
-          )}
+          {/* 🆕 Using ErrorCard component */}
+          <ErrorCard message={error} />
 
-          {/* Solution Steps */}
+          {/* Solution Steps (unchanged) */}
           {solution && (
             <View style={styles.solutionArea}>
               {solution.steps.map((step, index) => (
-                <StepCard
-                  key={index}
-                  step={step.step}
-                  badge={step.badge}
-                  index={index}
-                >
+                <StepCard key={index} step={step.step} badge={step.badge} index={index}>
                   {renderContent(step.content)}
                 </StepCard>
               ))}
-
               <FinalAnswer label="🎯 Solution">
-                <Text style={styles.finalRootText}>
-                  x₁ = {solution.roots[0]}
-                </Text>
-                <Text style={styles.finalRootText}>
-                  x₂ = {solution.roots[1]}
-                </Text>
+                <Text style={styles.finalRootText}>x₁ = {solution.roots[0]}</Text>
+                <Text style={styles.finalRootText}>x₂ = {solution.roots[1]}</Text>
               </FinalAnswer>
             </View>
           )}
