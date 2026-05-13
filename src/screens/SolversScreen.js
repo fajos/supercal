@@ -17,6 +17,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
 
 const SOLVERS = [
+  // === ALGEBRA ===
   {
     id: 'quadratic',
     title: 'Quadratic',
@@ -24,7 +25,59 @@ const SOLVERS = [
     description: 'ax² + bx + c = 0',
     color: '#00d4aa',
     screen: 'QuadraticSolver',
+    category: 'Algebra',
   },
+  {
+    id: 'linear',
+    title: 'Linear System',
+    icon: '📏',
+    description: '2×2 & 3×3 Equations',
+    color: '#3498db',
+    screen: 'LinearSolver',
+    category: 'Algebra',
+  },
+  {
+    id: 'polynomial',
+    title: 'Polynomial',
+    icon: '📈',
+    description: 'Cubic & Higher Degree',
+    color: '#ffa502',
+    screen: 'PolynomialSolver',
+    category: 'Algebra',
+  },
+  {
+    id: 'simultaneous',
+    title: 'Simultaneous',
+    icon: '⚡',
+    description: '3 Equations, 3 Unknowns',
+    color: '#e056a0',
+    screen: 'SimultaneousSolver',
+    category: 'Algebra',
+  },
+  
+  // === TRIGONOMETRY ===
+  {
+    id: 'trigonometry',
+    title: 'Trigonometry',
+    icon: '🔺',
+    description: 'sin, cos, tan Equations',
+    color: '#ff4757',
+    screen: 'TrigonometrySolver',
+    category: 'Trigonometry',
+  },
+  
+  // === CALCULUS ===
+  {
+    id: 'calculus',
+    title: 'Calculus',
+    icon: '∫',
+    description: 'Derivatives & Integrals',
+    color: '#a29bfe',
+    screen: 'CalculusSolver',
+    category: 'Calculus',
+  },
+  
+  // === STATISTICS ===
   {
     id: 'statistics',
     title: 'Statistics',
@@ -32,30 +85,60 @@ const SOLVERS = [
     description: 'Mean, Median, Std Dev',
     color: '#7c5ce7',
     screen: 'StatisticsSolver',
+    category: 'Statistics',
   },
   {
-    id: 'linear',
-    title: 'Linear System',
-    icon: '📏',
-    description: '2×2 Cramer\'s Rule',
-    color: '#3498db',
-    screen: 'LinearSolver',
+    id: 'probability',
+    title: 'Probability',
+    icon: '🎲',
+    description: 'Combinations & More',
+    color: '#fd79a8',
+    screen: 'ProbabilitySolver',
+    category: 'Statistics',
   },
+  
+  // === LINEAR ALGEBRA ===
   {
-    id: 'polynomial',
-    title: 'Polynomial',
-    icon: '📈',
-    description: 'Cubic & Higher',
-    color: '#ffa502',
-    screen: 'PolynomialSolver',
+    id: 'matrix',
+    title: 'Matrix',
+    icon: '🧮',
+    description: 'Det, Inverse, Eigenvalues',
+    color: '#00b894',
+    screen: 'MatrixSolver',
+    category: 'Linear Algebra',
   },
+  
+  // === COMPLEX NUMBERS ===
   {
-    id: 'trigonometry',
-    title: 'Trigonometry',
-    icon: '🔺',
-    description: 'sin, cos, tan eq.',
-    color: '#ff4757',
-    screen: 'TrigonometrySolver',
+    id: 'complex',
+    title: 'Complex Numbers',
+    icon: '🔄',
+    description: 'a + bi Operations',
+    color: '#6c5ce7',
+    screen: 'ComplexSolver',
+    category: 'Complex Numbers',
+  },
+  
+  // === SEQUENCES ===
+  {
+    id: 'sequences',
+    title: 'Sequences',
+    icon: '🔢',
+    description: 'Arithmetic & Geometric',
+    color: '#fdcb6e',
+    screen: 'SequenceSolver',
+    category: 'Sequences',
+  },
+  
+  // === FINANCE ===
+  {
+    id: 'finance',
+    title: 'Financial Math',
+    icon: '💰',
+    description: 'Interest, Loans, NPV',
+    color: '#55efc4',
+    screen: 'FinanceSolver',
+    category: 'Finance',
   },
 ];
 
@@ -64,6 +147,9 @@ export default function SolversScreen({ navigation }) {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate(solver.screen);
   };
+
+  // Group solvers by category
+  const categories = [...new Set(SOLVERS.map(s => s.category))];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -74,48 +160,73 @@ export default function SolversScreen({ navigation }) {
       >
         {/* Header */}
         <View style={styles.header}>
-          <Text style={styles.title}>🧮 Equation Solvers</Text>
-          <Text style={styles.subtitle}>Select a solver to get started</Text>
+          <Text style={styles.title}>🧮 Math Solvers</Text>
+          <Text style={styles.subtitle}>Step-by-step solutions for every problem</Text>
         </View>
 
-        {/* Solver Cards Grid */}
-        <View style={styles.grid}>
-          {SOLVERS.map((solver) => (
-            <TouchableOpacity
-              key={solver.id}
-              style={[styles.card, { borderColor: solver.color + '40' }]}
-              onPress={() => handleSolverPress(solver)}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.iconContainer, { backgroundColor: solver.color + '20' }]}>
-                <Text style={styles.icon}>{solver.icon}</Text>
+        {/* Solver Cards by Category */}
+        {categories.map(category => {
+          const categorySolvers = SOLVERS.filter(s => s.category === category);
+          
+          return (
+            <View key={category} style={styles.categorySection}>
+              <View style={styles.categoryHeader}>
+                <Text style={styles.categoryTitle}>{category}</Text>
+                <View style={styles.categoryLine} />
               </View>
-              <Text style={[styles.cardTitle, { color: solver.color }]}>{solver.title}</Text>
-              <Text style={styles.cardDescription}>{solver.description}</Text>
-              <View style={styles.arrowRow}>
-                <Text style={styles.solveText}>Solve →</Text>
+              
+              <View style={styles.grid}>
+                {categorySolvers.map((solver) => (
+                  <TouchableOpacity
+                    key={solver.id}
+                    style={[styles.card, { borderColor: solver.color + '40' }]}
+                    onPress={() => handleSolverPress(solver)}
+                    activeOpacity={0.8}
+                  >
+                    <View style={[styles.iconContainer, { backgroundColor: solver.color + '20' }]}>
+                      <Text style={styles.icon}>{solver.icon}</Text>
+                    </View>
+                    <Text style={[styles.cardTitle, { color: solver.color }]}>{solver.title}</Text>
+                    <Text style={styles.cardDescription}>{solver.description}</Text>
+                    <View style={styles.arrowRow}>
+                      <Text style={styles.solveText}>Solve →</Text>
+                    </View>
+                  </TouchableOpacity>
+                ))}
               </View>
-            </TouchableOpacity>
-          ))}
-        </View>
+            </View>
+          );
+        })}
 
-        {/* Recent Section */}
+        {/* Quick Tips Section */}
         <View style={styles.recentSection}>
-          <Text style={styles.recentTitle}>💡 Quick Tips</Text>
+          <Text style={styles.recentTitle}>💡 Learning Tips</Text>
           <View style={styles.tipCard}>
-            <Text style={styles.tipText}>
-              📐 <Text style={{ color: colors.accent }}>Quadratic:</Text> Enter a, b, c to solve ax²+bx+c=0
-            </Text>
+            <Ionicons name="bulb-outline" size={20} color={colors.accent} />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Understand, Don't Memorize</Text>
+              <Text style={styles.tipText}>
+                Each solver shows detailed steps to help you learn the underlying concepts.
+              </Text>
+            </View>
           </View>
           <View style={styles.tipCard}>
-            <Text style={styles.tipText}>
-              📊 <Text style={{ color: colors.purple }}>Statistics:</Text> Enter comma-separated numbers
-            </Text>
+            <Ionicons name="checkmark-circle-outline" size={20} color={colors.purple} />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Practice with Different Values</Text>
+              <Text style={styles.tipText}>
+                Try modifying the input values to see how the solution changes.
+              </Text>
+            </View>
           </View>
           <View style={styles.tipCard}>
-            <Text style={styles.tipText}>
-              📏 <Text style={{ color: colors.info }}>Linear:</Text> Two equations, Cramer's Rule solution
-            </Text>
+            <Ionicons name="analytics-outline" size={20} color="#ffa502" />
+            <View style={styles.tipContent}>
+              <Text style={styles.tipTitle}>Check Your Work</Text>
+              <Text style={styles.tipText}>
+                Use the verification steps to ensure your manual calculations are correct.
+              </Text>
+            </View>
           </View>
         </View>
       </ScrollView>
@@ -136,25 +247,46 @@ const styles = StyleSheet.create({
     paddingBottom: 30,
   },
   header: {
-    marginBottom: 20,
+    marginBottom: 24,
+    paddingTop: 8,
   },
   title: {
-    fontSize: 28,
-    fontWeight: '700',
+    fontSize: 32,
+    fontWeight: '800',
     color: colors.white,
     letterSpacing: -0.5,
   },
   subtitle: {
     fontSize: 14,
     color: colors.textSecondary,
-    marginTop: 4,
+    marginTop: 6,
     letterSpacing: 0.3,
+  },
+  categorySection: {
+    marginBottom: 20,
+  },
+  categoryHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+    gap: 10,
+  },
+  categoryTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.textSecondary,
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  categoryLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.border,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 12,
-    marginBottom: 20,
   },
   card: {
     width: CARD_WIDTH,
@@ -201,17 +333,29 @@ const styles = StyleSheet.create({
   },
   recentTitle: {
     fontSize: 18,
-    fontWeight: '600',
+    fontWeight: '700',
     color: colors.white,
     marginBottom: 12,
   },
   tipCard: {
     backgroundColor: colors.bgCard,
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     marginBottom: 8,
     borderWidth: 1,
     borderColor: colors.border,
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  tipContent: {
+    flex: 1,
+  },
+  tipTitle: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 4,
   },
   tipText: {
     color: colors.textSecondary,

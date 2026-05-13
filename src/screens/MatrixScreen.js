@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
+import { solveDeterminant, solveInverse, solveEigenvalues, solveTranspose } from '../solvers/matrixSolver';
 
 export default function MatrixScreen() {
   const [matrixSize, setMatrixSize] = useState('3');
@@ -233,7 +234,6 @@ export default function MatrixScreen() {
     });
 
     // Solve cubic using Newton's method
-    // FIXED: Wrap -x**3 as -(x**3) to avoid precedence issues
     const f_cubic = (x) => {
       return -(x ** 3) + trace * (x ** 2) - det2 * x + det3;
     };
@@ -297,82 +297,65 @@ export default function MatrixScreen() {
   };
 
   const handleOperation = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setError(null);
-    setResult(null);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  setError(null);
+  setResult(null);
 
-    try {
-      const matrix = getMatrix();
-      let operationResult;
+  try {
+    const matrix = getMatrix();
+    let solverResult;
 
-      switch (operation) {
-        case 'determinant': {
-          const detResult = calculateDeterminant(matrix);
-          operationResult = {
-            type: 'determinant',
-            value: detResult.value,
-            displayValue: detResult.value.toFixed(6),
-            steps: [
-              { step: 'CALCULATION', badge: 'primary', content: detResult.steps },
-            ],
-          };
-          break;
-        }
-        case 'inverse': {
-          const invResult = calculateInverse(matrix);
-          operationResult = {
-            type: 'inverse',
-            matrix: invResult.matrix,
-            steps: [
-              { step: 'CALCULATION', badge: 'primary', content: invResult.steps },
-            ],
-          };
-          break;
-        }
-        case 'eigenvalues': {
-          const eigResult = calculateEigenvalues(matrix);
-          operationResult = {
-            type: 'eigenvalues',
-            eigenvalues: eigResult.eigenvalues,
-            steps: [
-              { step: 'CALCULATION', badge: 'primary', content: eigResult.steps },
-            ],
-          };
-          break;
-        }
-        case 'transpose': {
-          const transpose = matrix[0].map((_, col) => matrix.map(row => row[col]));
-          operationResult = {
-            type: 'transpose',
-            matrix: transpose,
-            steps: [
-              {
-                step: 'RESULT',
-                badge: 'primary',
-                content: [{ type: 'text', text: 'Rows become columns and columns become rows.' }],
-              },
-            ],
-          };
-          break;
-        }
-        default:
-          throw new Error('Unknown operation');
-      }
+    switch (operation) {
+      case 'determinant':
+        solverResult = solveDeterminant(matrix);
+        setResult({
+          type: 'determinant',
+          value: solverResult.value,
+          displayValue: solverResult.value.toFixed(6),
+          steps: solverResult.steps,
+        });
+        break;
 
-      setResult(operationResult);
+      case 'inverse':
+        solverResult = solveInverse(matrix);
+        setResult({
+          type: 'inverse',
+          matrix: solverResult.matrix,
+          steps: solverResult.steps,
+        });
+        break;
 
-      addToHistory({
-        type: 'matrix',
-        input: { size, matrix, operation },
-        result: operationResult,
-        timestamp: new Date().toISOString(),
-      });
+      case 'eigenvalues':
+        solverResult = solveEigenvalues(matrix);
+        setResult({
+          type: 'eigenvalues',
+          eigenvalues: solverResult.eigenvalues,
+          steps: solverResult.steps,
+        });
+        break;
 
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
+      case 'transpose':
+        solverResult = solveTranspose(matrix);
+        setResult({
+          type: 'transpose',
+          matrix: solverResult.matrix,
+          steps: solverResult.steps,
+        });
+        break;
     }
-  };
+
+    addToHistory({
+      type: 'matrix',
+      input: { size, matrix, operation },
+      result: solverResult,
+      timestamp: new Date().toISOString(),
+    });
+
+    setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
+  } catch (err) {
+    setError(err.message);
+  }
+};
 
   const updateMatrixValue = (row, col, value) => {
     setMatrixValues(prev => ({ ...prev, [`${row}-${col}`]: value }));

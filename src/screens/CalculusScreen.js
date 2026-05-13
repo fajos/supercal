@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
+import { solveDerivative, solveIntegral, evaluateExpression } from '../solvers/calculusSolver';
 
 export default function CalculusScreen() {
   const [mode, setMode] = useState('derivative');
@@ -153,71 +154,52 @@ export default function CalculusScreen() {
   };
 
   const handleCalculate = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setError(null);
-    setResult(null);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  setError(null);
+  setResult(null);
 
-    try {
-      if (mode === 'derivative') {
-        const derivResult = symbolicDerivative(expression, variable);
-        const evalPoint = parseFloat(point);
-        let pointValue = null;
-
-        if (!isNaN(evalPoint)) {
-          const evalExpr = (expr, x) => {
-            let processed = expr
-              .replace(/\^/g, '**')
-              .replace(new RegExp(variable, 'g'), `(${x})`)
-              .replace(/sin/g, 'Math.sin')
-              .replace(/cos/g, 'Math.cos')
-              .replace(/tan/g, 'Math.tan');
-            try { return eval(processed); } catch { return NaN; }
-          };
-          pointValue = evalExpr(derivResult.derivative.replace(/\s/g, ''), evalPoint);
-          derivResult.steps.push({
-            type: 'highlight',
-            text: `\nAt ${variable} = ${evalPoint}: f'(${evalPoint}) = ${pointValue.toFixed(6)}`,
-          });
-        }
-
-        setResult({
-          type: 'derivative',
-          expression: derivResult.derivative,
-          pointValue,
-          steps: [{ step: 'DIFFERENTIATION', badge: 'primary', content: derivResult.steps }],
-        });
-
-        addToHistory({
-          type: 'calculus',
-          input: { mode: 'derivative', expression, variable, point },
-          result: { derivative: derivResult.derivative, pointValue },
-          timestamp: new Date().toISOString(),
-        });
-
-      } else if (mode === 'integral') {
-        const lower = parseFloat(point) || 0;
-        const upper = 5; // Default upper bound
-        const intResult = numericalIntegral(expression, variable, lower, upper);
-
-        setResult({
-          type: 'integral',
-          value: intResult.value,
-          lower,
-          upper,
-          steps: [{ step: 'INTEGRATION', badge: 'primary', content: intResult.steps }],
-        });
-
-        addToHistory({
-          type: 'calculus',
-          input: { mode: 'integral', expression, variable, lower, upper },
-          result: { value: intResult.value },
-          timestamp: new Date().toISOString(),
-        });
+  try {
+    if (mode === 'derivative') {
+      const derivResult = solveDerivative(expression, variable);
+      
+      // Evaluate at point if provided
+      let pointValue = null;
+      const evalPoint = parseFloat(point);
+      if (!isNaN(evalPoint)) {
+        pointValue = evaluateExpression(
+          derivResult.derivative, 
+          variable, 
+          evalPoint
+        );
       }
-    } catch (err) {
-      setError(err.message);
+
+      setResult({
+        type: 'derivative',
+        expression: derivResult.derivative,
+        pointValue,
+        steps: derivResult.steps,
+      });
+
+    } else if (mode === 'integral') {
+      const lower = parseFloat(point) || 0;
+      // You might want to add an upper bound input, for now using 5
+      const upper = 5;
+      
+      const intResult = solveIntegral(expression, variable, lower, upper);
+
+      setResult({
+        type: 'integral',
+        value: intResult.value,
+        antiderivative: intResult.antiderivative,
+        lower,
+        upper,
+        steps: intResult.steps,
+      });
     }
-  };
+  } catch (err) {
+    setError(err.message);
+  }
+};
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>

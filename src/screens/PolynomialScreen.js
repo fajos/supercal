@@ -16,6 +16,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveCubic } from '../solvers/polynomialSolver';
 import { useHistory } from '../utils/history';
+import { solvePolynomial } from '../solvers/polynomialSolver';
 
 export default function PolynomialScreen() {
   const [degree, setDegree] = useState('3');
@@ -30,35 +31,38 @@ export default function PolynomialScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setError(null);
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+  setError(null);
 
-    try {
-      const deg = parseInt(degree) || 3;
-      const coeffs = [parseFloat(a) || 0];
-      if (deg >= 2) coeffs.push(parseFloat(b) || 0);
-      if (deg >= 3) coeffs.push(parseFloat(c) || 0);
-      if (deg >= 4) coeffs.push(parseFloat(d) || 0);
-      if (deg >= 5) coeffs.push(parseFloat(e) || 0);
+  try {
+    const deg = parseInt(degree) || 3;
+    const coeffs = [];
+    
+    // Collect coefficients based on degree
+    coeffs.push(parseFloat(a) || 0);
+    if (deg >= 2) coeffs.push(parseFloat(b) || 0);
+    if (deg >= 3) coeffs.push(parseFloat(c) || 0);
+    if (deg >= 4) coeffs.push(parseFloat(d) || 0);
+    if (deg >= 5) coeffs.push(parseFloat(e) || 0);
 
-      const result = solveCubic(coeffs);
-      setSolution(result);
+    const result = solvePolynomial(coeffs);
+    setSolution(result);
 
-      addToHistory({
-        type: 'polynomial',
-        input: { degree: deg, coefficients: coeffs },
-        result: result.roots,
-        timestamp: new Date().toISOString(),
-      });
+    addToHistory({
+      type: 'polynomial',
+      input: { degree: deg, coefficients: coeffs },
+      result: result.roots,
+      timestamp: new Date().toISOString(),
+    });
 
-      setTimeout(() => {
-        scrollRef.current?.scrollToEnd({ animated: true });
-      }, 300);
-    } catch (err) {
-      setError(err.message);
-      setSolution(null);
-    }
-  };
+    setTimeout(() => {
+      scrollRef.current?.scrollToEnd({ animated: true });
+    }, 300);
+  } catch (err) {
+    setError(err.message);
+    setSolution(null);
+  }
+};
 
   const renderContent = (content) => {
     return content.map((item, idx) => {

@@ -23,6 +23,13 @@ import LinearScreen from './src/screens/LinearScreen';
 import PolynomialScreen from './src/screens/PolynomialScreen';
 import TrigonometryScreen from './src/screens/TrigonometryScreen';
 
+// NEW Solver Screens
+import SimultaneousScreen from './src/screens/SimultaneousScreen';
+import ProbabilityScreen from './src/screens/ProbabilityScreen';
+import ComplexScreen from './src/screens/ComplexScreen';
+import SequenceScreen from './src/screens/SequenceScreen';
+import FinanceScreen from './src/screens/FinanceScreen';
+
 const Tab = createBottomTabNavigator();
 const SolveStack = createNativeStackNavigator();
 
@@ -41,6 +48,13 @@ function SolveStackScreen() {
       <SolveStack.Screen name="LinearSolver" component={LinearScreen} />
       <SolveStack.Screen name="PolynomialSolver" component={PolynomialScreen} />
       <SolveStack.Screen name="TrigonometrySolver" component={TrigonometryScreen} />
+      
+      {/* NEW Solver Screens */}
+      <SolveStack.Screen name="SimultaneousSolver" component={SimultaneousScreen} />
+      <SolveStack.Screen name="ProbabilitySolver" component={ProbabilityScreen} />
+      <SolveStack.Screen name="ComplexSolver" component={ComplexScreen} />
+      <SolveStack.Screen name="SequenceSolver" component={SequenceScreen} />
+      <SolveStack.Screen name="FinanceSolver" component={FinanceScreen} />
     </SolveStack.Navigator>
   );
 }
