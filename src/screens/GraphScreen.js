@@ -8,32 +8,52 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
-  PanResponder,
+  Switch,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import Svg, { Path, Line, Circle, Text as SvgText, Rect, G, Polygon } from 'react-native-svg';
+import Svg, { Path, Line, Circle, Text as SvgText, Rect, G, Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const GRAPH_WIDTH = SCREEN_WIDTH - 48;
-const GRAPH_HEIGHT = 320;
+const GRAPH_HEIGHT = 340;
+
+const PRESET_FUNCTIONS = [
+  { label: 'Parabola', fn: 'x^2 - 4', range: { xMin: -5, xMax: 5, yMin: -5, yMax: 10 } },
+  { label: 'Cubic', fn: 'x^3 - 3x', range: { xMin: -3, xMax: 3, yMin: -5, yMax: 5 } },
+  { label: 'Sine', fn: 'sin(x)', range: { xMin: -2*Math.PI, xMax: 2*Math.PI, yMin: -2, yMax: 2 } },
+  { label: 'Cosine', fn: 'cos(x)', range: { xMin: -2*Math.PI, xMax: 2*Math.PI, yMin: -2, yMax: 2 } },
+  { label: 'Exponential', fn: 'e^x', range: { xMin: -2, xMax: 3, yMin: -1, yMax: 10 } },
+  { label: 'Natural Log', fn: 'ln(x)', range: { xMin: 0.1, xMax: 5, yMin: -3, yMax: 3 } },
+  { label: 'Absolute', fn: 'abs(x)', range: { xMin: -5, xMax: 5, yMin: -1, yMax: 6 } },
+  { label: 'Sqrt', fn: 'sqrt(x)', range: { xMin: -1, xMax: 5, yMin: -1, yMax: 4 } },
+];
 
 export default function GraphScreen() {
   const [equation, setEquation] = useState('x^2 - 4');
+  const [equation2, setEquation2] = useState('');
+  const [equation3, setEquation3] = useState('');
   const [xMin, setXMin] = useState('-5');
   const [xMax, setXMax] = useState('5');
   const [yMin, setYMin] = useState('-5');
   const [yMax, setYMax] = useState('10');
   const [points, setPoints] = useState([]);
+  const [points2, setPoints2] = useState([]);
+  const [points3, setPoints3] = useState([]);
   const [error, setError] = useState(null);
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
+  const [showRoots, setShowRoots] = useState(true);
+  const [showExtrema, setShowExtrema] = useState(true);
+  const [showDerivative, setShowDerivative] = useState(false);
+  const [derivativePoints, setDerivativePoints] = useState([]);
+  const [selectedPoint, setSelectedPoint] = useState(null);
+  const [traceMode, setTraceMode] = useState(false);
 
   // Parse and evaluate equation
   const evaluateFunction = useCallback((expr, x) => {
     try {
-      // Replace common math notations
       let processed = expr
         .replace(/\^/g, '**')
         .replace(/(\d)(x)/gi, '$1*$2')
@@ -49,13 +69,7 @@ export default function GraphScreen() {
         .replace(/sqrt/g, 'Math.sqrt')
         .replace(/abs/g, 'Math.abs')
         .replace(/pi/gi, 'Math.PI')
-        .replace(/e(?![xp])/gi, 'Math.E')
-        .replace(/\^/g, '**');
-
-      // Security check
-      if (/[^0-9+\-*/().,% Math.sqrtncsitaplogbxeE.PI]/.test(processed.replace(/Math\.\w+/g, ''))) {
-        throw new Error('Invalid expression');
-      }
+        .replace(/e(?![xp])/gi, 'Math.E');
 
       const result = eval(processed);
       return isFinite(result) ? result : null;
@@ -64,7 +78,36 @@ export default function GraphScreen() {
     }
   }, []);
 
+  // Numerical derivative
+  const evaluateDerivative = useCallback((expr, x) => {
+    const h = 0.0001;
+    const y1 = evaluateFunction(expr, x + h);
+    const y2 = evaluateFunction(expr, x - h);
+    if (y1 === null || y2 === null) return null;
+    return (y1 - y2) / (2 * h);
+  }, [evaluateFunction]);
+
   // Generate plot points
+  const generatePoints = useCallback((expr) => {
+    const xMinVal = parseFloat(xMin);
+    const xMaxVal = parseFloat(xMax);
+    const numPoints = 500;
+    const step = (xMaxVal - xMinVal) / numPoints;
+    const plotPoints = [];
+
+    for (let i = 0; i <= numPoints; i++) {
+      const x = xMinVal + i * step;
+      const y = evaluateFunction(expr, x);
+      if (y !== null) {
+        plotPoints.push({ x, y });
+      } else if (plotPoints.length > 0) {
+        plotPoints.push({ x, y: null, gap: true });
+      }
+    }
+
+    return plotPoints;
+  }, [xMin, xMax, evaluateFunction]);
+
   const plotGraph = useCallback(() => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
@@ -79,63 +122,62 @@ export default function GraphScreen() {
         throw new Error('Min must be less than Max values');
       }
 
-      const numPoints = 500;
-      const step = (xMaxVal - xMinVal) / numPoints;
-      const plotPoints = [];
-
-      for (let i = 0; i <= numPoints; i++) {
-        const x = xMinVal + i * step;
-        const y = evaluateFunction(equation, x);
-        if (y !== null) {
-          plotPoints.push({ x, y });
-        } else if (plotPoints.length > 0) {
-          // Add break for discontinuities
-          plotPoints.push({ x, y: null, gap: true });
-        }
+      setPoints(generatePoints(equation));
+      
+      if (equation2.trim()) {
+        setPoints2(generatePoints(equation2));
+      } else {
+        setPoints2([]);
+      }
+      
+      if (equation3.trim()) {
+        setPoints3(generatePoints(equation3));
+      } else {
+        setPoints3([]);
       }
 
-      setPoints(plotPoints);
-
-      // Auto-adjust Y range if needed
-      if (plotPoints.length > 0) {
-        const validPoints = plotPoints.filter(p => !p.gap && p.y !== null);
-        if (validPoints.length > 0) {
-          const yValues = validPoints.map(p => p.y);
-          const computedYMin = Math.min(...yValues);
-          const computedYMax = Math.max(...yValues);
-          const padding = (computedYMax - computedYMin) * 0.2 || 1;
-          // Optional: auto-adjust (commented out to respect user settings)
-          // setYMin((computedYMin - padding).toFixed(1));
-          // setYMax((computedYMax + padding).toFixed(1));
+      if (showDerivative) {
+        const derivPoints = [];
+        const xMinV = parseFloat(xMin);
+        const xMaxV = parseFloat(xMax);
+        const step = (xMaxV - xMinV) / 200;
+        
+        for (let i = 0; i <= 200; i++) {
+          const x = xMinV + i * step;
+          const dy = evaluateDerivative(equation, x);
+          if (dy !== null && isFinite(dy)) {
+            derivPoints.push({ x, y: dy });
+          }
         }
+        setDerivativePoints(derivPoints);
       }
     } catch (err) {
       setError(err.message);
       setPoints([]);
     }
-  }, [equation, xMin, xMax, yMin, yMax, evaluateFunction]);
+  }, [equation, equation2, equation3, xMin, xMax, yMin, yMax, generatePoints, showDerivative, evaluateDerivative]);
 
   // Convert math coords to SVG coords
-  const toSvgX = (x) => {
+  const toSvgX = useCallback((x) => {
     const xMinVal = parseFloat(xMin);
     const xMaxVal = parseFloat(xMax);
     return ((x - xMinVal) / (xMaxVal - xMinVal)) * GRAPH_WIDTH;
-  };
+  }, [xMin, xMax]);
 
-  const toSvgY = (y) => {
+  const toSvgY = useCallback((y) => {
     const yMinVal = parseFloat(yMin);
     const yMaxVal = parseFloat(yMax);
     return GRAPH_HEIGHT - ((y - yMinVal) / (yMaxVal - yMinVal)) * GRAPH_HEIGHT;
-  };
+  }, [yMin, yMax]);
 
   // Generate SVG path
-  const pathData = useMemo(() => {
-    if (points.length === 0) return '';
+  const generatePathData = useCallback((pts) => {
+    if (pts.length === 0) return '';
 
     let path = '';
     let isNewSegment = true;
 
-    points.forEach((point) => {
+    pts.forEach((point) => {
       if (point.gap) {
         isNewSegment = true;
         return;
@@ -144,7 +186,7 @@ export default function GraphScreen() {
       const svgX = toSvgX(point.x);
       const svgY = toSvgY(point.y);
 
-      if (svgY < -50 || svgY > GRAPH_HEIGHT + 50) {
+      if (svgY < -100 || svgY > GRAPH_HEIGHT + 100) {
         isNewSegment = true;
         return;
       }
@@ -158,9 +200,14 @@ export default function GraphScreen() {
     });
 
     return path;
-  }, [points]);
+  }, [toSvgX, toSvgY]);
 
-  // Grid lines
+  const pathData = useMemo(() => generatePathData(points), [points, generatePathData]);
+  const pathData2 = useMemo(() => generatePathData(points2), [points2, generatePathData]);
+  const pathData3 = useMemo(() => generatePathData(points3), [points3, generatePathData]);
+  const derivativePathData = useMemo(() => generatePathData(derivativePoints), [derivativePoints, generatePathData]);
+
+  // Grid lines with gradient
   const gridLines = useMemo(() => {
     const xMinVal = parseFloat(xMin);
     const xMaxVal = parseFloat(xMax);
@@ -168,36 +215,32 @@ export default function GraphScreen() {
     const yMaxVal = parseFloat(yMax);
     const lines = [];
 
-    // X-axis grid lines
     const xStep = (xMaxVal - xMinVal) / 10;
     for (let x = Math.ceil(xMinVal / xStep) * xStep; x <= xMaxVal; x += xStep) {
-      const svgX = toSvgX(x);
       lines.push(
         <Line
           key={`gx-${x}`}
-          x1={svgX}
+          x1={toSvgX(x)}
           y1={0}
-          x2={svgX}
+          x2={toSvgX(x)}
           y2={GRAPH_HEIGHT}
-          stroke={x === 0 ? colors.accent : colors.border}
+          stroke={x === 0 ? colors.accent + '40' : colors.border + '30'}
           strokeWidth={x === 0 ? 1.5 : 0.5}
           strokeDasharray={x === 0 ? '' : '4,4'}
         />
       );
     }
 
-    // Y-axis grid lines
     const yStep = (yMaxVal - yMinVal) / 10;
     for (let y = Math.ceil(yMinVal / yStep) * yStep; y <= yMaxVal; y += yStep) {
-      const svgY = toSvgY(y);
       lines.push(
         <Line
           key={`gy-${y}`}
           x1={0}
-          y1={svgY}
+          y1={toSvgY(y)}
           x2={GRAPH_WIDTH}
-          y2={svgY}
-          stroke={y === 0 ? colors.accent : colors.border}
+          y2={toSvgY(y)}
+          stroke={y === 0 ? colors.accent + '40' : colors.border + '30'}
           strokeWidth={y === 0 ? 1.5 : 0.5}
           strokeDasharray={y === 0 ? '' : '4,4'}
         />
@@ -205,7 +248,7 @@ export default function GraphScreen() {
     }
 
     return lines;
-  }, [xMin, xMax, yMin, yMax]);
+  }, [xMin, xMax, yMin, yMax, toSvgX, toSvgY]);
 
   // Axis labels
   const axisLabels = useMemo(() => {
@@ -218,18 +261,17 @@ export default function GraphScreen() {
     const xStep = (xMaxVal - xMinVal) / 5;
     for (let x = Math.ceil(xMinVal / xStep) * xStep; x <= xMaxVal; x += xStep) {
       if (Math.abs(x) < 0.001) continue;
-      const svgX = toSvgX(x);
       labels.push(
         <SvgText
           key={`lx-${x}`}
-          x={svgX}
+          x={toSvgX(x)}
           y={GRAPH_HEIGHT + 18}
           fill={colors.textSecondary}
           fontSize={10}
           textAnchor="middle"
           fontFamily={Platform.OS === 'ios' ? 'Menlo' : 'monospace'}
         >
-          {x.toFixed(1)}
+          {Number.isInteger(x) ? x : x.toFixed(1)}
         </SvgText>
       );
     }
@@ -237,41 +279,25 @@ export default function GraphScreen() {
     const yStep = (yMaxVal - yMinVal) / 5;
     for (let y = Math.ceil(yMinVal / yStep) * yStep; y <= yMaxVal; y += yStep) {
       if (Math.abs(y) < 0.001) continue;
-      const svgY = toSvgY(y);
       labels.push(
         <SvgText
           key={`ly-${y}`}
           x={-8}
-          y={svgY + 4}
+          y={toSvgY(y) + 4}
           fill={colors.textSecondary}
           fontSize={10}
           textAnchor="end"
           fontFamily={Platform.OS === 'ios' ? 'Menlo' : 'monospace'}
         >
-          {y.toFixed(1)}
+          {Number.isInteger(y) ? y : y.toFixed(1)}
         </SvgText>
       );
     }
 
-    // Origin label
-    labels.push(
-      <SvgText
-        key="origin"
-        x={toSvgX(0) - 8}
-        y={toSvgY(0) + 18}
-        fill={colors.accent}
-        fontSize={10}
-        textAnchor="end"
-        fontFamily={Platform.OS === 'ios' ? 'Menlo' : 'monospace'}
-      >
-        0
-      </SvgText>
-    );
-
     return labels;
-  }, [xMin, xMax, yMin, yMax]);
+  }, [xMin, xMax, yMin, yMax, toSvgX, toSvgY]);
 
-  // Find intersections, roots, extrema
+  // Find special points (roots, extrema, inflection)
   const specialPoints = useMemo(() => {
     const xMinVal = parseFloat(xMin);
     const xMaxVal = parseFloat(xMax);
@@ -279,35 +305,84 @@ export default function GraphScreen() {
 
     if (points.length < 2) return found;
 
-    // Find roots (where y ≈ 0)
-    for (let i = 1; i < points.length; i++) {
-      const prev = points[i - 1];
-      const curr = points[i];
-      if (!prev.gap && !curr.gap && prev.y !== null && curr.y !== null) {
-        if (prev.y * curr.y <= 0 && Math.abs(prev.y - curr.y) < 10) {
-          const rootX = prev.x - prev.y * (curr.x - prev.x) / (curr.y - prev.y);
-          if (rootX >= xMinVal && rootX <= xMaxVal) {
-            found.push({ x: rootX, y: 0, type: 'root' });
+    // Find roots
+    if (showRoots) {
+      for (let i = 1; i < points.length; i++) {
+        const prev = points[i - 1];
+        const curr = points[i];
+        if (!prev.gap && !curr.gap && prev.y !== null && curr.y !== null) {
+          if (prev.y * curr.y <= 0 && Math.abs(prev.y - curr.y) < 10) {
+            const rootX = prev.x - prev.y * (curr.x - prev.x) / (curr.y - prev.y);
+            if (rootX >= xMinVal && rootX <= xMaxVal) {
+              found.push({ x: rootX, y: 0, type: 'root' });
+            }
           }
         }
       }
     }
 
     // Find local extrema
-    for (let i = 2; i < points.length - 1; i++) {
-      const p1 = points[i - 1];
-      const p2 = points[i];
-      const p3 = points[i + 1];
-      if (!p1.gap && !p2.gap && !p3.gap &&
-          p1.y !== null && p2.y !== null && p3.y !== null) {
-        if ((p2.y > p1.y && p2.y > p3.y) || (p2.y < p1.y && p2.y < p3.y)) {
-          found.push({ x: p2.x, y: p2.y, type: p2.y > p1.y ? 'max' : 'min' });
+    if (showExtrema) {
+      for (let i = 2; i < points.length - 1; i++) {
+        const p1 = points[i - 1];
+        const p2 = points[i];
+        const p3 = points[i + 1];
+        if (!p1.gap && !p2.gap && !p3.gap &&
+            p1.y !== null && p2.y !== null && p3.y !== null) {
+          if ((p2.y > p1.y && p2.y > p3.y) || (p2.y < p1.y && p2.y < p3.y)) {
+            const extremaType = p2.y > p1.y ? 'max' : 'min';
+            if (!found.some(f => Math.abs(f.x - p2.x) < 0.01 && f.type === extremaType)) {
+              found.push({ x: p2.x, y: p2.y, type: extremaType });
+            }
+          }
         }
       }
     }
 
-    return found.slice(0, 10); // Limit special points
-  }, [points]);
+    return found.slice(0, 15);
+  }, [points, showRoots, showExtrema]);
+
+  // Apply preset function
+  const applyPreset = (preset) => {
+    Haptics.selectionAsync();
+    setEquation(preset.fn);
+    setXMin(String(preset.range.xMin));
+    setXMax(String(preset.range.xMax));
+    setYMin(String(preset.range.yMin));
+    setYMax(String(preset.range.yMax));
+    setEquation2('');
+    setEquation3('');
+    setShowDerivative(false);
+    setTimeout(() => {
+      // Auto-plot after state updates
+    }, 100);
+  };
+
+  // Statistics about the graph
+  const graphStats = useMemo(() => {
+    if (points.length === 0) return null;
+    
+    const validPoints = points.filter(p => !p.gap && p.y !== null);
+    if (validPoints.length === 0) return null;
+
+    const yValues = validPoints.map(p => p.y);
+    const roots = specialPoints.filter(p => p.type === 'root');
+    const maxima = specialPoints.filter(p => p.type === 'max');
+    const minima = specialPoints.filter(p => p.type === 'min');
+
+    return {
+      pointCount: validPoints.length,
+      yMin: Math.min(...yValues),
+      yMax: Math.max(...yValues),
+      rootCount: roots.length,
+      maxCount: maxima.length,
+      minCount: minima.length,
+      hasDiscontinuities: points.some(p => p.gap),
+    };
+  }, [points, specialPoints]);
+
+  const curveColors = [colors.accent, '#ff6b6b', '#ffd93d'];
+  const curveLabels = ['f(x)', 'g(x)', 'h(x)'];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -316,11 +391,24 @@ export default function GraphScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
         <View style={styles.header}>
           <Text style={styles.title}>📈 Graphing Calculator</Text>
-          <Text style={styles.subtitle}>Interactive Function Plotter</Text>
+          <Text style={styles.subtitle}>Multi-Function Plotter with Analysis</Text>
         </View>
+
+        {/* Preset Functions */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
+          {PRESET_FUNCTIONS.map((preset, idx) => (
+            <TouchableOpacity
+              key={idx}
+              style={styles.presetBtn}
+              onPress={() => applyPreset(preset)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.presetText}>{preset.label}</Text>
+            </TouchableOpacity>
+          ))}
+        </ScrollView>
 
         {/* Input Card */}
         <View style={styles.inputCard}>
@@ -329,46 +417,84 @@ export default function GraphScreen() {
             style={styles.eqInput}
             value={equation}
             onChangeText={setEquation}
-            placeholder="e.g., x^2 - 4, sin(x), 2x + 1"
+            placeholder="e.g., x^2 - 4"
             placeholderTextColor={colors.textSecondary}
           />
+
+          <Text style={[styles.inputLabel, { marginTop: 12 }]}>Function g(x) = (optional)</Text>
+          <TextInput
+            style={[styles.eqInput, styles.eqInputSecondary]}
+            value={equation2}
+            onChangeText={setEquation2}
+            placeholder="e.g., 2x + 1"
+            placeholderTextColor={colors.textSecondary}
+          />
+
+          <Text style={[styles.inputLabel, { marginTop: 12 }]}>Function h(x) = (optional)</Text>
+          <TextInput
+            style={[styles.eqInput, styles.eqInputSecondary]}
+            value={equation3}
+            onChangeText={setEquation3}
+            placeholder="e.g., sin(x)"
+            placeholderTextColor={colors.textSecondary}
+          />
+
+          {/* View Options */}
+          <View style={styles.optionsRow}>
+            <View style={styles.optionItem}>
+              <Text style={styles.optionLabel}>Grid</Text>
+              <Switch
+                value={showGrid}
+                onValueChange={setShowGrid}
+                trackColor={{ false: colors.border, true: colors.accent + '60' }}
+                thumbColor={showGrid ? colors.accent : colors.textSecondary}
+              />
+            </View>
+            <View style={styles.optionItem}>
+              <Text style={styles.optionLabel}>Roots</Text>
+              <Switch
+                value={showRoots}
+                onValueChange={setShowRoots}
+                trackColor={{ false: colors.border, true: colors.accent + '60' }}
+                thumbColor={showRoots ? colors.accent : colors.textSecondary}
+              />
+            </View>
+            <View style={styles.optionItem}>
+              <Text style={styles.optionLabel}>Extrema</Text>
+              <Switch
+                value={showExtrema}
+                onValueChange={setShowExtrema}
+                trackColor={{ false: colors.border, true: colors.accent + '60' }}
+                thumbColor={showExtrema ? colors.accent : colors.textSecondary}
+              />
+            </View>
+            <View style={styles.optionItem}>
+              <Text style={styles.optionLabel}>f'(x)</Text>
+              <Switch
+                value={showDerivative}
+                onValueChange={setShowDerivative}
+                trackColor={{ false: colors.border, true: '#ff6b6b60' }}
+                thumbColor={showDerivative ? '#ff6b6b' : colors.textSecondary}
+              />
+            </View>
+          </View>
 
           <View style={styles.rangeRow}>
             <View style={styles.rangeItem}>
               <Text style={styles.rangeLabel}>X Min</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={xMin}
-                onChangeText={setXMin}
-                keyboardType="decimal-pad"
-              />
+              <TextInput style={styles.rangeInput} value={xMin} onChangeText={setXMin} keyboardType="decimal-pad" />
             </View>
             <View style={styles.rangeItem}>
               <Text style={styles.rangeLabel}>X Max</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={xMax}
-                onChangeText={setXMax}
-                keyboardType="decimal-pad"
-              />
+              <TextInput style={styles.rangeInput} value={xMax} onChangeText={setXMax} keyboardType="decimal-pad" />
             </View>
             <View style={styles.rangeItem}>
               <Text style={styles.rangeLabel}>Y Min</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={yMin}
-                onChangeText={setYMin}
-                keyboardType="decimal-pad"
-              />
+              <TextInput style={styles.rangeInput} value={yMin} onChangeText={setYMin} keyboardType="decimal-pad" />
             </View>
             <View style={styles.rangeItem}>
               <Text style={styles.rangeLabel}>Y Max</Text>
-              <TextInput
-                style={styles.rangeInput}
-                value={yMax}
-                onChangeText={setYMax}
-                keyboardType="decimal-pad"
-              />
+              <TextInput style={styles.rangeInput} value={yMax} onChangeText={setYMax} keyboardType="decimal-pad" />
             </View>
           </View>
 
@@ -388,7 +514,7 @@ export default function GraphScreen() {
         {points.length > 0 && (
           <View style={styles.graphCard}>
             <Text style={styles.graphTitle}>
-              f(x) = {equation}
+              {[equation, equation2, equation3].filter(e => e.trim()).join(' | ')}
             </Text>
             <Text style={styles.graphRange}>
               x: [{xMin}, {xMax}] | y: [{yMin}, {yMax}]
@@ -396,15 +522,15 @@ export default function GraphScreen() {
 
             <View style={styles.graphContainer}>
               <Svg width={GRAPH_WIDTH} height={GRAPH_HEIGHT} style={styles.svg}>
+                <Defs>
+                  <LinearGradient id="graphBg" x1="0" y1="0" x2="0" y2="1">
+                    <Stop offset="0" stopColor={colors.bgInput} stopOpacity="1" />
+                    <Stop offset="1" stopColor="#0a0a1a" stopOpacity="1" />
+                  </LinearGradient>
+                </Defs>
+
                 {/* Background */}
-                <Rect
-                  x={0}
-                  y={0}
-                  width={GRAPH_WIDTH}
-                  height={GRAPH_HEIGHT}
-                  fill={colors.bgInput}
-                  rx={8}
-                />
+                <Rect x={0} y={0} width={GRAPH_WIDTH} height={GRAPH_HEIGHT} fill="url(#graphBg)" rx={8} />
 
                 {/* Grid */}
                 {showGrid && gridLines}
@@ -412,16 +538,20 @@ export default function GraphScreen() {
                 {/* Axis Labels */}
                 {showLabels && axisLabels}
 
-                {/* Function curve */}
+                {/* Function curves */}
                 {pathData.length > 0 && (
-                  <Path
-                    d={pathData}
-                    stroke={colors.accent}
-                    strokeWidth={2.5}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
+                  <Path d={pathData} stroke={curveColors[0]} strokeWidth={2.5} fill="none" strokeLinecap="round" strokeLinejoin="round" />
+                )}
+                {pathData2.length > 0 && (
+                  <Path d={pathData2} stroke={curveColors[1]} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="8,4" />
+                )}
+                {pathData3.length > 0 && (
+                  <Path d={pathData3} stroke={curveColors[2]} strokeWidth={2} fill="none" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="4,4" />
+                )}
+                
+                {/* Derivative */}
+                {showDerivative && derivativePathData.length > 0 && (
+                  <Path d={derivativePathData} stroke="#ff6b6b" strokeWidth={1.5} fill="none" strokeLinecap="round" strokeDasharray="3,3" opacity={0.7} />
                 )}
 
                 {/* Special Points */}
@@ -431,7 +561,7 @@ export default function GraphScreen() {
                       cx={toSvgX(point.x)}
                       cy={toSvgY(point.y)}
                       r={point.type === 'root' ? 5 : 4}
-                      fill={point.type === 'root' ? colors.accent : colors.purple}
+                      fill={point.type === 'root' ? colors.accent : point.type === 'max' ? '#ff6b6b' : '#ffd93d'}
                       stroke={colors.white}
                       strokeWidth={1.5}
                     />
@@ -447,55 +577,111 @@ export default function GraphScreen() {
                         ({point.x.toFixed(2)}, 0)
                       </SvgText>
                     )}
+                    {(point.type === 'max' || point.type === 'min') && (
+                      <SvgText
+                        x={toSvgX(point.x)}
+                        y={toSvgY(point.y) + (point.type === 'max' ? -12 : 20)}
+                        fill={point.type === 'max' ? '#ff6b6b' : '#ffd93d'}
+                        fontSize={8}
+                        textAnchor="middle"
+                      >
+                        {point.type === 'max' ? 'max' : 'min'}
+                      </SvgText>
+                    )}
                   </G>
                 ))}
 
                 {/* X-axis */}
-                <Line
-                  x1={0}
-                  y1={toSvgY(0)}
-                  x2={GRAPH_WIDTH}
-                  y2={toSvgY(0)}
-                  stroke={colors.accent}
-                  strokeWidth={1}
-                />
-
+                <Line x1={0} y1={toSvgY(0)} x2={GRAPH_WIDTH} y2={toSvgY(0)} stroke={colors.accent + '80'} strokeWidth={1.5} />
                 {/* Y-axis */}
-                <Line
-                  x1={toSvgX(0)}
-                  y1={0}
-                  x2={toSvgX(0)}
-                  y2={GRAPH_HEIGHT}
-                  stroke={colors.accent}
-                  strokeWidth={1}
-                />
+                <Line x1={toSvgX(0)} y1={0} x2={toSvgX(0)} y2={GRAPH_HEIGHT} stroke={colors.accent + '80'} strokeWidth={1.5} />
+                
+                {/* Arrow heads */}
+                <Polygon points={`${GRAPH_WIDTH-8},${toSvgY(0)-4} ${GRAPH_WIDTH},${toSvgY(0)} ${GRAPH_WIDTH-8},${toSvgY(0)+4}`} fill={colors.accent} />
+                <Polygon points={`${toSvgX(0)-4},8 ${toSvgX(0)},0 ${toSvgX(0)+4},8`} fill={colors.accent} />
               </Svg>
             </View>
 
             {/* Legend */}
             <View style={styles.legend}>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
-                <Text style={styles.legendText}>Function</Text>
+                <View style={[styles.legendLine, { backgroundColor: curveColors[0] }]} />
+                <Text style={styles.legendText}>f(x)</Text>
               </View>
+              {equation2.trim() !== '' && (
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendLine, { backgroundColor: curveColors[1] }]} />
+                  <Text style={styles.legendText}>g(x)</Text>
+                </View>
+              )}
+              {equation3.trim() !== '' && (
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendLine, { backgroundColor: curveColors[2] }]} />
+                  <Text style={styles.legendText}>h(x)</Text>
+                </View>
+              )}
+              {showDerivative && (
+                <View style={styles.legendItem}>
+                  <View style={[styles.legendLine, { backgroundColor: '#ff6b6b', height: 1 }]} />
+                  <Text style={styles.legendText}>f'(x)</Text>
+                </View>
+              )}
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.accent, width: 10, height: 10 }]} />
+                <View style={[styles.legendDot, { backgroundColor: colors.accent }]} />
                 <Text style={styles.legendText}>Roots</Text>
               </View>
               <View style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: colors.purple }]} />
-                <Text style={styles.legendText}>Extrema</Text>
+                <View style={[styles.legendDot, { backgroundColor: '#ff6b6b' }]} />
+                <Text style={styles.legendText}>Max</Text>
+              </View>
+              <View style={styles.legendItem}>
+                <View style={[styles.legendDot, { backgroundColor: '#ffd93d' }]} />
+                <Text style={styles.legendText}>Min</Text>
               </View>
             </View>
 
-            {/* Root Info */}
-            {specialPoints.filter(p => p.type === 'root').length > 0 && (
+            {/* Graph Statistics */}
+            {graphStats && (
+              <View style={styles.statsCard}>
+                <Text style={styles.statsTitle}>📊 Graph Analysis</Text>
+                <View style={styles.statsRow}>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{graphStats.rootCount}</Text>
+                    <Text style={styles.statLabel}>Roots</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{graphStats.maxCount}</Text>
+                    <Text style={styles.statLabel}>Maxima</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{graphStats.minCount}</Text>
+                    <Text style={styles.statLabel}>Minima</Text>
+                  </View>
+                  <View style={styles.statItem}>
+                    <Text style={styles.statValue}>{graphStats.hasDiscontinuities ? 'Yes' : 'No'}</Text>
+                    <Text style={styles.statLabel}>Discont.</Text>
+                  </View>
+                </View>
+                <Text style={styles.statDetail}>
+                  Y-Range in view: [{graphStats.yMin.toFixed(2)}, {graphStats.yMax.toFixed(2)}]
+                </Text>
+              </View>
+            )}
+
+            {/* Roots & Extrema Details */}
+            {specialPoints.length > 0 && (
               <View style={styles.rootsCard}>
-                <Text style={styles.rootsTitle}>🔍 Roots Found:</Text>
-                {specialPoints.filter(p => p.type === 'root').map((root, idx) => (
-                  <Text key={idx} style={styles.rootText}>
-                    x{idx + 1} = {root.x.toFixed(4)}
-                  </Text>
+                <Text style={styles.rootsTitle}>🔍 Special Points:</Text>
+                {specialPoints.map((point, idx) => (
+                  <View key={idx} style={styles.pointRow}>
+                    <View style={[styles.pointDot, { 
+                      backgroundColor: point.type === 'root' ? colors.accent : point.type === 'max' ? '#ff6b6b' : '#ffd93d' 
+                    }]} />
+                    <Text style={styles.pointText}>
+                      {point.type === 'root' ? 'Root' : point.type === 'max' ? 'Maximum' : 'Minimum'}
+                      : ({point.x.toFixed(4)}, {point.y.toFixed(4)})
+                    </Text>
+                  </View>
                 ))}
               </View>
             )}
@@ -504,19 +690,119 @@ export default function GraphScreen() {
 
         {/* Help Card */}
         <View style={styles.helpCard}>
-          <Text style={styles.helpTitle}>💡 Supported Functions</Text>
+          <Text style={styles.helpTitle}>💡 Tips & Supported Functions</Text>
           <View style={styles.helpGrid}>
-            <Text style={styles.helpText}>• Polynomials: x^2, 2x+1</Text>
-            <Text style={styles.helpText}>• Trig: sin(x), cos(x), tan(x)</Text>
-            <Text style={styles.helpText}>• Log: log(x), ln(x)</Text>
-            <Text style={styles.helpText}>• sqrt(x), abs(x)</Text>
-            <Text style={styles.helpText}>• Constants: pi, e</Text>
+            <Text style={styles.helpText}>• Plot up to 3 functions simultaneously</Text>
+            <Text style={styles.helpText}>• Toggle derivative f'(x) to analyze slopes</Text>
+            <Text style={styles.helpText}>• Supports: sin, cos, tan, log, ln, sqrt, abs</Text>
+            <Text style={styles.helpText}>• Use e for Euler's number, pi for π</Text>
+            <Text style={styles.helpText}>• Implicit multiplication: 2x = 2*x</Text>
+            <Text style={styles.helpText}>• Roots show where f(x) = 0 (x-intercepts)</Text>
           </View>
         </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
+
+// Add these new styles to your existing StyleSheet
+const additionalStyles = {
+  presetScroll: {
+    marginBottom: 12,
+  },
+  presetBtn: {
+    backgroundColor: colors.bgCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginRight: 8,
+  },
+  presetText: {
+    color: colors.accent,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  eqInputSecondary: {
+    fontSize: 16,
+    opacity: 0.8,
+  },
+  optionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginTop: 16,
+    paddingVertical: 12,
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: colors.border,
+  },
+  optionItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  optionLabel: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '500',
+  },
+  statsCard: {
+    backgroundColor: colors.bgInput,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 12,
+  },
+  statsTitle: {
+    color: colors.white,
+    fontSize: 14,
+    fontWeight: '600',
+    marginBottom: 10,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+  },
+  statItem: {
+    alignItems: 'center',
+  },
+  statValue: {
+    color: colors.accent,
+    fontSize: 18,
+    fontWeight: '700',
+  },
+  statLabel: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    marginTop: 2,
+  },
+  statDetail: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    textAlign: 'center',
+    marginTop: 8,
+  },
+  pointRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginTop: 4,
+  },
+  pointDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  pointText: {
+    color: '#c8c8d8',
+    fontSize: 12,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  },
+  legendLine: {
+    width: 20,
+    height: 3,
+    borderRadius: 2,
+  },
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -713,4 +999,5 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 20,
   },
+  ...additionalStyles,
 });

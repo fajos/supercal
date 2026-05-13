@@ -22,18 +22,24 @@ import StatisticsScreen from './src/screens/StatisticsScreen';
 import LinearScreen from './src/screens/LinearScreen';
 import PolynomialScreen from './src/screens/PolynomialScreen';
 import TrigonometryScreen from './src/screens/TrigonometryScreen';
-
-// NEW Solver Screens
 import SimultaneousScreen from './src/screens/SimultaneousScreen';
 import ProbabilityScreen from './src/screens/ProbabilityScreen';
 import ComplexScreen from './src/screens/ComplexScreen';
 import SequenceScreen from './src/screens/SequenceScreen';
 import FinanceScreen from './src/screens/FinanceScreen';
 
+// Physics Screens
+import PhysicsScreen from './src/screens/PhysicsScreen';
+import KinematicsScreen from './src/screens/KinematicsScreen';
+import DynamicsScreen from './src/screens/DynamicsScreen';
+import EnergyScreen from './src/screens/EnergyScreen';
+import WavesScreen from './src/screens/WavesScreen';
+import CircuitsScreen from './src/screens/CircuitsScreen';
+
 const Tab = createBottomTabNavigator();
 const SolveStack = createNativeStackNavigator();
+const PhysicsStack = createNativeStackNavigator();
 
-// Stack navigator for the Solver section
 function SolveStackScreen() {
   return (
     <SolveStack.Navigator
@@ -48,14 +54,32 @@ function SolveStackScreen() {
       <SolveStack.Screen name="LinearSolver" component={LinearScreen} />
       <SolveStack.Screen name="PolynomialSolver" component={PolynomialScreen} />
       <SolveStack.Screen name="TrigonometrySolver" component={TrigonometryScreen} />
-      
-      {/* NEW Solver Screens */}
       <SolveStack.Screen name="SimultaneousSolver" component={SimultaneousScreen} />
       <SolveStack.Screen name="ProbabilitySolver" component={ProbabilityScreen} />
       <SolveStack.Screen name="ComplexSolver" component={ComplexScreen} />
+      <SolveStack.Screen name="CalculusSolver" component={CalculusScreen} />
+      <SolveStack.Screen name="MatrixSolver" component={MatrixScreen} />
       <SolveStack.Screen name="SequenceSolver" component={SequenceScreen} />
       <SolveStack.Screen name="FinanceSolver" component={FinanceScreen} />
     </SolveStack.Navigator>
+  );
+}
+
+function PhysicsStackScreen() {
+  return (
+    <PhysicsStack.Navigator
+      screenOptions={{
+        headerShown: false,
+        contentStyle: { backgroundColor: colors.bgPrimary },
+      }}
+    >
+      <PhysicsStack.Screen name="PhysicsHome" component={PhysicsScreen} />
+      <PhysicsStack.Screen name="KinematicsSolver" component={KinematicsScreen} />
+      <PhysicsStack.Screen name="DynamicsSolver" component={DynamicsScreen} />
+      <PhysicsStack.Screen name="EnergySolver" component={EnergyScreen} />
+      <PhysicsStack.Screen name="WavesSolver" component={WavesScreen} />
+      <PhysicsStack.Screen name="CircuitsSolver" component={CircuitsScreen} />
+    </PhysicsStack.Navigator>
   );
 }
 
@@ -81,14 +105,14 @@ export default function App() {
                   case 'Solve':
                     iconName = focused ? 'school' : 'school-outline';
                     break;
+                  case 'Physics':
+                    iconName = focused ? 'flash' : 'flash-outline';
+                    break;
                   case 'Graph':
                     iconName = focused ? 'trending-up' : 'trending-up-outline';
                     break;
                   case 'Matrix':
                     iconName = focused ? 'grid' : 'grid-outline';
-                    break;
-                  case 'Calculus':
-                    iconName = focused ? 'infinite' : 'infinite-outline';
                     break;
                   default:
                     iconName = 'help-circle-outline';
@@ -99,9 +123,8 @@ export default function App() {
           >
             <Tab.Screen name="Calculator" component={CalculatorScreen} options={{ tabBarLabel: 'Calc' }} />
             <Tab.Screen name="Solve" component={SolveStackScreen} options={{ tabBarLabel: 'Solve' }} />
+            <Tab.Screen name="Physics" component={PhysicsStackScreen} options={{ tabBarLabel: 'Physics' }} />
             <Tab.Screen name="Graph" component={GraphScreen} options={{ tabBarLabel: 'Graph' }} />
-            <Tab.Screen name="Matrix" component={MatrixScreen} options={{ tabBarLabel: 'Matrix' }} />
-            <Tab.Screen name="Calculus" component={CalculusScreen} options={{ tabBarLabel: 'Calculus' }} />
           </Tab.Navigator>
         </NavigationContainer>
       </HistoryProvider>
