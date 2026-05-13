@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const HistoryContext = createContext();
+const HistoryContext = createContext(null);
 
 export function HistoryProvider({ children }) {
   const [history, setHistory] = useState([]);
@@ -9,6 +9,7 @@ export function HistoryProvider({ children }) {
   const addToHistory = useCallback(async (entry) => {
     setHistory((prev) => {
       const updated = [entry, ...prev].slice(0, 50);
+      // Save to AsyncStorage (fire and forget)
       AsyncStorage.setItem('calcHistory', JSON.stringify(updated)).catch(() => {});
       return updated;
     });
@@ -23,7 +24,9 @@ export function HistoryProvider({ children }) {
     try {
       const data = await AsyncStorage.getItem('calcHistory');
       if (data) setHistory(JSON.parse(data));
-    } catch {}
+    } catch (error) {
+      // Silently fail - history will be empty
+    }
   }, []);
 
   return (
@@ -35,6 +38,8 @@ export function HistoryProvider({ children }) {
 
 export function useHistory() {
   const context = useContext(HistoryContext);
-  if (!context) throw new Error('useHistory must be used within HistoryProvider');
+  if (!context) {
+    throw new Error('useHistory must be used within a HistoryProvider');
+  }
   return context;
 }
