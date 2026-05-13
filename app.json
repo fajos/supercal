@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "SuperCalc - Step by Step Solver",
+    "name": "SuperCalculator",
     "slug": "supercalc",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#0a0a14"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.yourcompany.supercalc",
@@ -31,8 +33,9 @@
     },
     "extra": {
       "eas": {
-        "projectId": "your-project-id-here"
+        "projectId": "47907628-b7bf-4c8b-ad27-24d69d87e758"
       }
-    }
+    },
+    "owner": "fajostheprince"
   }
 }
