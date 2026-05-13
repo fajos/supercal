@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveFinance } from '../solvers/financeSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function FinanceScreen() {
   const [mode, setMode] = useState('compound');
@@ -61,10 +62,7 @@ export default function FinanceScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>💰 Financial Math</Text>
-          <Text style={styles.subtitle}>Interest, Loans & Investments</Text>
-        </View>
+        <BackHeader title="💰 Financial Math" subtitle="Interest, Loans & Investments" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>

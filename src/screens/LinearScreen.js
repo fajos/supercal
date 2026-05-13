@@ -16,6 +16,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveLinearSystem } from '../solvers/linearSolver';
 import { useHistory } from '../utils/history';
+import { BackHeader } from '../components/BackHeader';
 
 export default function LinearScreen() {
   const [a1, setA1] = useState('2');
@@ -99,10 +100,7 @@ export default function LinearScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>📏 Linear System</Text>
-            <Text style={styles.subtitle}>2×2 System using Cramer's Rule</Text>
-          </View>
+          <BackHeader title="📏 Linear System" subtitle="2×2 Cramer's Rule" />  
 
           {/* Input Card */}
           <View style={styles.inputCard}>

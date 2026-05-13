@@ -55,6 +55,26 @@ const SOLVERS = [
     category: 'Algebra',
   },
   
+  // === ADVANCED ALGEBRA ===
+{
+  id: 'radical',
+  title: 'Radical Equations',
+  icon: '√',
+  description: 'Square roots & radicals',
+  color: '#e17055',
+  screen: 'RadicalSolver',
+  category: 'Advanced Algebra',
+},
+{
+  id: 'exponential',
+  title: 'Exponential & Log',
+  icon: '📊',
+  description: 'e^x, ln(x), growth/decay',
+  color: '#00cec9',
+  screen: 'ExponentialSolver',
+  category: 'Advanced Algebra',
+},
+
   // === TRIGONOMETRY ===
   {
     id: 'trigonometry',

@@ -15,6 +15,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
 import { solveDeterminant, solveInverse, solveEigenvalues, solveTranspose } from '../solvers/matrixSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function MatrixScreen() {
   const [matrixSize, setMatrixSize] = useState('3');
@@ -394,10 +395,7 @@ export default function MatrixScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>🧮 Matrix Operations</Text>
-          <Text style={styles.subtitle}>Determinant, Inverse, Eigenvalues & More</Text>
-        </View>
+        <BackHeader title="🧮 Matrix Operations" subtitle="Determinant, Inverse, Eigenvalues" />
 
         {/* Matrix Size */}
         <View style={styles.inputCard}>

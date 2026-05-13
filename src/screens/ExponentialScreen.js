@@ -7,16 +7,16 @@ import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
-import { solveEnergy } from '../solvers/energySolver';
+import { solveExponential } from '../solvers/exponentialSolver';
 import { BackHeader } from '../components/BackHeader';
 
-export default function EnergyScreen() {
-  const [mode, setMode] = useState('kinetic');
-  const [mass, setMass] = useState('10');
-  const [velocity, setVelocity] = useState('5');
-  const [height, setHeight] = useState('20');
-  const [springConstant, setSpringConstant] = useState('100');
-  const [springCompression, setSpringCompression] = useState('0.5');
+export default function ExponentialScreen() {
+  const [mode, setMode] = useState('exponential');
+  const [base, setBase] = useState('2');
+  const [value, setValue] = useState('8');
+  const [principal, setPrincipal] = useState('1000');
+  const [rate, setRate] = useState('5');
+  const [time, setTime] = useState('10');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const scrollRef = useRef();
@@ -25,15 +25,19 @@ export default function EnergyScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     try {
-      const params = {
-        mass: parseFloat(mass) || 0,
-        velocity: parseFloat(velocity) || 0,
-        height: parseFloat(height) || 0,
-        springConstant: parseFloat(springConstant) || 0,
-        springCompression: parseFloat(springCompression) || 0,
-        gravity: 9.81,
-      };
-      const solverResult = solveEnergy(mode, params);
+      let params = {};
+      
+      if (mode === 'exponential') {
+        params = { base: parseFloat(base), value: parseFloat(value) };
+      } else if (mode === 'logarithmic') {
+        params = { base: parseFloat(base), value: parseFloat(value) };
+      } else if (mode === 'natural') {
+        params = { value: parseFloat(value), isExp: true };
+      } else if (mode === 'growth') {
+        params = { principal: parseFloat(principal), rate: parseFloat(rate), time: parseFloat(time), mode: 'growth' };
+      }
+      
+      const solverResult = solveExponential(mode, params);
       setResult(solverResult);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
     } catch (err) {
@@ -42,72 +46,49 @@ export default function EnergyScreen() {
     }
   };
 
-  const renderContent = (content) => {
-    return content.map((item, idx) => {
-      if (item.type === 'highlight') return <Text key={idx} style={styles.highlightText}>{item.text}</Text>;
-      if (item.type === 'formula') return <Text key={idx} style={styles.formulaText}>{item.text}</Text>;
-      if (item.type === 'result') return (
-        <View key={idx} style={styles.resultBox}>
-          <Text style={styles.resultText}>{item.text}</Text>
-        </View>
-      );
-      return <Text key={idx} style={styles.stepText}>{item.text}</Text>;
-    });
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <BackHeader title="⚡ Energy & Work" subtitle="Kinetic, Potential & Conservation" />
+        <BackHeader title="📊 Exp & Log" subtitle="Exponential & Logarithmic Equations" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>
             {[
-              { id: 'kinetic', label: 'Kinetic\nEnergy' },
-              { id: 'potential', label: 'Potential\nEnergy' },
-              { id: 'spring', label: 'Spring\nEnergy' },
-              { id: 'conservation', label: 'Conservation\nof Energy' },
+              { id: 'exponential', label: 'a^x = b' },
+              { id: 'logarithmic', label: 'log_a(x) = b' },
+              { id: 'natural', label: 'e^x / ln(x)' },
+              { id: 'growth', label: 'Growth' },
             ].map(m => (
               <TouchableOpacity
                 key={m.id}
                 style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
                 onPress={() => { setMode(m.id); setResult(null); }}
               >
-                <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                  {m.label}
-                </Text>
+                <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>{m.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Mass (kg):</Text>
-          <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-
-          {mode === 'kinetic' || mode === 'conservation' ? (
+          {mode !== 'growth' ? (
             <>
-              <Text style={styles.inputLabel}>Velocity (m/s):</Text>
-              <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+              <Text style={styles.inputLabel}>Base a:</Text>
+              <TextInput style={styles.input} value={base} onChangeText={setBase} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+              <Text style={styles.inputLabel}>Value b:</Text>
+              <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
             </>
-          ) : null}
-
-          {mode === 'potential' || mode === 'conservation' ? (
+          ) : (
             <>
-              <Text style={styles.inputLabel}>Height (m):</Text>
-              <TextInput style={styles.input} value={height} onChangeText={setHeight} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+              <Text style={styles.inputLabel}>Initial Amount (P):</Text>
+              <TextInput style={styles.input} value={principal} onChangeText={setPrincipal} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+              <Text style={styles.inputLabel}>Rate (%):</Text>
+              <TextInput style={styles.input} value={rate} onChangeText={setRate} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+              <Text style={styles.inputLabel}>Time periods (t):</Text>
+              <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
             </>
-          ) : null}
-
-          {mode === 'spring' ? (
-            <>
-              <Text style={styles.inputLabel}>Spring Constant k (N/m):</Text>
-              <TextInput style={styles.input} value={springConstant} onChangeText={setSpringConstant} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-              <Text style={styles.inputLabel}>Compression/Extension x (m):</Text>
-              <TextInput style={styles.input} value={springCompression} onChangeText={setSpringCompression} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-            </>
-          ) : null}
+          )}
 
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>⚡ CALCULATE</Text>
+            <Text style={styles.solveBtnText}>📊 SOLVE</Text>
           </TouchableOpacity>
         </View>
 
@@ -117,11 +98,15 @@ export default function EnergyScreen() {
           <View style={styles.solutionArea}>
             {result.steps.map((step, idx) => (
               <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
-                {renderContent(step.content)}
+                {step.content.map((item, i) => {
+                  if (item.type === 'highlight') return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
+                  if (item.type === 'formula') return <Text key={i} style={styles.formulaText}>{item.text}</Text>;
+                  return <Text key={i} style={styles.stepText}>{item.text}</Text>;
+                })}
               </StepCard>
             ))}
-            <FinalAnswer label="⚡ Result">
-              <Text style={styles.finalText}>{result.result}</Text>
+            <FinalAnswer label="📊 Result">
+              <Text style={styles.finalText}>{String(result.result)}</Text>
             </FinalAnswer>
           </View>
         )}
@@ -141,7 +126,7 @@ const styles = StyleSheet.create({
   modeRow: { flexDirection: 'row', gap: 6, marginBottom: 16, flexWrap: 'wrap' },
   modeBtn: { flex: 1, minWidth: '22%', paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
+  modeText: { color: colors.textSecondary, fontSize: 11, fontWeight: '500', textAlign: 'center' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
@@ -153,7 +138,5 @@ const styles = StyleSheet.create({
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
-  resultBox: { backgroundColor: '#2a2a40', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginVertical: 2 },
-  resultText: { color: '#c4b5fd', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 14, fontWeight: '600' },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
 });

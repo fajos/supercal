@@ -17,6 +17,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { solveCubic } from '../solvers/polynomialSolver';
 import { useHistory } from '../utils/history';
 import { solvePolynomial } from '../solvers/polynomialSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function PolynomialScreen() {
   const [degree, setDegree] = useState('3');
@@ -109,10 +110,7 @@ export default function PolynomialScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>📈 Polynomial</Text>
-            <Text style={styles.subtitle}>Cubic & Higher Degree Solver</Text>
-          </View>
+          <BackHeader title="📈 Polynomial" subtitle="Cubic & Higher Degree Solver" />
 
           {/* Input Card */}
           <View style={styles.inputCard}>

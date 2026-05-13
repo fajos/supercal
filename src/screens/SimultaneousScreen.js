@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveSimultaneous3x3 } from '../solvers/simultaneousSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function SimultaneousScreen() {
   const [a1, setA1] = useState('2'); const [b1, setB1] = useState('1'); const [c1, setC1] = useState('-1'); const [d1, setD1] = useState('8');
@@ -50,10 +51,7 @@ export default function SimultaneousScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>⚡ Simultaneous Equations</Text>
-          <Text style={styles.subtitle}>3×3 System Solver</Text>
-        </View>
+        <BackHeader title="⚡ Simultaneous Equations" subtitle="3×3 System Solver" />
 
         <View style={styles.inputCard}>
           <Text style={styles.inputLabel}>Equation 1: a₁x + b₁y + c₁z = d₁</Text>

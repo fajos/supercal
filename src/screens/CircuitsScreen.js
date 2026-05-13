@@ -8,6 +8,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveCircuits } from '../solvers/circuitsSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function CircuitsScreen() {
   const [mode, setMode] = useState('ohmsLaw');
@@ -56,10 +57,7 @@ export default function CircuitsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>⚡ Electric Circuits</Text>
-          <Text style={styles.subtitle}>Ohm's Law & Circuit Analysis</Text>
-        </View>
+        <BackHeader title="⚡ Electric Circuits" subtitle="Ohm's Law & Circuit Analysis" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>

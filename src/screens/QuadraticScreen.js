@@ -18,6 +18,7 @@ import { SolveButton } from '../components/SolveButton';  // 🆕 Import
 import { ErrorCard } from '../components/ErrorCard';      // 🆕 Import
 import { solveQuadratic } from '../solvers/quadraticSolver';
 import { useHistory } from '../utils/history';
+import { BackHeader } from '../components/BackHeader';
 
 export default function QuadraticScreen() {
   const [a, setA] = useState('1');
@@ -103,10 +104,7 @@ export default function QuadraticScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <View style={styles.header}>
-            <Text style={styles.title}>📐 Quadratic Solver</Text>
-            <Text style={styles.subtitle}>ax² + bx + c = 0</Text>
-          </View>
+          <BackHeader title="📐 Quadratic Solver" subtitle="ax² + bx + c = 0" />
 
           {/* 🆕 Using InputCard component */}
           <InputCard>

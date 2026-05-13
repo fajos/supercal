@@ -16,7 +16,7 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.supercalc",
+      "bundleIdentifier": "com.fajostech.supercalc",
       "buildNumber": "1.0.0",
       "infoPlist": {
         "UIStatusBarStyle": "UIStatusBarStyleLightContent"
@@ -27,7 +27,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0a0a14"
       },
-      "package": "com.yourcompany.supercalc",
+      "package": "com.fajostech.supercalc",
       "versionCode": 1,
       "softwareKeyboardLayoutMode": "pan"
     },

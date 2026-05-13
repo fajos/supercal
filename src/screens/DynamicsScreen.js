@@ -8,6 +8,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveDynamics } from '../solvers/dynamicsSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function DynamicsScreen() {
   const [mode, setMode] = useState('newton2');
@@ -56,10 +57,7 @@ export default function DynamicsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>💪 Dynamics</Text>
-          <Text style={styles.subtitle}>Forces, Friction & Newton's Laws</Text>
-        </View>
+       <BackHeader title="💪 Dynamics" subtitle="Forces, Friction & Newton's Laws" />
 
         <View style={styles.inputCard}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.modeScroll}>

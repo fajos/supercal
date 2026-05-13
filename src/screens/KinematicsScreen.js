@@ -15,6 +15,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveKinematics } from '../solvers/kinematicsSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function KinematicsScreen() {
   const [mode, setMode] = useState('velocity');
@@ -50,10 +51,7 @@ export default function KinematicsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🏃 Kinematics</Text>
-          <Text style={styles.subtitle}>Motion in One Dimension</Text>
-        </View>
+       <BackHeader title="🏃 Kinematics" subtitle="Motion in One Dimension" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>

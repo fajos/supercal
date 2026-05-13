@@ -16,6 +16,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveStatistics } from '../solvers/statisticsSolver';
 import { useHistory } from '../utils/history';
+import { BackHeader } from '../components/BackHeader';
 
 export default function StatisticsScreen() {
   const [dataInput, setDataInput] = useState('12, 15, 18, 22, 25, 30');
@@ -87,10 +88,7 @@ export default function StatisticsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>📊 Statistics</Text>
-            <Text style={styles.subtitle}>Descriptive Statistics Analyzer</Text>
-          </View>
+          <BackHeader title="📊 Statistics" subtitle="Mean, Median, Standard Deviation" />
 
           {/* Input Card */}
           <View style={styles.inputCard}>

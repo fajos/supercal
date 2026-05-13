@@ -15,6 +15,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
 import { solveDerivative, solveIntegral, evaluateExpression } from '../solvers/calculusSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function CalculusScreen() {
   const [mode, setMode] = useState('derivative');
@@ -209,10 +210,7 @@ export default function CalculusScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>📐 Calculus</Text>
-          <Text style={styles.subtitle}>Derivatives & Definite Integrals</Text>
-        </View>
+        <BackHeader title="∫ Calculus" subtitle="Derivatives & Integrals" />
 
         <View style={styles.inputCard}>
           {/* Mode Toggle */}

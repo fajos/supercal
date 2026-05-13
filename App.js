@@ -27,6 +27,8 @@ import ProbabilityScreen from './src/screens/ProbabilityScreen';
 import ComplexScreen from './src/screens/ComplexScreen';
 import SequenceScreen from './src/screens/SequenceScreen';
 import FinanceScreen from './src/screens/FinanceScreen';
+import RadicalScreen from './src/screens/RadicalScreen';
+import ExponentialScreen from './src/screens/ExponentialScreen';
 
 // Physics Screens
 import PhysicsScreen from './src/screens/PhysicsScreen';
@@ -35,6 +37,7 @@ import DynamicsScreen from './src/screens/DynamicsScreen';
 import EnergyScreen from './src/screens/EnergyScreen';
 import WavesScreen from './src/screens/WavesScreen';
 import CircuitsScreen from './src/screens/CircuitsScreen';
+
 
 const Tab = createBottomTabNavigator();
 const SolveStack = createNativeStackNavigator();
@@ -61,6 +64,8 @@ function SolveStackScreen() {
       <SolveStack.Screen name="MatrixSolver" component={MatrixScreen} />
       <SolveStack.Screen name="SequenceSolver" component={SequenceScreen} />
       <SolveStack.Screen name="FinanceSolver" component={FinanceScreen} />
+      <SolveStack.Screen name="RadicalSolver" component={RadicalScreen} />
+      <SolveStack.Screen name="ExponentialSolver" component={ExponentialScreen} />
     </SolveStack.Navigator>
   );
 }

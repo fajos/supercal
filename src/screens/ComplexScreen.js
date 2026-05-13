@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveComplexOperation } from '../solvers/complexSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function ComplexScreen() {
   const [operation, setOperation] = useState('add');
@@ -52,10 +53,7 @@ export default function ComplexScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🔄 Complex Numbers</Text>
-          <Text style={styles.subtitle}>a + bi Operations</Text>
-        </View>
+        <BackHeader title="🔄 Complex Numbers" subtitle="a + bi Operations" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>

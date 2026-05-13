@@ -14,6 +14,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveSequence } from '../solvers/sequenceSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function SequenceScreen() {
   const [type, setType] = useState('arithmetic');
@@ -52,10 +53,7 @@ export default function SequenceScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🔢 Sequences & Series</Text>
-          <Text style={styles.subtitle}>Arithmetic & Geometric Progressions</Text>
-        </View>
+        <BackHeader title="🔢 Sequences & Series" subtitle="Arithmetic & Geometric" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>

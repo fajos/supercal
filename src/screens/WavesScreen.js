@@ -8,6 +8,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveWaves } from '../solvers/wavesSolver';
+import { BackHeader } from '../components/BackHeader';
 
 export default function WavesScreen() {
   const [mode, setMode] = useState('waveSpeed');
@@ -51,10 +52,7 @@ export default function WavesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.header}>
-          <Text style={styles.title}>🌊 Waves & Sound</Text>
-          <Text style={styles.subtitle}>Frequency, Wavelength & Speed</Text>
-        </View>
+        <BackHeader title="🌊 Waves & Sound" subtitle="Frequency, Wavelength & Speed" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>

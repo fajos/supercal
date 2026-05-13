@@ -1,26 +1,20 @@
 import React, { useState, useRef } from 'react';
 import {
-  View,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  ScrollView,
-  StyleSheet,
-  Platform,
+  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
-import { solveProbability } from '../solvers/probabilitySolver';
+import { solveRadicalWithValues } from '../solvers/radicalSolver';
 import { BackHeader } from '../components/BackHeader';
 
-export default function ProbabilityScreen() {
-  const [mode, setMode] = useState('permutation');
-  const [n, setN] = useState('10');
-  const [r, setR] = useState('3');
-  const [p, setP] = useState('0.5');
+export default function RadicalScreen() {
+  const [mode, setMode] = useState('simple');
+  const [coeffA, setCoeffA] = useState('1');
+  const [coeffB, setCoeffB] = useState('3');
+  const [coeffC, setCoeffC] = useState('3');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const scrollRef = useRef();
@@ -29,10 +23,12 @@ export default function ProbabilityScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     try {
-      const params = mode === 'binomial' 
-        ? { n: parseInt(n), k: parseInt(r), p: parseFloat(p) }
-        : { n: parseInt(n), r: parseInt(r) };
-      const solverResult = solveProbability(mode, params);
+      const solverResult = solveRadicalWithValues(
+        mode,
+        parseFloat(coeffA) || 0,
+        parseFloat(coeffB) || 0,
+        parseFloat(coeffC) || 0
+      );
       setResult(solverResult);
       setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
     } catch (err) {
@@ -44,42 +40,40 @@ export default function ProbabilityScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-       <BackHeader title="🎲 Probability" subtitle="Permutations, Combinations & More" />
+        <BackHeader title="√ Radical Equations" subtitle="Square Roots & Domain Analysis" />
 
         <View style={styles.inputCard}>
           <View style={styles.modeRow}>
-            {['permutation', 'combination', 'binomial'].map(m => (
+            {[
+              { id: 'simple', label: '√(ax+b) = c' },
+              { id: 'quadratic', label: '√(ax+b) = cx+d' },
+              { id: 'domain', label: 'Find Domain' },
+            ].map(m => (
               <TouchableOpacity
-                key={m}
-                style={[styles.modeBtn, mode === m && styles.modeBtnActive]}
-                onPress={() => { setMode(m); setResult(null); }}
+                key={m.id}
+                style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
+                onPress={() => { setMode(m.id); setResult(null); }}
               >
-                <Text style={[styles.modeText, mode === m && styles.modeTextActive]}>
-                  {m === 'permutation' ? 'P(n,r)' : m === 'combination' ? 'C(n,r)' : 'Binom'}
-                </Text>
+                <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>{m.label}</Text>
               </TouchableOpacity>
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>n (total items/trials):</Text>
-          <TextInput style={styles.input} value={n} onChangeText={setN} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-
-          <Text style={styles.inputLabel}>{mode === 'binomial' ? 'k (successes):' : 'r (items chosen):'}</Text>
-          <TextInput style={styles.input} value={r} onChangeText={setR} keyboardType="number-pad" placeholderTextColor={colors.textSecondary} />
-
-          {mode === 'binomial' && (
-            <>
-              <Text style={styles.inputLabel}>p (probability of success):</Text>
-              <TextInput style={styles.input} value={p} onChangeText={setP} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-            </>
-          )}
+          <Text style={styles.inputLabel}>Coefficient a:</Text>
+          <TextInput style={styles.input} value={coeffA} onChangeText={setCoeffA} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+          
+          <Text style={styles.inputLabel}>Constant b:</Text>
+          <TextInput style={styles.input} value={coeffB} onChangeText={setCoeffB} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+          
+          <Text style={styles.inputLabel}>Right side c:</Text>
+          <TextInput style={styles.input} value={coeffC} onChangeText={setCoeffC} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>🎲 CALCULATE</Text>
+            <Text style={styles.solveBtnText}>√ SOLVE</Text>
           </TouchableOpacity>
         </View>
 
-        {error && <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text></View>}
+        {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
         {result && (
           <View style={styles.solutionArea}>
@@ -91,16 +85,25 @@ export default function ProbabilityScreen() {
                 })}
               </StepCard>
             ))}
-            <FinalAnswer label="🎯 Result">
-              <Text style={styles.finalText}>{result.result}</Text>
+            <FinalAnswer label="√ Result">
+              <Text style={styles.finalText}>{String(result.result)}</Text>
             </FinalAnswer>
           </View>
         )}
+
+        {/* Tips */}
+        <View style={styles.tipCard}>
+          <Text style={styles.tipTitle}>⚠️ Remember:</Text>
+          <Text style={styles.tipText}>• Always check for extraneous solutions</Text>
+          <Text style={styles.tipText}>• √x is always non-negative (≥ 0)</Text>
+          <Text style={styles.tipText}>• Radicand must be ≥ 0 for real solutions</Text>
+        </View>
       </ScrollView>
     </SafeAreaView>
   );
 }
 
+// ... styles (use same pattern as other screens)
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
@@ -112,16 +115,19 @@ const styles = StyleSheet.create({
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
+  modeText: { color: colors.textSecondary, fontSize: 12, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
-  solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 16 },
+  solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 20 },
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
   errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   solutionArea: { gap: 0 },
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
-  finalText: { color: colors.white, fontSize: 24, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
+  finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
+  tipCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, marginTop: 12 },
+  tipTitle: { color: colors.accent, fontSize: 14, fontWeight: '600', marginBottom: 8 },
+  tipText: { color: colors.textSecondary, fontSize: 12, lineHeight: 20 },
 });

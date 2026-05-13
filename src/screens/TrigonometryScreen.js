@@ -16,6 +16,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveTrig } from '../solvers/trigSolver';
 import { useHistory } from '../utils/history';
+import { BackHeader } from '../components/BackHeader';
 
 const TRIG_FUNCTIONS = [
   { label: 'sin(x)', value: 'sin' },
@@ -94,10 +95,7 @@ export default function TrigonometryScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>🔺 Trigonometry</Text>
-            <Text style={styles.subtitle}>Solve Trigonometric Equations</Text>
-          </View>
+          <BackHeader title="🔺 Trigonometry" subtitle="sin, cos, tan Equations" />
 
           {/* Input Card */}
           <View style={styles.inputCard}>
