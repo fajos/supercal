@@ -37,6 +37,13 @@ import DynamicsScreen from './src/screens/DynamicsScreen';
 import EnergyScreen from './src/screens/EnergyScreen';
 import WavesScreen from './src/screens/WavesScreen';
 import CircuitsScreen from './src/screens/CircuitsScreen';
+import ProjectileScreen from './src/screens/ProjectileScreen';
+import ThermalScreen from './src/screens/ThermalScreen';
+import CircularScreen from './src/screens/CircularScreen';
+import EquilibriumScreen from './src/screens/EquilibriumScreen';
+import ElasticityScreen from './src/screens/ElasticityScreen';
+import RadioactivityScreen from './src/screens/RadioactivityScreen';
+import MagneticScreen from './src/screens/MagneticScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -84,6 +91,13 @@ function PhysicsStackScreen() {
       <PhysicsStack.Screen name="EnergySolver" component={EnergyScreen} />
       <PhysicsStack.Screen name="WavesSolver" component={WavesScreen} />
       <PhysicsStack.Screen name="CircuitsSolver" component={CircuitsScreen} />
+      <PhysicsStack.Screen name="ProjectileSolver" component={ProjectileScreen} />
+      <PhysicsStack.Screen name="ThermalSolver" component={ThermalScreen} />
+      <PhysicsStack.Screen name="CircularSolver" component={CircularScreen} />
+      <PhysicsStack.Screen name="EquilibriumSolver" component={EquilibriumScreen} />
+      <PhysicsStack.Screen name="ElasticitySolver" component={ElasticityScreen} />
+      <PhysicsStack.Screen name="RadioactivitySolver" component={RadioactivityScreen} />
+      <PhysicsStack.Screen name="MagneticSolver" component={MagneticScreen} />
     </PhysicsStack.Navigator>
   );
 }

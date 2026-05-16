@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,7 @@ import {
   Platform,
   Dimensions,
   Alert,
+  Animated,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -16,7 +17,7 @@ import * as Haptics from 'expo-haptics';
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
 // Account for tab bar (typical height ~50-55 on iOS, ~60 on Android)
-const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 50 : 60;
+const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 25 : 35;
 const GAP = 3;
 const PAD = 6;
 const COLS = 6;
@@ -25,46 +26,128 @@ const ROWS = 8;
 
 // Calculate available height after subtracting status bar, padding, and tab bar
 const AVAILABLE_HEIGHT = SCREEN_HEIGHT - STATUS_H - TAB_BAR_HEIGHT;
-const KEYBOARD_PADDING = PAD * 2 + GAP * (ROWS - 1);
-const BTN_H = Math.floor((AVAILABLE_HEIGHT * 0.58 - KEYBOARD_PADDING) / ROWS);
+const KEYBOARD_PADDING = PAD * 2 + GAP * ROWS + 25;
+const BTN_H = Math.floor((AVAILABLE_HEIGHT * 0.66 - KEYBOARD_PADDING) / ROWS);
 const KEYBOARD_H = ROWS * BTN_H + KEYBOARD_PADDING;
 const BTN_W = Math.floor((SCREEN_WIDTH - PAD * 2 - GAP * (COLS - 1)) / COLS);
 const DISPLAY_H = AVAILABLE_HEIGHT - KEYBOARD_H;
 
 export default function CalculatorScreen() {
-  const [display, setDisplay] = useState('0');
+  const [display, setDisplay] = useState('');
   const [expression, setExpression] = useState('');
   const [memory, setMemory] = useState(0);
   const [shift, setShift] = useState(false);
   const [isRadian, setIsRadian] = useState(true);
   const [history, setHistory] = useState([]);
+  const [isFinished, setIsFinished] = useState(false);
   const displayScrollRef = useRef(null);
+
+  const [isPrompt, setIsPrompt] = useState(true);
+
+  const sciRows = useMemo(() => [
+    [
+      { p: 'sin', s: 'sin⁻¹', v: 'sin(', sv: 'sin⁻¹(', t: 'function' },
+      { p: 'cos', s: 'cos⁻¹', v: 'cos(', sv: 'cos⁻¹(', t: 'function' },
+      { p: 'tan', s: 'tan⁻¹', v: 'tan(', sv: 'tan⁻¹(', t: 'function' },
+      { p: 'ln', s: '10ˣ', v: 'ln(', sv: '10^', t: 'function', st: 'operator' },
+      { p: 'log', s: 'log₂', v: 'log(', sv: 'log₂(', t: 'function' },
+      { p: '√', s: 'abs', v: '√(', sv: 'abs(', t: 'function' },
+    ],
+    [
+      { p: 'x²', s: 'nCr', v: '^(2)', sv: 'nCr', t: 'function' },
+      { p: 'xⁿ', s: 'nPr', v: '^', sv: 'nPr', t: 'operator', st: 'function' },
+      { p: 'EXP', s: 'eˣ', v: 'EXP', sv: 'e^', t: 'function', st: 'operator' },
+      { p: '1/x', s: 'x³', v: '1/(', sv: '^(3)', t: 'function' },
+      { p: '∛', s: 'e', v: '∛(', sv: 'e', t: 'function', st: 'constant' },
+      { p: 'mod', s: '', v: 'mod', sv: '', t: 'operator' },
+    ]
+  ], []);
+
+const BlinkCursor = () => {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <Animated.Text style={[styles.promptCursor, { opacity }]}>|</Animated.Text>
+  );
+};
+
 
   const evaluate = (expr) => {
     try {
+      // Helper functions for nCr and nPr
+      const fact = (n) => {
+        if (n < 0) return NaN;
+        if (n === 0) return 1;
+        let f = 1;
+        for (let i = 2; i <= n; i++) f *= i;
+        return f;
+      };
+      const nCr = (n, r) => fact(n) / (fact(r) * fact(n - r));
+      const nPr = (n, r) => fact(n) / fact(n - r);
+
+      const lastResult = history.length > 0 ? history[history.length - 1].result : '0';
       let p = expr
+        .replace(/Ans/g, `(${lastResult})`)
+        .replace(/Rand/g, () => `(${Math.random()})`)
         .replace(/−/g, '-')
         .replace(/×/g, '*')
         .replace(/÷/g, '/')
         .replace(/π/g, `(${Math.PI})`)
-        .replace(/\be\b/g, `(${Math.E})`)
-        .replace(/sin⁻¹/g, 'Math.asin')
-        .replace(/cos⁻¹/g, 'Math.acos')
-        .replace(/tan⁻¹/g, 'Math.atan')
-        .replace(/sin/g, 'Math.sin')
-        .replace(/cos/g, 'Math.cos')
-        .replace(/tan/g, 'Math.tan')
+        .replace(/\be\b/g, `(${Math.E})`);
+
+      // Handle scientific powers
+      p = p.replace(/10\^/g, '10**').replace(/e\^/g, 'Math.E**');
+
+      // Handle trig functions based on Radian/Degree mode
+      if (isRadian) {
+        p = p
+          .replace(/sin⁻¹/g, 'Math.asin')
+          .replace(/cos⁻¹/g, 'Math.acos')
+          .replace(/tan⁻¹/g, 'Math.atan')
+          .replace(/sin/g, 'Math.sin')
+          .replace(/cos/g, 'Math.cos')
+          .replace(/tan/g, 'Math.tan');
+      } else {
+        p = p
+          .replace(/sin⁻¹/g, '(x => Math.asin(x) * 180 / Math.PI)')
+          .replace(/cos⁻¹/g, '(x => Math.acos(x) * 180 / Math.PI)')
+          .replace(/tan⁻¹/g, '(x => Math.atan(x) * 180 / Math.PI)')
+          .replace(/sin/g, '(x => Math.sin(x * Math.PI / 180))')
+          .replace(/cos/g, '(x => Math.cos(x * Math.PI / 180))')
+          .replace(/tan/g, '(x => Math.tan(x * Math.PI / 180))');
+      }
+
+      p = p
         .replace(/ln/g, 'Math.log')
+        .replace(/log₂/g, 'Math.log2')
         .replace(/log/g, 'Math.log10')
         .replace(/√/g, 'Math.sqrt')
+        .replace(/∛/g, 'Math.cbrt')
         .replace(/\^/g, '**')
         .replace(/abs/g, 'Math.abs')
         .replace(/EXP/g, '*10**')
-        .replace(/(\d+)!/g, (_, n) => { 
-          let f = 1; 
-          for (let i = 2; i <= parseInt(n); i++) f *= i; 
-          return f; 
-        });
+        .replace(/mod/g, '%')
+        .replace(/°/g, isRadian ? '*Math.PI/180' : '')
+        .replace(/(\d+)nCr(\d+)/g, (_, n, r) => nCr(parseInt(n), parseInt(r)))
+        .replace(/(\d+)nPr(\d+)/g, (_, n, r) => nPr(parseInt(n), parseInt(r)))
+        .replace(/(\d+)!/g, (_, n) => fact(parseInt(n)));
       
       const r = eval(p);
       if (!isFinite(r)) return 'Error';
@@ -97,27 +180,94 @@ export default function CalculatorScreen() {
 
   const press = (action, val) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+
+    if (isPrompt) {
+    setIsPrompt(false);
+    setDisplay('');
+    setExpression('');
+  }
     
-    if (action === 'clear') { 
-      setDisplay('0'); 
-      setExpression(''); 
+    if (action === 'shift') { setShift(p => !p); return; }
+    if (action === 'raddeg') { setIsRadian(p => !p); return; }
+    if (action === 'clear') {
+      setDisplay('');
+      setExpression('');
+      setIsFinished(false);
+      setIsPrompt(true);   // reset to cursor mode
+      return;
     }
-    else if (action === 'delete') {
-      setDisplay(p => p.length <= 1 || p === 'Error' ? '0' : p.slice(0, -1));
-      setExpression(p => p.slice(0, -1));
+
+
+    if (isFinished) {
+      if (action === 'equals') return;
+      if (action === 'delete') {
+        setDisplay('0');
+        setExpression('');
+        setIsFinished(false);
+        return;
+      }
+
+      setIsFinished(false);
+      if (action === 'operator') {
+        const startVal = '0' + val;
+        setDisplay(startVal);
+        setExpression(startVal);
+      } else if (action === 'memory') {
+        if (val === 'MC') setMemory(0);
+        else if (val === 'M+' || val === 'M-') {
+          const r = parseFloat(display);
+          if (!isNaN(r)) setMemory(p => val === 'M+' ? p + r : p - r);
+          setIsFinished(true); // Keep result visible
+        } else if (val === 'MR') {
+          const memStr = String(memory);
+          setDisplay(memStr);
+          setExpression(memStr);
+        }
+        return;
+      } else if (action === 'number' || action === 'function' || action === 'constant') {
+        setDisplay(val);
+        setExpression(val);
+      }
+      scrollToBottom();
+      return;
     }
+
+if (action === 'delete') {
+  // If already in prompt mode, do nothing
+  if (isPrompt) {
+    return; // keep the blinking cursor visible
+  }
+
+  setDisplay(prev => {
+    if (!prev || prev === 'Error' || prev.length <= 1) {
+      // Switch to prompt mode once, and stay there
+      if (!isPrompt) setIsPrompt(true);
+      return '';
+    }
+    return prev.slice(0, -1);
+  });
+
+  setExpression(prev => prev.length > 0 ? prev.slice(0, -1) : '');
+  return;
+}
+
+
     else if (action === 'equals') {
       const expr = expression || display;
+      if (expr === '' || expr === 'Error') return;
       const result = evaluate(expr);
       if (result !== 'Error') {
         setHistory(prev => [...prev, { expr, result, id: Date.now() }]);
+        setDisplay('');
+        setExpression('');
+        setIsFinished(false);
+        setIsPrompt(true);
+      } else {
+        setDisplay('Error');
+        setExpression('');
+        setIsFinished(true);
       }
-      setDisplay(result);
-      setExpression('');
-      scrollToBottom();
     }
-    else if (action === 'shift') setShift(p => !p);
-    else if (action === 'raddeg') setIsRadian(p => !p);
     else if (action === 'memory') {
       if (val === 'MC') setMemory(0);
       else if (val === 'MR') { 
@@ -136,31 +286,22 @@ export default function CalculatorScreen() {
     }
     else {
       const char = val;
-      if (history.length > 0 && expression === '' && display !== '0' && display !== 'Error' && action === 'number') {
-        setDisplay(char);
-        setExpression(char);
-        scrollToBottom();
-        return;
-      }
-      setDisplay(p => {
-        if (p === '0' || p === 'Error') return char;
-        if (p.length >= 14) return p;
-        if (action === 'operator') {
-          if (expression === '' && history.length > 0 && p !== '0') {
-            setExpression(p + char);
-            return p + char;
-          }
+      if (action === 'operator') {
+        setDisplay(p => {
+          if (p === 'Error') return char;
           const last = p.slice(-1);
           if ('+−×÷^'.includes(last)) return p.slice(0, -1) + char;
-        }
-        return p + char;
-      });
-      setExpression(p => {
-        if (p === '' && history.length > 0 && display !== '0' && display !== 'Error' && action === 'operator') {
-          return display + char;
-        }
-        return p + char;
-      });
+          return p + char;
+        });
+        setExpression(p => {
+          const last = p.slice(-1);
+          if ('+−×÷^'.includes(last)) return p.slice(0, -1) + char;
+          return p + char;
+        });
+      } else {
+        setDisplay(p => (p === '0' || p === 'Error') ? char : (p.length < 40 ? p + char : p));
+        setExpression(p => p + char);
+      }
     }
     scrollToBottom();
   };
@@ -170,12 +311,11 @@ export default function CalculatorScreen() {
     if (type === 'equals') {
       return {
         shadowColor: '#00ffaa',
-        shadowOffset: { width: 0, height: 4 },
+        shadowOffset: { width: 0, height: 0 },
         shadowOpacity: 0.4,
-        shadowRadius: 8,
-        elevation: 8,
-        borderBottomWidth: 4,
-        borderBottomColor: '#003322',
+        shadowRadius: 1,
+        elevation: 1,
+        borderBottomWidth: 0,
       };
     }
     if (type === 'clear') {
@@ -218,7 +358,7 @@ export default function CalculatorScreen() {
     };
   };
 
-  const B = ({ label, action, value, type, w }) => {
+  const B = ({ label, secondaryLabel, action, value, type, w }) => {
     const isShifted = type === 'shift' && shift;
     const bg = type === 'number' ? '#252540' :
                type === 'operator' ? '#2a2a50' :
@@ -239,9 +379,9 @@ export default function CalculatorScreen() {
                type === 'memory' ? '#aaaacc' :
                type === 'constant' ? '#77ccdd' : '#e0e0f0';
     
-    const fs = type === 'number' ? Math.max(14, BTN_W * 0.22) : 
-               type === 'operator' || type === 'equals' ? Math.max(16, BTN_W * 0.25) : 
-               Math.max(9, BTN_W * 0.15);
+   const fs = type === 'number' ? Math.min(BTN_H * 0.72, Math.max(36, BTN_W * 0.58)) :
+                  type === 'operator' || type === 'equals' ? Math.min(BTN_H * 0.78, Math.max(38, BTN_W * 0.62)) :
+                  Math.min(BTN_H * 0.55, Math.max(22, BTN_W * 0.45));
 
     const shadowStyle = getButtonShadow(type, isShifted);
 
@@ -256,26 +396,34 @@ export default function CalculatorScreen() {
         onPress={() => press(action, value)}
         activeOpacity={0.7}
       >
-        <Text style={[styles.bt, { 
-          color: fg, 
-          fontSize: fs,
-          textShadowColor: 'rgba(0,0,0,0.5)',
-          textShadowOffset: { width: 0, height: 1 },
-          textShadowRadius: 2,
-        }]}>{label}</Text>
+        {secondaryLabel && (
+          <Text
+            style={styles.secondaryLabel}
+            numberOfLines={1}
+            adjustsFontSizeToFit
+            minimumFontScale={0.7}
+          >
+            {secondaryLabel}
+          </Text>
+        )}
+        <Text
+          style={[styles.bt, {
+            color: fg,
+            fontSize: fs,
+            textShadowColor: 'rgba(0,0,0,0.8)',
+            textShadowOffset: { width: 0, height: 2 },
+            textShadowRadius: 4,
+            letterSpacing: -0.6,
+          }]}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >{label}</Text>
       </TouchableOpacity>
     );
   };
 
   const Row = ({ children }) => <View style={styles.row}>{children}</View>;
-
-  const sci = shift ? [
-    ['sin⁻¹','cos⁻¹','tan⁻¹','10ˣ','n!','abs'],
-    ['nCr','nPr','eˣ','mod','M+','M-'],
-  ] : [
-    ['sin','cos','tan','ln','log','√'],
-    ['x²','xⁿ','EXP','π','e','mod'],
-  ];
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -308,21 +456,25 @@ export default function CalculatorScreen() {
                 style={styles.historyItem}
                 onPress={() => {
                   setDisplay(h.result);
-                  setExpression('');
+                  setExpression(h.expr);
+                  setIsFinished(true);
                 }}
                 activeOpacity={0.7}
               >
-                <Text style={styles.historyExpr} numberOfLines={1}>{h.expr}</Text>
-                <Text style={styles.historyResult}> = {h.result}</Text>
+                <Text style={styles.historyExpr} numberOfLines={1} adjustsFontSizeToFit>{h.expr}</Text>
+                <View style={styles.historyResultContainer}>
+                  <Text style={styles.historyEqual}>=</Text>
+                  <Text style={styles.historyResult} numberOfLines={1} adjustsFontSizeToFit>{h.result}</Text>
+                </View>
               </TouchableOpacity>
               <View style={styles.divider} />
             </View>
           ))}
 
           <View style={styles.currentSection}>
-            <Text style={styles.currentExpr} numberOfLines={2}>{expression || ' '}</Text>
-            <Text style={styles.currentDisplay} numberOfLines={1} adjustsFontSizeToFit>
+            <Text style={styles.currentExpr} numberOfLines={2} adjustsFontSizeToFit>
               {display}
+              {isPrompt && <BlinkCursor />}
             </Text>
           </View>
         </ScrollView>
@@ -330,23 +482,20 @@ export default function CalculatorScreen() {
 
       {/* Keyboard */}
       <View style={styles.kb}>
-        <Row>
-          {sci[0].map((s, i) => (
-            <B key={`s1-${i}`} label={s} 
-              action={s === 'π' || s === 'e' ? 'constant' : s === 'mod' || s === 'xⁿ' ? 'operator' : s === 'M+' || s === 'M-' ? 'memory' : 'function'}
-              value={s === 'x²' ? '^(2)' : s === 'xⁿ' ? '^' : s + (['sin','cos','tan','ln','log','√','sin⁻¹','cos⁻¹','tan⁻¹','abs'].includes(s) ? '(' : '')}
-              type={s === 'π' || s === 'e' ? 'constant' : s === 'M+' || s === 'M-' ? 'memory' : s === 'mod' || s === 'xⁿ' ? 'operator' : 'function'} />
-          ))}
-        </Row>
-
-        <Row>
-          {sci[1].map((s, i) => (
-            <B key={`s2-${i}`} label={s}
-              action={s === 'π' || s === 'e' ? 'constant' : s === 'mod' || s === 'xⁿ' ? 'operator' : 'function'}
-              value={s === 'x²' ? '^(2)' : s === 'xⁿ' ? '^' : s}
-              type={s === 'π' || s === 'e' ? 'constant' : s === 'mod' || s === 'xⁿ' ? 'operator' : 'function'} />
-          ))}
-        </Row>
+        {sciRows.map((row, rowIndex) => (
+          <Row key={`sci-row-${rowIndex}`}>
+            {row.map((btn, i) => (
+              <B
+                key={`sci-${rowIndex}-${i}`}
+                label={shift ? btn.s : btn.p}
+                secondaryLabel={!shift ? btn.s : null}
+                action={shift ? (btn.st || btn.t) : btn.t}
+                value={shift ? btn.sv : btn.v}
+                type={shift ? (btn.st || btn.t) : btn.t}
+              />
+            ))}
+          </Row>
+        ))}
 
         <Row>
           <B label="Shift" action="shift" value="" type="shift" />
@@ -380,21 +529,21 @@ export default function CalculatorScreen() {
           <B label="6" action="number" value="6" type="number" />
           <B label="+" action="operator" value="+" type="operator" />
           <B label="−" action="operator" value="−" type="operator" />
-          <B label="nCr" action="function" value="nCr" type="function" />
+          <B label="Ans" action="function" value="Ans" type="function" />
         </Row>
 
         <Row>
           <B label="1" action="number" value="1" type="number" />
           <B label="2" action="number" value="2" type="number" />
           <B label="3" action="number" value="3" type="number" />
-          <B label="nPr" action="function" value="nPr" type="function" />
+          <B label="Rand" action="function" value="Rand" type="function" />
           <B label="." action="number" value="." type="number" w={2} />
         </Row>
 
         <Row>
           <B label="0" action="number" value="0" type="number" w={2} />
-          <B label="EXP" action="function" value="EXP" type="function" />
-          <B label="e⁰" action="constant" value="e" type="constant" />
+          <B label="π" action="constant" value="π" type="constant" />
+          <B label="°" action="constant" value="°" type="constant" />
           <B label="=" action="equals" value="" type="equals" w={2} />
         </Row>
       </View>
@@ -440,7 +589,7 @@ const styles = StyleSheet.create({
   disp: {
     backgroundColor: '#060618',
     borderBottomWidth: 1,
-    borderBottomColor: '#1a1a30',
+    borderBottomColor: '#00ffcc',
   },
   displayScroll: {
     flex: 1,
@@ -448,21 +597,44 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   historyItem: {
-    paddingVertical: 6,
+    paddingVertical: 12,
+    flexDirection: 'column',
+    alignItems: 'stretch',
   },
   historyExpr: {
-    color: '#666688',
-    fontSize: 13,
+    color: '#00ffcc',
+    fontSize: 24,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    textAlign: 'right',
+    textAlign: 'left',
+    fontWeight: '700',
+    textShadowColor: 'rgba(0, 255, 204, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
+    opacity: 0.8,
+  },
+  historyResultContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 4,
+  },
+  historyEqual: {
+    color: '#00ffcc',
+    fontSize: 20,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontWeight: '700',
+    marginRight: 8,
+    opacity: 0.5,
   },
   historyResult: {
-    color: '#f0f0ff',
-    fontSize: 18,
+    color: '#00ffcc',
+    fontSize: 24,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    fontWeight: '500',
+    fontWeight: '700',
     textAlign: 'right',
-    marginTop: 2,
+    textShadowColor: 'rgba(0, 255, 204, 0.3)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 6,
   },
   divider: {
     height: 1,
@@ -472,25 +644,53 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   currentSection: {
-    paddingTop: 4,
+    paddingBottom: 16,
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    minHeight: 120,
+    justifyContent: 'flex-start',
+  },
+  resultContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginTop: 16,
+  },
+  resultEqual: {
+    color: '#00ffcc',
+    fontSize: 32,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontWeight: '700',
+    marginRight: 12,
+    opacity: 0.7,
+    textShadowColor: 'rgba(0, 255, 204, 0.5)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
   },
   currentExpr: {
-    color: '#555577',
-    fontSize: 13,
+    color: '#00ffcc',
+    fontSize: 42,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    textAlign: 'right',
-    marginBottom: 4,
+    textAlign: 'left',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 255, 204, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 15,
   },
   currentDisplay: {
-    color: '#ffffff',
-    fontSize: 30,
+    color: '#00ffcc',
+    fontSize: 38,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'right',
-    fontWeight: '300',
-    paddingBottom: 4,
+    fontWeight: '700',
+    textShadowColor: 'rgba(0, 255, 204, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+    flexShrink: 1,
   },
   kb: {
     padding: PAD,
+    paddingBottom: 25,
     backgroundColor: '#080812',
   },
   row: {
@@ -512,7 +712,29 @@ const styles = StyleSheet.create({
   },
   bt: {
     fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : 'sans-serif',
-    fontWeight: '600',
+    fontWeight: '900',
     textAlign: 'center',
   },
+  secondaryLabel: {
+    position: 'absolute',
+    top: 2,
+    right: 4,
+    fontSize: 11,
+    color: '#ffaa00',
+    fontWeight: '900',
+    opacity: 0.9,
+    textShadowColor: 'rgba(0,0,0,0.5)',
+    textShadowOffset: { width: 0, height: 1 },
+    textShadowRadius: 1,
+  },
+promptCursor: {
+  color: '#00ffcc',
+  fontSize: 34,
+  fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+  fontWeight: '900',
+  textShadowColor: 'rgba(0, 255, 204, 0.6)',
+  textShadowOffset: { width: 0, height: 0 },
+  textShadowRadius: 12,
+},
+
 });
