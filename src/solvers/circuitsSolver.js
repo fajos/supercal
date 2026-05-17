@@ -6,138 +6,182 @@ export function solveCircuits(mode, params) {
   switch (mode) {
     case 'ohmsLaw': {
       const calcCurrent = voltage / resistance;
-      const calcVoltage = current * resistance;
-      const calcResistance = voltage / current;
-      
       steps.push({
-        step: "OHM'S LAW",
-        badge: 'primary',
+        step: "GIVEN VALUES",
+        badge: 'input',
         content: [
-          { type: 'text', text: "⚡ Ohm's Law: V = IR" },
-          { type: 'formula', text: 'V = I × R' },
-          { type: 'text', text: '' },
-          { type: 'text', text: '🔍 The Ohm\'s Law Triangle:' },
-          { type: 'text', text: '    V' },
-          { type: 'text', text: '  ─────' },
-          { type: 'text', text: '  I | R' },
-          { type: 'text', text: '' },
-          { type: 'text', text: '📊 With your values:' },
-          { type: 'text', text: `V = ${voltage} V, I = ${current} A, R = ${resistance} Ω` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Verify: V = IR' },
-          { type: 'text', text: `${voltage} = ${current} × ${resistance}` },
-          { type: 'text', text: `${voltage} = ${current * resistance}` },
-          { type: 'text', text: Math.abs(voltage - current * resistance) < 0.01 ? '✅ Consistent!' : '⚠️ Values not consistent with Ohm\'s Law' },
-          { type: 'text', text: '' },
-          { type: 'highlight', text: `I = ${calcCurrent.toFixed(2)} A (from V/R)` },
-          { type: 'highlight', text: `V = ${calcVoltage.toFixed(2)} V (from IR)` },
-          { type: 'highlight', text: `R = ${calcResistance.toFixed(2)} Ω (from V/I)` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Water Analogy: Voltage = pressure, Current = flow rate, Resistance = pipe width' },
+          { type: 'text', text: `• Voltage (V): ${voltage} V` },
+          { type: 'text', text: `• Resistance (R): ${resistance} Ω` },
         ],
       });
-      result = `${calcCurrent.toFixed(2)} A, V = ${calcVoltage.toFixed(1)} V, R = ${calcResistance.toFixed(1)} Ω`;
+
+      steps.push({
+        step: "EQUATIONS",
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'Ohm\'s Law defines the relationship between voltage, current, and resistance:' },
+          { type: 'formula', text: 'V = I · R' },
+          { type: 'text', text: 'To find Current (I):' },
+          { type: 'formula', text: 'I = V / R' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `I = ${voltage} V / ${resistance} Ω` },
+          { type: 'highlight', text: `I = ${calcCurrent.toFixed(2)} A` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `A current of ${calcCurrent.toFixed(2)} Amperes will flow through the circuit.` },
+          { type: 'text', text: '💡 Analogy: Think of voltage as water pressure, current as the flow rate, and resistance as the size of the pipe. Higher pressure (voltage) or a wider pipe (lower resistance) leads to more flow (current).' },
+        ],
+      });
+      result = `${calcCurrent.toFixed(2)} A`;
       break;
     }
 
     case 'series': {
       const R_total_series = resistance + resistance2;
       const I_series = voltage / R_total_series;
-      const V1 = I_series * resistance;
-      const V2 = I_series * resistance2;
-      
+
       steps.push({
-        step: 'SERIES CIRCUIT',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '⚡ Series Circuit Analysis' },
-          { type: 'text', text: 'In series: Same current flows through all components' },
-          { type: 'text', text: '' },
-          { type: 'text', text: '1️⃣ Total Resistance:' },
-          { type: 'formula', text: 'R_total = R₁ + R₂' },
-          { type: 'text', text: `R_total = ${resistance} + ${resistance2} = ${R_total_series.toFixed(1)} Ω` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '2️⃣ Circuit Current:' },
-          { type: 'formula', text: 'I = V / R_total' },
-          { type: 'text', text: `I = ${voltage} / ${R_total_series.toFixed(1)} = ${I_series.toFixed(2)} A` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '3️⃣ Voltage Drops (Voltage Divider):' },
-          { type: 'text', text: `V₁ = I × R₁ = ${I_series.toFixed(2)} × ${resistance} = ${V1.toFixed(1)} V` },
-          { type: 'text', text: `V₂ = I × R₂ = ${I_series.toFixed(2)} × ${resistance2} = ${V2.toFixed(1)} V` },
-          { type: 'text', text: `Check: V₁ + V₂ = ${(V1 + V2).toFixed(1)} V ≈ ${voltage} V ✓` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Series circuits divide voltage. Each resistor gets a portion of the total voltage.' },
+          { type: 'text', text: `• Voltage Source: ${voltage} V` },
+          { type: 'text', text: `• R₁: ${resistance} Ω` },
+          { type: 'text', text: `• R₂: ${resistance2} Ω` },
         ],
       });
-      result = `R_total = ${R_total_series.toFixed(1)} Ω, I = ${I_series.toFixed(2)} A, V₁ = ${V1.toFixed(1)} V, V₂ = ${V2.toFixed(1)} V`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'In a series circuit, components are connected end-to-end:' },
+          { type: 'formula', text: 'R_total = R₁ + R₂ + ...' },
+          { type: 'formula', text: 'I_total = V / R_total' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `1. Total Resistance: ${resistance} + ${resistance2} = ${R_total_series.toFixed(2)} Ω` },
+          { type: 'text', text: `2. Total Current: ${voltage} / ${R_total_series.toFixed(2)}` },
+          { type: 'highlight', text: `I = ${I_series.toFixed(3)} A` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: 'In series, the current is the same through every component.' },
+          { type: 'text', text: `Voltage Drops: R₁ consumes ${(I_series * resistance).toFixed(1)}V and R₂ consumes ${(I_series * resistance2).toFixed(1)}V.` },
+          { type: 'text', text: '💡 If one component fails (opens) in a series circuit, the entire circuit stops working.' },
+        ],
+      });
+      result = `${I_series.toFixed(3)} A`;
       break;
     }
 
     case 'parallel': {
-      const R_total_parallel = (resistance * resistance2) / (resistance + resistance2);
+      const R_total_parallel = 1 / (1 / resistance + 1 / resistance2);
       const I_total = voltage / R_total_parallel;
-      const I1 = voltage / resistance;
-      const I2 = voltage / resistance2;
-      
+
       steps.push({
-        step: 'PARALLEL CIRCUIT',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '⚡ Parallel Circuit Analysis' },
-          { type: 'text', text: 'In parallel: Same voltage across all components' },
-          { type: 'text', text: '' },
-          { type: 'text', text: '1️⃣ Total Resistance:' },
-          { type: 'formula', text: '1/R_total = 1/R₁ + 1/R₂' },
-          { type: 'text', text: `1/R = 1/${resistance} + 1/${resistance2}` },
-          { type: 'text', text: `1/R = ${(1/resistance).toFixed(3)} + ${(1/resistance2).toFixed(3)} = ${(1/resistance + 1/resistance2).toFixed(3)}` },
-          { type: 'highlight', text: `R_total = ${R_total_parallel.toFixed(2)} Ω` },
-          { type: 'text', text: '(Always LESS than the smallest individual resistance!)' },
-          { type: 'text', text: '' },
-          { type: 'text', text: '2️⃣ Total Current:' },
-          { type: 'text', text: `I_total = V / R_total = ${voltage} / ${R_total_parallel.toFixed(2)} = ${I_total.toFixed(2)} A` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '3️⃣ Branch Currents (Current Divider):' },
-          { type: 'text', text: `I₁ = V / R₁ = ${voltage} / ${resistance} = ${I1.toFixed(2)} A` },
-          { type: 'text', text: `I₂ = V / R₂ = ${voltage} / ${resistance2} = ${I2.toFixed(2)} A` },
-          { type: 'text', text: `Check: I₁ + I₂ = ${(I1 + I2).toFixed(2)} A ≈ ${I_total.toFixed(2)} A ✓` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Parallel circuits divide current. More paths = lower total resistance = higher current.' },
+          { type: 'text', text: `• Voltage Source: ${voltage} V` },
+          { type: 'text', text: `• R₁: ${resistance} Ω` },
+          { type: 'text', text: `• R₂: ${resistance2} Ω` },
         ],
       });
-      result = `R_total = ${R_total_parallel.toFixed(2)} Ω, I = ${I_total.toFixed(2)} A, I₁ = ${I1.toFixed(2)} A, I₂ = ${I2.toFixed(2)} A`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'In a parallel circuit, components are connected across the same two nodes:' },
+          { type: 'formula', text: '1 / R_total = 1 / R₁ + 1 / R₂ + ...' },
+          { type: 'formula', text: 'I_total = I₁ + I₂ + ...' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `1. Total Resistance: 1 / (1/${resistance} + 1/${resistance2})` },
+          { type: 'highlight', text: `R_total = ${R_total_parallel.toFixed(2)} Ω` },
+          { type: 'text', text: `2. Total Current: ${voltage} / ${R_total_parallel.toFixed(2)}` },
+          { type: 'highlight', text: `I_total = ${I_total.toFixed(2)} A` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `Notice that the total resistance (${R_total_parallel.toFixed(2)} Ω) is lower than the smallest individual resistor.` },
+          { type: 'text', text: `Branch currents: I₁ = ${(voltage/resistance).toFixed(2)}A, I₂ = ${(voltage/resistance2).toFixed(2)}A.` },
+          { type: 'text', text: '💡 Parallel circuits are used in houses so that turning off one light doesn\'t turn off everything else.' },
+        ],
+      });
+      result = `${I_total.toFixed(2)} A`;
       break;
     }
 
     case 'power': {
-      const calcPowerVI = voltage * current;
-      const calcPowerI2R = current * current * resistance;
-      const calcPowerV2R = (voltage * voltage) / resistance;
-      
+      const calcPower = voltage * current;
       steps.push({
-        step: 'ELECTRICAL POWER',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '⚡ Electrical Power Formulas' },
-          { type: 'formula', text: 'P = VI = I²R = V²/R' },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Method 1: P = V × I' },
-          { type: 'text', text: `P = ${voltage} × ${current} = ${calcPowerVI.toFixed(1)} W` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Method 2: P = I² × R' },
-          { type: 'text', text: `P = ${current}² × ${resistance} = ${current * current} × ${resistance} = ${calcPowerI2R.toFixed(1)} W` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Method 3: P = V² / R' },
-          { type: 'text', text: `P = ${voltage}² / ${resistance} = ${voltage * voltage} / ${resistance} = ${calcPowerV2R.toFixed(1)} W` },
-          { type: 'text', text: '' },
-          { type: 'highlight', text: `Power = ${calcPowerVI.toFixed(1)} Watts (all methods agree ✓)` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '🔌 Energy Consumption:' },
-          { type: 'text', text: `In 1 hour: ${(calcPowerVI / 1000).toFixed(2)} kWh` },
-          { type: 'text', text: `In 24 hours: ${((calcPowerVI * 24) / 1000).toFixed(2)} kWh` },
-          { type: 'text', text: `Cost at $0.12/kWh: $${((calcPowerVI * 24) / 1000 * 0.12).toFixed(2)}/day` },
+          { type: 'text', text: `• Voltage (V): ${voltage} V` },
+          { type: 'text', text: `• Current (I): ${current} A` },
         ],
       });
-      result = `${calcPowerVI.toFixed(1)} W (${(calcPowerVI/1000).toFixed(2)} kW)`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'Electrical power (P) is the rate at which energy is transferred:' },
+          { type: 'formula', text: 'P = V · I' },
+          { type: 'text', text: 'Alternative formulas (using Ohm\'s Law):' },
+          { type: 'formula', text: 'P = I² · R  or  P = V² / R' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `P = ${voltage} V × ${current} A` },
+          { type: 'highlight', text: `P = ${calcPower.toFixed(2)} W` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `The circuit is consuming ${calcPower.toFixed(2)} Watts of power.` },
+          { type: 'text', text: `If left on for one hour, it would use ${(calcPower / 1000).toFixed(4)} kWh of energy.` },
+        ],
+      });
+      result = `${calcPower.toFixed(2)} W`;
       break;
     }
   }

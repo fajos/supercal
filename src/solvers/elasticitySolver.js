@@ -5,23 +5,44 @@ export function solveElasticity(mode, params) {
 
   switch (mode) {
     case 'hookesLaw': {
-      // F = ke => k = F/e
       const k = force / extension;
       steps.push({
-        step: "HOOKE'S LAW",
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '📏 Calculating Force Constant (k):' },
-          { type: 'formula', text: 'F = ke' },
-          { type: 'text', text: `Applied Force (F) = ${force} N` },
-          { type: 'text', text: `Extension (e) = ${extension} m` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Rearranging for k:' },
+          { type: 'text', text: 'We are examining the relationship between force and extension for an elastic material:' },
+          { type: 'text', text: `• Applied Force (F): ${force} N` },
+          { type: 'text', text: `• Extension (e): ${extension} m` },
+        ],
+      });
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: "Hooke's Law states that extension is directly proportional to the applied load:" },
+          { type: 'formula', text: 'F = k · e' },
+          { type: 'text', text: 'To find the Spring Constant (k):' },
           { type: 'formula', text: 'k = F / e' },
-          { type: 'text', text: `k = ${force} / ${extension}` },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `k = ${force} N / ${extension} m` },
           { type: 'highlight', text: `Spring Constant (k) = ${k.toFixed(2)} N/m` },
-          { type: 'text', text: '' },
-          { type: 'text', text: "💡 Hooke's Law states that the extension of an elastic material is directly proportional to the applied force, provided the elastic limit is not exceeded." },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `The material has a stiffness of ${k.toFixed(2)} Newtons per meter.` },
+          { type: 'text', text: '💡 Stiffer materials (like steel springs) have higher k-values, meaning they require more force to stretch.' },
+          { type: 'text', text: "💡 Limit of Proportionality: This linear relationship only holds until the material's elastic limit is reached, after which it may permanently deform." },
         ],
       });
       result = `${k.toFixed(2)} N/m`;
@@ -29,22 +50,50 @@ export function solveElasticity(mode, params) {
     }
 
     case 'youngsModulus': {
-      // Y = Stress / Strain = (F/A) / (e/L) = (F * L) / (A * e)
       const stress = force / area;
       const strain = extension / originalLength;
       const Y = stress / strain;
 
       steps.push({
-        step: "YOUNG'S MODULUS",
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '🏗️ Calculating Elastic Modulus:' },
-          { type: 'formula', text: 'E = Stress / Strain' },
-          { type: 'text', text: `Stress = F/A = ${force} / ${area} = ${stress.toFixed(2)} Pa` },
-          { type: 'text', text: `Strain = e/L = ${extension} / ${originalLength} = ${strain.toFixed(5)}` },
-          { type: 'text', text: '' },
-          { type: 'formula', text: 'E = (F × L) / (A × e)' },
+          { type: 'text', text: 'We are calculating the intrinsic stiffness of the material itself:' },
+          { type: 'text', text: `• Force (F): ${force} N` },
+          { type: 'text', text: `• Cross-sectional Area (A): ${area} m²` },
+          { type: 'text', text: `• Original Length (L): ${originalLength} m` },
+          { type: 'text', text: `• Extension (e): ${extension} m` },
+        ],
+      });
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: "Young's Modulus (E) is the ratio of Tensile Stress to Tensile Strain:" },
+          { type: 'formula', text: 'Stress (σ) = F / A' },
+          { type: 'formula', text: 'Strain (ε) = e / L' },
+          { type: 'formula', text: 'E = σ / ε = (F · L) / (A · e)' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `1. Stress = ${force} / ${area} = ${stress.toExponential(2)} Pa` },
+          { type: 'text', text: `2. Strain = ${extension} / ${originalLength} = ${strain.toFixed(5)} (unitless)` },
           { type: 'highlight', text: `Young's Modulus = ${Y.toExponential(2)} Pa` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `The Young's Modulus is ${Y.toExponential(2)} Pascals.` },
+          { type: 'text', text: "💡 Unlike the spring constant (k), Young's Modulus is a property of the material, not the specific object. A steel wire and a steel beam have the same E, but different k." },
+          { type: 'text', text: '💡 High E values (e.g., Diamond, Steel) indicate "stiff" materials, while low E values (e.g., Rubber) indicate "flexible" materials.' },
         ],
       });
       result = `${Y.toExponential(2)} Pa`;
@@ -52,18 +101,42 @@ export function solveElasticity(mode, params) {
     }
 
     case 'workDone': {
-      // W = 1/2 * F * e = 1/2 * k * e^2
       const W = 0.5 * force * extension;
       steps.push({
-        step: 'ELASTIC POTENTIAL ENERGY',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '⚡ Calculating work done in stretching:' },
-          { type: 'formula', text: 'W = ½Fe' },
-          { type: 'text', text: `W = 0.5 × ${force} × ${extension}` },
+          { type: 'text', text: 'We are calculating the energy stored in the stretched material:' },
+          { type: 'text', text: `• Final Force (F): ${force} N` },
+          { type: 'text', text: `• Total Extension (e): ${extension} m` },
+        ],
+      });
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'The work done (W) is equivalent to the Elastic Potential Energy (EPE):' },
+          { type: 'formula', text: 'W = ½ · F · e' },
+          { type: 'text', text: 'This represents the area under a Force-Extension graph.' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `W = 0.5 × ${force} N × ${extension} m` },
           { type: 'highlight', text: `Work Done = ${W.toFixed(4)} Joules` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 This work is stored as Elastic Potential Energy in the material.' },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `A total of ${W.toFixed(4)} Joules of energy is stored in the material.` },
+          { type: 'text', text: '💡 Energy Recovery: If the material is perfectly elastic, all this energy is released when the force is removed. If it is plastic, some energy is lost as heat during deformation.' },
         ],
       });
       result = `${W.toFixed(4)} J`;

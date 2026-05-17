@@ -5,34 +5,49 @@ export function solveDynamics(mode, params) {
 
   switch (mode) {
     case 'newton2': {
-      // F = ma
       const acceleration = force / mass;
       const weight = mass * gravity;
       
       steps.push({
-        step: "NEWTON'S SECOND LAW",
-        badge: 'primary',
+        step: "GIVEN VALUES",
+        badge: 'input',
         content: [
-          { type: 'text', text: '💪 Newton\'s Second Law: F = ma' },
-          { type: 'formula', text: 'a = F / m' },
-          { type: 'text', text: `Applied Force: ${force} N` },
-          { type: 'text', text: `Mass: ${mass} kg` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 1: Identify the net force' },
-          { type: 'text', text: `F_net = ${force} N` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 2: Calculate acceleration' },
-          { type: 'text', text: `a = ${force} / ${mass}` },
-          { type: 'highlight', text: `a = ${acceleration.toFixed(2)} m/s²` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Additional Info:' },
-          { type: 'text', text: `Weight of object: W = mg = ${mass} × ${gravity} = ${weight.toFixed(1)} N` },
-          { type: 'text', text: '' },
-          { type: 'text', text: `💡 This means the ${mass} kg object accelerates at ${acceleration.toFixed(2)} m/s every second.` },
-          { type: 'text', text: `After 3 seconds, velocity would be ${(acceleration * 3).toFixed(1)} m/s (starting from rest).` },
+          { type: 'text', text: `• Mass (m): ${mass} kg` },
+          { type: 'text', text: `• Applied Force (F): ${force} N` },
+          { type: 'text', text: `• Local Gravity (g): ${gravity} m/s²` },
         ],
       });
-      result = `a = ${acceleration.toFixed(2)} m/s²`;
+
+      steps.push({
+        step: "EQUATIONS",
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'Newton\'s Second Law states that the acceleration of an object is directly proportional to the net force acting on it and inversely proportional to its mass:' },
+          { type: 'formula', text: 'ΣF = m · a' },
+          { type: 'text', text: 'Solving for acceleration (a):' },
+          { type: 'formula', text: 'a = F / m' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `a = ${force} N / ${mass} kg` },
+          { type: 'highlight', text: `a = ${acceleration.toFixed(2)} m/s²` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `The object will accelerate at ${acceleration.toFixed(2)} m/s² in the direction of the force.` },
+          { type: 'text', text: `Weight Check: On this planet, the object's weight is ${weight.toFixed(1)} N (W = mg).` },
+          { type: 'text', text: '💡 Did you know? If you doubled the force, the acceleration would double. If you doubled the mass, the acceleration would be cut in half.' },
+        ],
+      });
+      result = `${acceleration.toFixed(2)} m/s²`;
       break;
     }
 
@@ -40,46 +55,54 @@ export function solveDynamics(mode, params) {
       const normalForce = mass * gravity;
       const frictionForce = friction * normalForce;
       const netForce = force - frictionForce;
-      const acceleration = netForce / mass;
+      const acceleration = Math.max(0, netForce / mass);
       
       steps.push({
-        step: 'FRICTION ANALYSIS',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '💪 Friction Force Analysis' },
-          { type: 'formula', text: 'f = μN (friction = coefficient × normal force)' },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 1: Calculate Normal Force' },
-          { type: 'text', text: `N = mg = ${mass} × ${gravity}` },
-          { type: 'highlight', text: `N = ${normalForce.toFixed(1)} N` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 2: Calculate Friction Force' },
-          { type: 'text', text: `f = μN = ${friction} × ${normalForce.toFixed(1)}` },
-          { type: 'highlight', text: `f = ${frictionForce.toFixed(1)} N` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 3: Find Net Force' },
-          { type: 'text', text: `F_net = Applied Force - Friction` },
-          { type: 'text', text: `F_net = ${force} - ${frictionForce.toFixed(1)}` },
-          { type: 'highlight', text: `F_net = ${netForce.toFixed(1)} N` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 4: Calculate Acceleration' },
-          { type: 'text', text: `a = F_net / m = ${netForce.toFixed(1)} / ${mass}` },
-          { type: 'highlight', text: `a = ${acceleration.toFixed(2)} m/s²` },
-          { type: 'text', text: '' },
-          { type: 'text', text: netForce > 0 
-            ? '✅ Net force is positive - object accelerates forward.'
-            : netForce < 0 
-              ? '⚠️ Friction exceeds applied force - object decelerates or won\'t move.'
-              : '⚖️ Forces are balanced - object maintains constant velocity or stays at rest.'
-          },
-          { type: 'text', text: '' },
-          { type: 'text', text: '📊 Types of Friction:' },
-          { type: 'text', text: '• Static friction (μs): Prevents motion from starting' },
-          { type: 'text', text: '• Kinetic friction (μk): Opposes motion while sliding' },
-          { type: 'text', text: '• μs > μk (harder to start moving than keep moving)' },
+          { type: 'text', text: `• Mass (m): ${mass} kg` },
+          { type: 'text', text: `• Applied Force (F): ${force} N` },
+          { type: 'text', text: `• Coefficient of Friction (μ): ${friction}` },
         ],
       });
-      result = `a = ${acceleration.toFixed(2)} m/s² (f = ${frictionForce.toFixed(1)} N)`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: '1. Normal Force (N) on a flat surface:' },
+          { type: 'formula', text: 'N = m · g' },
+          { type: 'text', text: '2. Friction Force (f):' },
+          { type: 'formula', text: 'f = μ · N' },
+          { type: 'text', text: '3. Net Force (F_net):' },
+          { type: 'formula', text: 'F_net = F_applied - f' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `1. Normal Force: ${mass} × ${gravity} = ${normalForce.toFixed(1)} N` },
+          { type: 'text', text: `2. Friction Force: ${friction} × ${normalForce.toFixed(1)} = ${frictionForce.toFixed(1)} N` },
+          { type: 'text', text: `3. Net Force: ${force} - ${frictionForce.toFixed(1)} = ${netForce.toFixed(1)} N` },
+          { type: 'highlight', text: `a = ${acceleration.toFixed(2)} m/s²` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: netForce > 0 
+            ? 'The applied force is greater than friction, so the object accelerates.'
+            : 'The applied force is not enough to overcome friction. The object remains at rest.'
+          },
+          { type: 'text', text: '💡 Static vs Kinetic: Usually, it takes more force to start an object moving (static) than to keep it moving (kinetic).' },
+        ],
+      });
+      result = `${acceleration.toFixed(2)} m/s²`;
       break;
     }
 
@@ -91,114 +114,143 @@ export function solveDynamics(mode, params) {
       const parallelForce = mass * gravity * sinAngle;
       const frictionForce = friction * normalForce;
       const netForce = parallelForce - frictionForce;
-      const acceleration = netForce / mass;
+      const acceleration = Math.max(0, netForce / mass);
       
       steps.push({
-        step: 'INCLINED PLANE',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '⛰️ Inclined Plane Analysis' },
-          { type: 'text', text: `Angle: ${angle}°` },
-          { type: 'text', text: `Mass: ${mass} kg` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 1: Resolve Weight into Components' },
-          { type: 'formula', text: 'Parallel: mg·sin(θ)' },
-          { type: 'formula', text: 'Perpendicular: mg·cos(θ)' },
-          { type: 'text', text: `sin(${angle}°) = ${sinAngle.toFixed(4)}` },
-          { type: 'text', text: `cos(${angle}°) = ${cosAngle.toFixed(4)}` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 2: Calculate Forces' },
-          { type: 'text', text: `Weight = mg = ${mass} × ${gravity} = ${(mass * gravity).toFixed(1)} N` },
-          { type: 'text', text: `Parallel Force = ${(mass * gravity).toFixed(1)} × ${sinAngle.toFixed(4)}` },
-          { type: 'highlight', text: `F_parallel = ${parallelForce.toFixed(1)} N (pulling down slope)` },
-          { type: 'text', text: `Normal Force = ${(mass * gravity).toFixed(1)} × ${cosAngle.toFixed(4)}` },
-          { type: 'highlight', text: `N = ${normalForce.toFixed(1)} N (perpendicular to slope)` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 3: Include Friction' },
-          { type: 'text', text: `Friction = μN = ${friction} × ${normalForce.toFixed(1)}` },
-          { type: 'highlight', text: `f = ${frictionForce.toFixed(1)} N (opposing motion)` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 4: Net Force & Acceleration' },
-          { type: 'text', text: `F_net = ${parallelForce.toFixed(1)} - ${frictionForce.toFixed(1)}` },
-          { type: 'highlight', text: `F_net = ${netForce.toFixed(1)} N` },
-          { type: 'text', text: `a = ${netForce.toFixed(1)} / ${mass}` },
-          { type: 'highlight', text: `a = ${acceleration.toFixed(2)} m/s²` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Without friction (μ = 0):' },
-          { type: 'text', text: `Acceleration would be g·sin(θ) = ${(gravity * sinAngle).toFixed(2)} m/s²` },
-          { type: 'text', text: `The steeper the incline (larger θ), the greater the acceleration.` },
+          { type: 'text', text: `• Mass (m): ${mass} kg` },
+          { type: 'text', text: `• Incline Angle (θ): ${angle}°` },
+          { type: 'text', text: `• Coefficient of Friction (μ): ${friction}` },
         ],
       });
-      result = `a = ${acceleration.toFixed(2)} m/s² down the incline`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'We resolve the weight (mg) into components:' },
+          { type: 'formula', text: 'F_parallel = m · g · sin(θ)' },
+          { type: 'formula', text: 'F_perpendicular (Normal) = m · g · cos(θ)' },
+          { type: 'text', text: 'Acceleration (a) down the slope:' },
+          { type: 'formula', text: 'a = (F_parallel - f) / m' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `1. Parallel Force: ${parallelForce.toFixed(1)} N` },
+          { type: 'text', text: `2. Normal Force: ${normalForce.toFixed(1)} N` },
+          { type: 'text', text: `3. Friction: ${frictionForce.toFixed(1)} N` },
+          { type: 'highlight', text: `a = ${acceleration.toFixed(2)} m/s²` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: acceleration > 0
+            ? 'The component of gravity pulling the object down the slope exceeds friction.'
+            : 'Friction is strong enough to keep the object from sliding down.'
+          },
+          { type: 'text', text: '💡 Tilt Tip: As the angle increases, sin(θ) increases (more pull down) and cos(θ) decreases (less normal force/friction).' },
+        ],
+      });
+      result = `${acceleration.toFixed(2)} m/s²`;
       break;
     }
 
     case 'momentum': {
       const momentum = mass * velocity;
       const impulse = force * time;
-      const finalVelocity = (mass * velocity + force * time) / mass;
+      const finalVelocity = (momentum + impulse) / mass;
       
       steps.push({
-        step: 'MOMENTUM & IMPULSE',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '💫 Momentum & Impulse Theorem' },
-          { type: 'formula', text: 'p = mv (momentum)' },
-          { type: 'formula', text: 'J = Ft = Δp (impulse = change in momentum)' },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 1: Calculate Initial Momentum' },
-          { type: 'text', text: `p_i = m × v = ${mass} × ${velocity}` },
-          { type: 'highlight', text: `p_i = ${momentum.toFixed(1)} kg·m/s` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 2: Calculate Impulse Applied' },
-          { type: 'text', text: `J = F × t = ${force} × ${time}` },
-          { type: 'highlight', text: `J = ${impulse.toFixed(1)} N·s` },
-          { type: 'text', text: '' },
-          { type: 'text', text: 'Step 3: Final Momentum & Velocity' },
-          { type: 'text', text: `p_f = p_i + J = ${momentum.toFixed(1)} + ${impulse.toFixed(1)}` },
-          { type: 'highlight', text: `p_f = ${(momentum + impulse).toFixed(1)} kg·m/s` },
-          { type: 'text', text: `v_f = p_f / m = ${(momentum + impulse).toFixed(1)} / ${mass}` },
-          { type: 'highlight', text: `v_f = ${finalVelocity.toFixed(2)} m/s` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Conservation of Momentum:' },
-          { type: 'text', text: 'In collisions, total momentum before = total momentum after.' },
-          { type: 'text', text: `Example: A ${mass} kg ball at ${velocity} m/s has enough momentum to...` },
-          { type: 'text', text: `...knock over a ${momentum.toFixed(0)} kg object at 1 m/s in a perfectly inelastic collision.` },
+          { type: 'text', text: `• Mass (m): ${mass} kg` },
+          { type: 'text', text: `• Initial Velocity (v): ${velocity} m/s` },
+          { type: 'text', text: `• Applied Force (F): ${force} N` },
+          { type: 'text', text: `• Time Duration (Δt): ${time} s` },
         ],
       });
-      result = `p = ${momentum.toFixed(1)} kg·m/s, v_f = ${finalVelocity.toFixed(2)} m/s`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'formula', text: 'p = m · v (Momentum)' },
+          { type: 'formula', text: 'J = F · Δt (Impulse)' },
+          { type: 'formula', text: 'Δp = J (Impulse-Momentum Theorem)' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `1. Initial Momentum: ${mass} × ${velocity} = ${momentum.toFixed(1)} kg·m/s` },
+          { type: 'text', text: `2. Impulse: ${force} × ${time} = ${impulse.toFixed(1)} N·s` },
+          { type: 'highlight', text: `Final Velocity = ${finalVelocity.toFixed(2)} m/s` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `The force applied for ${time}s changed the object's velocity from ${velocity} m/s to ${finalVelocity.toFixed(2)} m/s.` },
+          { type: 'text', text: '💡 Impulse is what you feel in a car crash; air bags increase the time (Δt) of impact to reduce the force (F) required to change your momentum.' },
+        ],
+      });
+      result = `${finalVelocity.toFixed(2)} m/s`;
       break;
     }
 
     case 'weight': {
       const weightOnEarth = mass * 9.81;
-      const weightOnMoon = mass * 1.62;
-      const weightOnMars = mass * 3.71;
-      const weightOnJupiter = mass * 24.79;
-      
+
       steps.push({
-        step: 'WEIGHT & GRAVITY',
-        badge: 'primary',
+        step: 'GIVEN VALUES',
+        badge: 'input',
         content: [
-          { type: 'text', text: '⚖️ Weight vs. Mass' },
-          { type: 'formula', text: 'W = mg (Weight = mass × gravitational acceleration)' },
-          { type: 'text', text: '' },
-          { type: 'text', text: `Mass: ${mass} kg (same everywhere in the universe!)` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '🌍 Weight on Different Celestial Bodies:' },
-          { type: 'highlight', text: `Earth: ${weightOnEarth.toFixed(1)} N (g = 9.81 m/s²)` },
-          { type: 'text', text: `Moon: ${weightOnMoon.toFixed(1)} N (g = 1.62 m/s²) - ${((weightOnMoon/weightOnEarth)*100).toFixed(0)}% of Earth weight` },
-          { type: 'text', text: `Mars: ${weightOnMars.toFixed(1)} N (g = 3.71 m/s²) - ${((weightOnMars/weightOnEarth)*100).toFixed(0)}% of Earth weight` },
-          { type: 'text', text: `Jupiter: ${weightOnJupiter.toFixed(1)} N (g = 24.79 m/s²) - ${((weightOnJupiter/weightOnEarth)*100).toFixed(0)}% of Earth weight` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '⭐ Key Concepts:' },
-          { type: 'text', text: '• Mass (kg): Amount of matter - NEVER changes' },
-          { type: 'text', text: '• Weight (N): Force due to gravity - DEPENDS on location' },
-          { type: 'text', text: '• On the Moon, you weigh 1/6th but your mass is the same!' },
-          { type: 'text', text: '• In deep space (no gravity), you\'d be weightless but still have mass.' },
+          { type: 'text', text: `• Mass: ${mass} kg` },
         ],
       });
-      result = `${weightOnEarth.toFixed(1)} N on Earth (${(weightOnEarth/9.81).toFixed(1)} kg mass)`;
+
+      steps.push({
+        step: 'EQUATIONS',
+        badge: 'formula',
+        content: [
+          { type: 'text', text: 'Weight is the force of gravity acting on a mass:' },
+          { type: 'formula', text: 'W = m · g' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'math',
+        content: [
+          { type: 'text', text: `W = ${mass} kg × 9.81 m/s²` },
+          { type: 'highlight', text: `Weight = ${weightOnEarth.toFixed(1)} N` },
+        ],
+      });
+
+      steps.push({
+        step: 'INTERPRETATION/ANALYSIS',
+        badge: 'insight',
+        content: [
+          { type: 'text', text: `On Earth, this object weighs ${weightOnEarth.toFixed(1)} Newtons.` },
+          { type: 'text', text: '⚠️ Remember: Mass is the amount of matter (remains constant), while Weight is a force (changes with gravity).' },
+          { type: 'text', text: `On the Moon, this same ${mass}kg mass would only weigh about ${(mass * 1.62).toFixed(1)} N.` },
+        ],
+      });
+      result = `${weightOnEarth.toFixed(1)} N`;
       break;
     }
 

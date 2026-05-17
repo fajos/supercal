@@ -379,9 +379,9 @@ if (action === 'delete') {
                type === 'memory' ? '#aaaacc' :
                type === 'constant' ? '#77ccdd' : '#e0e0f0';
     
-   const fs = type === 'number' ? Math.min(BTN_H * 0.72, Math.max(36, BTN_W * 0.58)) :
-                  type === 'operator' || type === 'equals' ? Math.min(BTN_H * 0.78, Math.max(38, BTN_W * 0.62)) :
-                  Math.min(BTN_H * 0.55, Math.max(22, BTN_W * 0.45));
+    const fs = type === 'number' ? Math.min(BTN_H * 0.58, Math.max(28, BTN_W * 0.52)) :
+               type === 'operator' || type === 'equals' ? Math.min(BTN_H * 0.65, Math.max(32, BTN_W * 0.58)) :
+               Math.min(BTN_H * 0.42, Math.max(16, BTN_W * 0.35));
 
     const shadowStyle = getButtonShadow(type, isShifted);
 

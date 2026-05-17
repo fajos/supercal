@@ -24,7 +24,7 @@ const SOLVERS = [
     icon: '📐',
     description: 'ax² + bx + c = 0',
     color: '#00d4aa',
-    screen: 'QuadraticSolver',
+    screen: 'QuadraticScreen',
     category: 'Algebra',
   },
   {
@@ -33,7 +33,7 @@ const SOLVERS = [
     icon: '📏',
     description: '2×2 & 3×3 Equations',
     color: '#3498db',
-    screen: 'LinearSolver',
+    screen: 'LinearScreen',
     category: 'Algebra',
   },
   {
@@ -42,7 +42,7 @@ const SOLVERS = [
     icon: '📈',
     description: 'Cubic & Higher Degree',
     color: '#ffa502',
-    screen: 'PolynomialSolver',
+    screen: 'PolynomialScreen',
     category: 'Algebra',
   },
   {
@@ -51,7 +51,7 @@ const SOLVERS = [
     icon: '⚡',
     description: '3 Equations, 3 Unknowns',
     color: '#e056a0',
-    screen: 'SimultaneousSolver',
+    screen: 'SimultaneousScreen',
     category: 'Algebra',
   },
   
@@ -62,7 +62,7 @@ const SOLVERS = [
   icon: '√',
   description: 'Square roots & radicals',
   color: '#e17055',
-  screen: 'RadicalSolver',
+  screen: 'RadicalScreen',
   category: 'Advanced Algebra',
 },
 {
@@ -71,7 +71,7 @@ const SOLVERS = [
   icon: '📊',
   description: 'e^x, ln(x), growth/decay',
   color: '#00cec9',
-  screen: 'ExponentialSolver',
+  screen: 'ExponentialScreen',
   category: 'Advanced Algebra',
 },
 
@@ -82,7 +82,7 @@ const SOLVERS = [
     icon: '🔺',
     description: 'sin, cos, tan Equations',
     color: '#ff4757',
-    screen: 'TrigonometrySolver',
+    screen: 'TrigonometryScreen',
     category: 'Trigonometry',
   },
   
@@ -93,7 +93,7 @@ const SOLVERS = [
     icon: '∫',
     description: 'Derivatives & Integrals',
     color: '#a29bfe',
-    screen: 'CalculusSolver',
+    screen: 'CalculusScreen',
     category: 'Calculus',
   },
   
@@ -104,7 +104,7 @@ const SOLVERS = [
     icon: '📊',
     description: 'Mean, Median, Std Dev',
     color: '#7c5ce7',
-    screen: 'StatisticsSolver',
+    screen: 'StatisticsScreen',
     category: 'Statistics',
   },
   {
@@ -113,7 +113,7 @@ const SOLVERS = [
     icon: '🎲',
     description: 'Combinations & More',
     color: '#fd79a8',
-    screen: 'ProbabilitySolver',
+    screen: 'ProbabilityScreen',
     category: 'Statistics',
   },
   
@@ -124,7 +124,7 @@ const SOLVERS = [
     icon: '🧮',
     description: 'Det, Inverse, Eigenvalues',
     color: '#00b894',
-    screen: 'MatrixSolver',
+    screen: 'MatrixScreen',
     category: 'Linear Algebra',
   },
   
@@ -135,7 +135,7 @@ const SOLVERS = [
     icon: '🔄',
     description: 'a + bi Operations',
     color: '#6c5ce7',
-    screen: 'ComplexSolver',
+    screen: 'ComplexScreen',
     category: 'Complex Numbers',
   },
   
@@ -146,7 +146,7 @@ const SOLVERS = [
     icon: '🔢',
     description: 'Arithmetic & Geometric',
     color: '#fdcb6e',
-    screen: 'SequenceSolver',
+    screen: 'SequenceScreen',
     category: 'Sequences',
   },
   
@@ -157,7 +157,7 @@ const SOLVERS = [
     icon: '💰',
     description: 'Interest, Loans, NPV',
     color: '#55efc4',
-    screen: 'FinanceSolver',
+    screen: 'FinanceScreen',
     category: 'Finance',
   },
 ];

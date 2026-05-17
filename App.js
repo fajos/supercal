@@ -44,6 +44,12 @@ import EquilibriumScreen from './src/screens/EquilibriumScreen';
 import ElasticityScreen from './src/screens/ElasticityScreen';
 import RadioactivityScreen from './src/screens/RadioactivityScreen';
 import MagneticScreen from './src/screens/MagneticScreen';
+import OpticsScreen from './src/screens/OpticsScreen';
+import ElectrostaticsScreen from './src/screens/ElectrostaticsScreen';
+import FluidsScreen from './src/screens/FluidsScreen';
+import GravitationScreen from './src/screens/GravitationScreen';
+import InductionScreen from './src/screens/InductionScreen';
+import QuantumScreen from './src/screens/QuantumScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -59,20 +65,20 @@ function SolveStackScreen() {
       }}
     >
       <SolveStack.Screen name="SolversHome" component={SolversScreen} />
-      <SolveStack.Screen name="QuadraticSolver" component={QuadraticScreen} />
-      <SolveStack.Screen name="StatisticsSolver" component={StatisticsScreen} />
-      <SolveStack.Screen name="LinearSolver" component={LinearScreen} />
-      <SolveStack.Screen name="PolynomialSolver" component={PolynomialScreen} />
-      <SolveStack.Screen name="TrigonometrySolver" component={TrigonometryScreen} />
-      <SolveStack.Screen name="SimultaneousSolver" component={SimultaneousScreen} />
-      <SolveStack.Screen name="ProbabilitySolver" component={ProbabilityScreen} />
-      <SolveStack.Screen name="ComplexSolver" component={ComplexScreen} />
-      <SolveStack.Screen name="CalculusSolver" component={CalculusScreen} />
-      <SolveStack.Screen name="MatrixSolver" component={MatrixScreen} />
-      <SolveStack.Screen name="SequenceSolver" component={SequenceScreen} />
-      <SolveStack.Screen name="FinanceSolver" component={FinanceScreen} />
-      <SolveStack.Screen name="RadicalSolver" component={RadicalScreen} />
-      <SolveStack.Screen name="ExponentialSolver" component={ExponentialScreen} />
+      <SolveStack.Screen name="QuadraticScreen" component={QuadraticScreen} />
+      <SolveStack.Screen name="StatisticsScreen" component={StatisticsScreen} />
+      <SolveStack.Screen name="LinearScreen" component={LinearScreen} />
+      <SolveStack.Screen name="PolynomialScreen" component={PolynomialScreen} />
+      <SolveStack.Screen name="TrigonometryScreen" component={TrigonometryScreen} />
+      <SolveStack.Screen name="SimultaneousScreen" component={SimultaneousScreen} />
+      <SolveStack.Screen name="ProbabilityScreen" component={ProbabilityScreen} />
+      <SolveStack.Screen name="ComplexScreen" component={ComplexScreen} />
+      <SolveStack.Screen name="CalculusScreen" component={CalculusScreen} />
+      <SolveStack.Screen name="MatrixScreen" component={MatrixScreen} />
+      <SolveStack.Screen name="SequenceScreen" component={SequenceScreen} />
+      <SolveStack.Screen name="FinanceScreen" component={FinanceScreen} />
+      <SolveStack.Screen name="RadicalScreen" component={RadicalScreen} />
+      <SolveStack.Screen name="ExponentialScreen" component={ExponentialScreen} />
     </SolveStack.Navigator>
   );
 }
@@ -86,18 +92,24 @@ function PhysicsStackScreen() {
       }}
     >
       <PhysicsStack.Screen name="PhysicsHome" component={PhysicsScreen} />
-      <PhysicsStack.Screen name="KinematicsSolver" component={KinematicsScreen} />
-      <PhysicsStack.Screen name="DynamicsSolver" component={DynamicsScreen} />
-      <PhysicsStack.Screen name="EnergySolver" component={EnergyScreen} />
-      <PhysicsStack.Screen name="WavesSolver" component={WavesScreen} />
-      <PhysicsStack.Screen name="CircuitsSolver" component={CircuitsScreen} />
-      <PhysicsStack.Screen name="ProjectileSolver" component={ProjectileScreen} />
-      <PhysicsStack.Screen name="ThermalSolver" component={ThermalScreen} />
-      <PhysicsStack.Screen name="CircularSolver" component={CircularScreen} />
-      <PhysicsStack.Screen name="EquilibriumSolver" component={EquilibriumScreen} />
-      <PhysicsStack.Screen name="ElasticitySolver" component={ElasticityScreen} />
-      <PhysicsStack.Screen name="RadioactivitySolver" component={RadioactivityScreen} />
-      <PhysicsStack.Screen name="MagneticSolver" component={MagneticScreen} />
+      <PhysicsStack.Screen name="KinematicsScreen" component={KinematicsScreen} />
+      <PhysicsStack.Screen name="DynamicsScreen" component={DynamicsScreen} />
+      <PhysicsStack.Screen name="EnergyScreen" component={EnergyScreen} />
+      <PhysicsStack.Screen name="WavesScreen" component={WavesScreen} />
+      <PhysicsStack.Screen name="CircuitsScreen" component={CircuitsScreen} />
+      <PhysicsStack.Screen name="ProjectileScreen" component={ProjectileScreen} />
+      <PhysicsStack.Screen name="ThermalScreen" component={ThermalScreen} />
+      <PhysicsStack.Screen name="CircularScreen" component={CircularScreen} />
+      <PhysicsStack.Screen name="EquilibriumScreen" component={EquilibriumScreen} />
+      <PhysicsStack.Screen name="ElasticityScreen" component={ElasticityScreen} />
+      <PhysicsStack.Screen name="RadioactivityScreen" component={RadioactivityScreen} />
+      <PhysicsStack.Screen name="MagneticScreen" component={MagneticScreen} />
+      <PhysicsStack.Screen name="OpticsScreen" component={OpticsScreen} />
+      <PhysicsStack.Screen name="ElectrostaticsScreen" component={ElectrostaticsScreen} />
+      <PhysicsStack.Screen name="FluidsScreen" component={FluidsScreen} />
+      <PhysicsStack.Screen name="GravitationScreen" component={GravitationScreen} />
+      <PhysicsStack.Screen name="InductionScreen" component={InductionScreen} />
+      <PhysicsStack.Screen name="QuantumScreen" component={QuantumScreen} />
     </PhysicsStack.Navigator>
   );
 }
