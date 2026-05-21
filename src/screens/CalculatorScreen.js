@@ -6,33 +6,18 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
-  Dimensions,
   Alert,
   Animated,
+  useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const isTablet = SCREEN_WIDTH >= 600;
-
-// Account for tab bar
-const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 25 : 35;
-const GAP = isTablet ? 6 : 3;
-const PAD = isTablet ? 20 : 6;
 const COLS = 6;
 const STATUS_H = 28;
 const ROWS = 8;
-
-const AVAILABLE_HEIGHT = SCREEN_HEIGHT - STATUS_H - TAB_BAR_HEIGHT;
-const KEYBOARD_PADDING = PAD * 2 + GAP * ROWS;
-// On tablets, we limit the keyboard height to 55% instead of 66% to leave more room for history
-const KB_HEIGHT_RATIO = isTablet ? 0.55 : 0.66;
-const BTN_H = Math.floor((AVAILABLE_HEIGHT * KB_HEIGHT_RATIO - KEYBOARD_PADDING) / ROWS);
-const KEYBOARD_H = ROWS * BTN_H + KEYBOARD_PADDING;
-const BTN_W = Math.floor((SCREEN_WIDTH - PAD * 2 - GAP * (COLS - 1)) / COLS);
-const DISPLAY_H = AVAILABLE_HEIGHT - KEYBOARD_H;
 
 const BlinkCursor = () => {
   const opacity = useRef(new Animated.Value(1)).current;
@@ -62,6 +47,39 @@ const BlinkCursor = () => {
 };
 
 export default function CalculatorScreen() {
+  const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
+  const insets = useSafeAreaInsets();
+
+  let tabBarHeight = 0;
+  try {
+    tabBarHeight = useBottomTabBarHeight();
+  } catch (e) {
+    // If we're not inside a tab navigator, default to 0 and rely on safe area insets
+    tabBarHeight = 0;
+  }
+
+  const isTablet = SCREEN_WIDTH >= 600;
+  const GAP = isTablet ? 6 : 1.5;
+  const PAD = isTablet ? 16 : 6;
+
+  // AVAILABLE_HEIGHT is the total vertical space for our content,
+  // excluding system-reserved areas (notch, status bar, and tab bar).
+  // Use a single offset for the bottom to avoid redundant spacing.
+  const bottomOffset = Math.max(tabBarHeight, insets.bottom);
+  const AVAILABLE_HEIGHT = SCREEN_HEIGHT - insets.top - STATUS_H - bottomOffset;
+
+  const KB_HEIGHT_RATIO = isTablet ? 0.55 : 0.72;
+  // Total vertical padding/gaps inside the keyboard container itself
+  const KB_VPAD = 3; // 2 top, 1 bottom
+  const KEYBOARD_INTERNAL_PAD_V = KB_VPAD + GAP * (ROWS - 1);
+
+  // Height for the buttons themselves
+  const BTN_H = Math.floor((AVAILABLE_HEIGHT * KB_HEIGHT_RATIO - KEYBOARD_INTERNAL_PAD_V) / ROWS);
+  const BTN_W = Math.floor((SCREEN_WIDTH - PAD * 2 - GAP * (COLS - 1)) / COLS);
+
+  // Display height is the remaining space after keyboard is accounted for
+  const DISPLAY_H = AVAILABLE_HEIGHT - (BTN_H * ROWS + KEYBOARD_INTERNAL_PAD_V);
+
   const [display, setDisplay] = useState('');
   const [expression, setExpression] = useState('');
   const [memory, setMemory] = useState(0);
@@ -426,7 +444,7 @@ if (action === 'delete') {
     );
   };
 
-  const Row = ({ children }) => <View style={styles.row}>{children}</View>;
+  const Row = ({ children }) => <View style={[styles.row, { gap: GAP }]}>{children}</View>;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -484,7 +502,12 @@ if (action === 'delete') {
       </View>
 
       {/* Keyboard */}
-      <View style={styles.kb}>
+      <View style={[styles.kb, {
+        paddingTop: 2,
+        paddingHorizontal: PAD,
+        paddingBottom: 1,
+        gap: GAP
+      }]}>
         {sciRows.map((row, rowIndex) => (
           <Row key={`sci-row-${rowIndex}`}>
             {row.map((btn, i) => (
@@ -603,7 +626,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   historyItem: {
-    paddingVertical: 12,
+    paddingVertical: 8,
     flexDirection: 'column',
     alignItems: 'stretch',
   },
@@ -650,10 +673,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   currentSection: {
-    paddingBottom: 16,
+    paddingBottom: 10,
     flexDirection: 'column',
     alignItems: 'flex-start',
-    minHeight: 120,
+    minHeight: 80,
     justifyContent: 'flex-start',
   },
   resultContainer: {
@@ -695,17 +718,14 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   kb: {
-    padding: PAD,
     paddingBottom: 0,
     backgroundColor: '#080812',
     width: '100%',
     maxWidth: 1000,
     alignSelf: 'center',
-    gap: GAP,
   },
   row: {
     flexDirection: 'row',
-    gap: GAP,
     justifyContent: 'center',
   },
   btn: {
