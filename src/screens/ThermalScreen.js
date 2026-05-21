@@ -8,14 +8,19 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
+import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveThermal } from '../solvers/thermalSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function ThermalScreen() {
   const [mode, setMode] = useState('specificHeat');
@@ -62,10 +67,12 @@ export default function ThermalScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-       <BackHeader title="🌡️ Thermal Physics" subtitle="Heat & Thermodynamics" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="🌡️ Thermal Physics" subtitle="Heat & Thermodynamics" />
+        </View>
 
-        <View style={styles.inputCard}>
-          <View style={styles.modeRow}>
+        <InputCard>
+          <View style={styles.modeGrid}>
             {[
               { id: 'specificHeat', label: 'Heat' },
               { id: 'latentHeat', label: 'Latent' },
@@ -122,7 +129,7 @@ export default function ThermalScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>🔥 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
@@ -150,10 +157,31 @@ export default function ThermalScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
+  },
+  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  modeBtn: {
+    flex: 1,
+    minWidth: '28%',
+    paddingVertical: 10,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
@@ -162,9 +190,8 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row', gap: 8 },
   solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 20 },
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
+  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16, width: '100%', maxWidth: 600 },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  solutionArea: { gap: 0 },
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },

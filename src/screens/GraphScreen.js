@@ -16,7 +16,8 @@ import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const GRAPH_WIDTH = SCREEN_WIDTH - 48;
+const isTablet = SCREEN_WIDTH >= 600;
+const GRAPH_WIDTH = isTablet ? 760 : SCREEN_WIDTH - 48;
 const GRAPH_HEIGHT = 340;
 
 const PRESET_FUNCTIONS = [
@@ -391,27 +392,31 @@ export default function GraphScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <View style={styles.header}>
-          <Text style={styles.title}>📈 Graphing Calculator</Text>
-          <Text style={styles.subtitle}>Multi-Function Plotter with Analysis</Text>
+        <View style={styles.headerContainer}>
+          <View style={styles.header}>
+            <Text style={styles.title}>📈 Graphing Calculator</Text>
+            <Text style={styles.subtitle}>Multi-Function Plotter with Analysis</Text>
+          </View>
         </View>
 
         {/* Preset Functions */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
-          {PRESET_FUNCTIONS.map((preset, idx) => (
-            <TouchableOpacity
-              key={idx}
-              style={styles.presetBtn}
-              onPress={() => applyPreset(preset)}
-              activeOpacity={0.7}
-            >
-              <Text style={styles.presetText}>{preset.label}</Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <View style={styles.headerContainer}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
+            {PRESET_FUNCTIONS.map((preset, idx) => (
+              <TouchableOpacity
+                key={idx}
+                style={styles.presetBtn}
+                onPress={() => applyPreset(preset)}
+                activeOpacity={0.7}
+              >
+                <Text style={styles.presetText}>{preset.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
 
         {/* Input Card */}
-        <View style={styles.inputCard}>
+        <View style={[styles.inputCard, isTablet && styles.tabletInputCard]}>
           <Text style={styles.inputLabel}>Function f(x) =</Text>
           <TextInput
             style={styles.eqInput}
@@ -512,7 +517,7 @@ export default function GraphScreen() {
 
         {/* Graph Display */}
         {points.length > 0 && (
-          <View style={styles.graphCard}>
+          <View style={[styles.graphCard, isTablet && styles.headerContainer]}>
             <Text style={styles.graphTitle}>
               {[equation, equation2, equation3].filter(e => e.trim()).join(' | ')}
             </Text>
@@ -689,7 +694,7 @@ export default function GraphScreen() {
         )}
 
         {/* Help Card */}
-        <View style={styles.helpCard}>
+        <View style={[styles.helpCard, isTablet && styles.headerContainer]}>
           <Text style={styles.helpTitle}>💡 Tips & Supported Functions</Text>
           <View style={styles.helpGrid}>
             <Text style={styles.helpText}>• Plot up to 3 functions simultaneously</Text>
@@ -815,6 +820,15 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
   },
   header: {
     marginBottom: 20,
@@ -839,6 +853,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    width: '100%',
   },
   inputLabel: {
     fontSize: 13,
@@ -902,6 +917,8 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
+    width: '100%',
+    maxWidth: 600,
   },
   errorText: {
     color: colors.danger,
@@ -915,6 +932,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 16,
     marginBottom: 16,
+    width: '100%',
   },
   graphTitle: {
     color: colors.white,
@@ -983,6 +1001,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 20,
     padding: 20,
+    width: '100%',
   },
   helpTitle: {
     color: colors.white,

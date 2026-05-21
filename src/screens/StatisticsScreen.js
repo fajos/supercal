@@ -8,15 +8,20 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveStatistics } from '../solvers/statisticsSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function StatisticsScreen() {
   const [dataInput, setDataInput] = useState('12, 15, 18, 22, 25, 30');
@@ -88,10 +93,12 @@ export default function StatisticsScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <BackHeader title="📊 Statistics" subtitle="Mean, Median, Standard Deviation" />
+          <View style={styles.headerContainer}>
+            <BackHeader title="📊 Statistics" subtitle="Mean, Median, Standard Deviation" />
+          </View>
 
           {/* Input Card */}
-          <View style={styles.inputCard}>
+          <InputCard style={isTablet && styles.tabletInputCard}>
             <Text style={styles.inputLabel}>
               Enter dataset (comma-separated values):
             </Text>
@@ -112,7 +119,7 @@ export default function StatisticsScreen() {
             >
               <Text style={styles.solveBtnText}>📊 ANALYZE DATA</Text>
             </TouchableOpacity>
-          </View>
+          </InputCard>
 
           {/* Error */}
           {error && (
@@ -198,30 +205,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+    alignItems: 'center',
   },
-  header: {
-    marginBottom: 20,
-    paddingTop: 8,
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    letterSpacing: -0.5,
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-    letterSpacing: 0.3,
-  },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
   },
   inputLabel: {
     fontSize: 14,

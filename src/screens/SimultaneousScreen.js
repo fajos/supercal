@@ -7,14 +7,19 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveSimultaneous3x3 } from '../solvers/simultaneousSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function SimultaneousScreen() {
   const [a1, setA1] = useState('2'); const [b1, setB1] = useState('1'); const [c1, setC1] = useState('-1'); const [d1, setD1] = useState('8');
@@ -50,10 +55,17 @@ export default function SimultaneousScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <BackHeader title="⚡ Simultaneous Equations" subtitle="3×3 System Solver" />
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerContainer}>
+          <BackHeader title="⚡ Simultaneous Equations" subtitle="3×3 System Solver" />
+        </View>
 
-        <View style={styles.inputCard}>
+        <InputCard style={isTablet && styles.tabletInputCard}>
           <Text style={styles.inputLabel}>Equation 1: a₁x + b₁y + c₁z = d₁</Text>
           <View style={styles.coeffRow}>
             <TextInput style={styles.input} value={a1} onChangeText={setA1} keyboardType="decimal-pad" placeholder="a₁" placeholderTextColor={colors.textSecondary} />
@@ -90,7 +102,7 @@ export default function SimultaneousScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>⚡ SOLVE SYSTEM</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
@@ -116,20 +128,50 @@ export default function SimultaneousScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
+  },
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
+  },
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
   inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   coeffRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' },
-  input: { flex: 1, minWidth: 40, paddingVertical: 12, paddingHorizontal: 8, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, color: colors.white, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', textAlign: 'center' },
+  input: {
+    flex: 1,
+    minWidth: 50,
+    maxWidth: 80,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    textAlign: 'center'
+  },
   sep: { color: colors.textSecondary, fontSize: 12 },
   solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 16 },
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
   errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  solutionArea: { gap: 0 },
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 30 },

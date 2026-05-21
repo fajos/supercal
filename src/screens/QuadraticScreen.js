@@ -7,6 +7,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -19,6 +20,9 @@ import { ErrorCard } from '../components/ErrorCard';      // 🆕 Import
 import { solveQuadratic } from '../solvers/quadraticSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function QuadraticScreen() {
   const [a, setA] = useState('1');
@@ -104,10 +108,12 @@ export default function QuadraticScreen() {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <BackHeader title="📐 Quadratic Solver" subtitle="ax² + bx + c = 0" />
+          <View style={styles.headerContainer}>
+            <BackHeader title="📐 Quadratic Solver" subtitle="ax² + bx + c = 0" />
+          </View>
 
           {/* 🆕 Using InputCard component */}
-          <InputCard>
+          <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.coeffRow}>
               <TextInput style={styles.input} value={a} onChangeText={setA}
                 keyboardType="decimal-pad" placeholder="a" placeholderTextColor={colors.textSecondary} />
@@ -162,6 +168,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
+  },
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
   },
   header: {
     marginBottom: 20,

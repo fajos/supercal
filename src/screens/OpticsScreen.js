@@ -8,14 +8,19 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveOptics } from '../solvers/opticsSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function OpticsScreen() {
   const [mode, setMode] = useState('lens');
@@ -55,9 +60,11 @@ export default function OpticsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <BackHeader title="🔭 Optics & Light" subtitle="Lenses, Reflection & Refraction" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="🔭 Optics & Light" subtitle="Lenses, Reflection & Refraction" />
+        </View>
 
-        <View style={styles.inputCard}>
+        <InputCard style={isTablet && styles.tabletInputCard}>
           <View style={styles.modeRow}>
             {[
               { id: 'lens', label: 'Lens Formula' },
@@ -102,7 +109,7 @@ export default function OpticsScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>🔭 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
@@ -130,10 +137,12 @@ export default function OpticsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800 },
+  tabletInputCard: { maxWidth: 600, width: '100%' },
+  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
+  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
+  modeBtn: { flex: 1, minWidth: 120, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },

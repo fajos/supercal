@@ -8,14 +8,19 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
+import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveFluids } from '../solvers/fluidsSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function FluidsScreen() {
   const [mode, setMode] = useState('pressure_solid');
@@ -50,10 +55,12 @@ export default function FluidsScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <BackHeader title="💧 Fluids & Pressure" subtitle="Hydrostatics & Solid Pressure" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="💧 Fluids & Pressure" subtitle="Hydrostatics & Solid Pressure" />
+        </View>
 
-        <View style={styles.inputCard}>
-          <View style={styles.modeRow}>
+        <InputCard>
+          <View style={styles.modeGrid}>
             {[
               { id: 'pressure_solid', label: 'Solid Pressure' },
               { id: 'pressure_liquid', label: 'Liquid Pressure' },
@@ -91,7 +98,7 @@ export default function FluidsScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>💧 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
@@ -119,10 +126,20 @@ export default function FluidsScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800 },
+  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
+  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  modeBtn: {
+    flex: 1,
+    minWidth: '40%',
+    paddingVertical: 10,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },

@@ -1,14 +1,18 @@
 import React, { useState, useRef } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform,
+  View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveWaves } from '../solvers/wavesSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function WavesScreen() {
   const [mode, setMode] = useState('waveSpeed');
@@ -52,9 +56,11 @@ export default function WavesScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <BackHeader title="🌊 Waves & Sound" subtitle="Frequency, Wavelength & Speed" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="🌊 Waves & Sound" subtitle="Frequency, Wavelength & Speed" />
+        </View>
 
-        <View style={styles.inputCard}>
+        <InputCard style={isTablet && styles.tabletInputCard}>
           <View style={styles.modeRow}>
             {[
               { id: 'waveSpeed', label: 'Wave\nSpeed' },
@@ -92,7 +98,7 @@ export default function WavesScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>🌊 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
@@ -116,13 +122,15 @@ export default function WavesScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800 },
+  tabletInputCard: { maxWidth: 600, width: '100%' },
+  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
+  modeBtn: { flex: 1, minWidth: 100, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },

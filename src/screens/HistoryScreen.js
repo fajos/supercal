@@ -7,11 +7,15 @@ import {
   StyleSheet,
   Platform,
   Alert,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useHistory } from '../utils/history';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function HistoryScreen() {
   const { history, clearHistory, loadHistory } = useHistory();
@@ -121,13 +125,15 @@ export default function HistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <View style={styles.header}>
-        <Text style={styles.title}>📋 History</Text>
-        {history.length > 0 && (
-          <TouchableOpacity onPress={handleClear}>
-            <Text style={styles.clearBtn}>Clear All</Text>
-          </TouchableOpacity>
-        )}
+      <View style={styles.headerContainer}>
+        <View style={styles.header}>
+          <Text style={styles.title}>📋 History</Text>
+          {history.length > 0 && (
+            <TouchableOpacity onPress={handleClear}>
+              <Text style={styles.clearBtn}>Clear All</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {history.length === 0 ? (
@@ -169,14 +175,20 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.bgPrimary,
   },
+  headerContainer: {
+    width: '100%',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: 20,
     paddingVertical: 16,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    width: '100%',
+    maxWidth: 800,
   },
   title: {
     fontSize: 28,
@@ -195,6 +207,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     gap: 12,
+    alignItems: 'center',
   },
   historyCard: {
     backgroundColor: colors.bgCard,
@@ -202,6 +215,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 16,
     padding: 16,
+    width: '100%',
+    maxWidth: 600,
   },
   cardHeader: {
     flexDirection: 'row',

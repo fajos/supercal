@@ -15,22 +15,51 @@ import * as Haptics from 'expo-haptics';
 
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
-// Account for tab bar (typical height ~50-55 on iOS, ~60 on Android)
+// Account for tab bar
 const TAB_BAR_HEIGHT = Platform.OS === 'ios' ? 25 : 35;
-const GAP = 3;
-const PAD = 6;
+const GAP = isTablet ? 6 : 3;
+const PAD = isTablet ? 20 : 6;
 const COLS = 6;
 const STATUS_H = 28;
 const ROWS = 8;
 
-// Calculate available height after subtracting status bar, padding, and tab bar
 const AVAILABLE_HEIGHT = SCREEN_HEIGHT - STATUS_H - TAB_BAR_HEIGHT;
-const KEYBOARD_PADDING = PAD * 2 + GAP * ROWS + 25;
-const BTN_H = Math.floor((AVAILABLE_HEIGHT * 0.66 - KEYBOARD_PADDING) / ROWS);
+const KEYBOARD_PADDING = PAD * 2 + GAP * ROWS;
+// On tablets, we limit the keyboard height to 55% instead of 66% to leave more room for history
+const KB_HEIGHT_RATIO = isTablet ? 0.55 : 0.66;
+const BTN_H = Math.floor((AVAILABLE_HEIGHT * KB_HEIGHT_RATIO - KEYBOARD_PADDING) / ROWS);
 const KEYBOARD_H = ROWS * BTN_H + KEYBOARD_PADDING;
 const BTN_W = Math.floor((SCREEN_WIDTH - PAD * 2 - GAP * (COLS - 1)) / COLS);
 const DISPLAY_H = AVAILABLE_HEIGHT - KEYBOARD_H;
+
+const BlinkCursor = () => {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    const animation = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    );
+    animation.start();
+    return () => animation.stop();
+  }, [opacity]);
+
+  return (
+    <Animated.Text style={[styles.promptCursor, { opacity }]}>|</Animated.Text>
+  );
+};
 
 export default function CalculatorScreen() {
   const [display, setDisplay] = useState('');
@@ -46,48 +75,22 @@ export default function CalculatorScreen() {
 
   const sciRows = useMemo(() => [
     [
-      { p: 'sin', s: 'sin⁻¹', v: 'sin(', sv: 'sin⁻¹(', t: 'function' },
-      { p: 'cos', s: 'cos⁻¹', v: 'cos(', sv: 'cos⁻¹(', t: 'function' },
-      { p: 'tan', s: 'tan⁻¹', v: 'tan(', sv: 'tan⁻¹(', t: 'function' },
-      { p: 'ln', s: '10ˣ', v: 'ln(', sv: '10^', t: 'function', st: 'operator' },
-      { p: 'log', s: 'log₂', v: 'log(', sv: 'log₂(', t: 'function' },
-      { p: '√', s: 'abs', v: '√(', sv: 'abs(', t: 'function' },
+      { p: 'sin', s: 'sin⁻¹', v: 'sin(', sv: 'sin⁻¹(', t: 'function', st: 'function' },
+      { p: 'cos', s: 'cos⁻¹', v: 'cos(', sv: 'cos⁻¹(', t: 'function', st: 'function' },
+      { p: 'tan', s: 'tan⁻¹', v: 'tan(', sv: 'tan⁻¹(', t: 'function', st: 'function' },
+      { p: 'ln', s: 'eˣ', v: 'ln(', sv: 'e^', t: 'function', st: 'function' },
+      { p: 'log', s: '10ˣ', v: 'log(', sv: '10^', t: 'function', st: 'function' },
+      { p: 'log₂', s: '2ˣ', v: 'log₂(', sv: '2^', t: 'function', st: 'function' },
     ],
     [
-      { p: 'x²', s: 'nCr', v: '^(2)', sv: 'nCr', t: 'function' },
-      { p: 'xⁿ', s: 'nPr', v: '^', sv: 'nPr', t: 'operator', st: 'function' },
-      { p: 'EXP', s: 'eˣ', v: 'EXP', sv: 'e^', t: 'function', st: 'operator' },
-      { p: '1/x', s: 'x³', v: '1/(', sv: '^(3)', t: 'function' },
-      { p: '∛', s: 'e', v: '∛(', sv: 'e', t: 'function', st: 'constant' },
-      { p: 'mod', s: '', v: 'mod', sv: '', t: 'operator' },
-    ]
+      { p: '√', s: 'x²', v: '√(', sv: '^2', t: 'function', st: 'operator' },
+      { p: '∛', s: 'x³', v: '∛(', sv: '^3', t: 'function', st: 'operator' },
+      { p: 'xʸ', s: 'ʸ√x', v: '^', sv: '^(1/', t: 'operator', st: 'operator' },
+      { p: 'abs', s: 'x!', v: 'abs(', sv: '!', t: 'function', st: 'function' },
+      { p: 'nCr', s: 'nPr', v: 'nCr', sv: 'nPr', t: 'operator', st: 'operator' },
+      { p: 'EXP', s: 'mod', v: 'EXP', sv: 'mod', t: 'operator', st: 'operator' },
+    ],
   ], []);
-
-const BlinkCursor = () => {
-  const opacity = useRef(new Animated.Value(1)).current;
-
-  useEffect(() => {
-    Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-        Animated.timing(opacity, {
-          toValue: 1,
-          duration: 500,
-          useNativeDriver: true,
-        }),
-      ])
-    ).start();
-  }, []);
-
-  return (
-    <Animated.Text style={[styles.promptCursor, { opacity }]}>|</Animated.Text>
-  );
-};
-
 
   const evaluate = (expr) => {
     try {
@@ -590,6 +593,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#060618',
     borderBottomWidth: 1,
     borderBottomColor: '#00ffcc',
+    width: '100%',
+    maxWidth: 1000,
+    alignSelf: 'center',
   },
   displayScroll: {
     flex: 1,
@@ -690,13 +696,16 @@ const styles = StyleSheet.create({
   },
   kb: {
     padding: PAD,
-    paddingBottom: 25,
+    paddingBottom: 0,
     backgroundColor: '#080812',
+    width: '100%',
+    maxWidth: 1000,
+    alignSelf: 'center',
+    gap: GAP,
   },
   row: {
     flexDirection: 'row',
     gap: GAP,
-    marginBottom: GAP,
     justifyContent: 'center',
   },
   btn: {
@@ -729,7 +738,7 @@ const styles = StyleSheet.create({
   },
 promptCursor: {
   color: '#00ffcc',
-  fontSize: 34,
+  fontSize: 28,
   fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   fontWeight: '900',
   textShadowColor: 'rgba(0, 255, 204, 0.6)',

@@ -8,6 +8,7 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -17,6 +18,9 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { solveTrig } from '../solvers/trigSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 const TRIG_FUNCTIONS = [
   { label: 'sin(x)', value: 'sin' },
@@ -95,10 +99,12 @@ export default function TrigonometryScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <BackHeader title="🔺 Trigonometry" subtitle="sin, cos, tan Equations" />
+          <View style={styles.headerContainer}>
+            <BackHeader title="🔺 Trigonometry" subtitle="sin, cos, tan Equations" />
+          </View>
 
           {/* Input Card */}
-          <View style={styles.inputCard}>
+          <View style={[styles.inputCard, isTablet && styles.tabletInputCard]}>
             <Text style={styles.inputLabel}>Select function:</Text>
             <View style={styles.funcRow}>
               {TRIG_FUNCTIONS.map((func) => (
@@ -213,22 +219,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+    alignItems: 'center',
   },
-  header: {
-    marginBottom: 20,
-    paddingTop: 8,
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    letterSpacing: -0.5,
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-    letterSpacing: 0.3,
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
   },
   inputCard: {
     backgroundColor: colors.bgCard,
@@ -237,6 +241,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    width: '100%',
   },
   inputLabel: {
     fontSize: 13,
@@ -306,14 +311,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
+    width: '100%',
+    maxWidth: 600,
   },
   errorText: {
     color: colors.danger,
     fontSize: 14,
     fontWeight: '500',
-  },
-  solutionArea: {
-    gap: 0,
   },
   stepText: {
     color: '#c8c8d8',

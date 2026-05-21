@@ -19,6 +19,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+    width: '100%',
+    maxWidth: 800,
   },
   label: {
     fontSize: 13,

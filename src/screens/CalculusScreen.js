@@ -7,15 +7,20 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
 import { solveDerivative, solveIntegral, evaluateExpression } from '../solvers/calculusSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function CalculusScreen() {
   const [mode, setMode] = useState('derivative');
@@ -210,9 +215,11 @@ export default function CalculusScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <BackHeader title="∫ Calculus" subtitle="Derivatives & Integrals" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="∫ Calculus" subtitle="Derivatives & Integrals" />
+        </View>
 
-        <View style={styles.inputCard}>
+        <InputCard style={isTablet && styles.tabletInputCard}>
           {/* Mode Toggle */}
           <View style={styles.modeRow}>
             <TouchableOpacity
@@ -272,7 +279,7 @@ export default function CalculusScreen() {
               {mode === 'derivative' ? '📐 DIFFERENTIATE' : '📐 INTEGRATE'}
             </Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && (
           <View style={styles.errorCard}>
@@ -337,7 +344,19 @@ export default function CalculusScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800 },
+  tabletInputCard: { maxWidth: 600, width: '100%' },
+  resultArea: { gap: 0, width: '100%', maxWidth: 800 },
+  helpCard: {
+    backgroundColor: colors.bgCard,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 20,
+    padding: 20,
+    width: '100%',
+    maxWidth: 800,
+  },
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
@@ -349,9 +368,10 @@ const styles = StyleSheet.create({
     padding: 20,
     marginBottom: 16,
   },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
   modeBtn: {
     flex: 1,
+    minWidth: 140,
     paddingVertical: 12,
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -405,7 +425,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  resultArea: { gap: 0 },
   stepText: {
     color: '#c8c8d8',
     fontSize: 14,

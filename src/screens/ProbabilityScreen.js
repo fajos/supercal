@@ -7,14 +7,19 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
+import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveProbability } from '../solvers/probabilitySolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function ProbabilityScreen() {
   const [mode, setMode] = useState('permutation');
@@ -43,11 +48,18 @@ export default function ProbabilityScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-       <BackHeader title="🎲 Probability" subtitle="Permutations, Combinations & More" />
+      <ScrollView
+        ref={scrollRef}
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.headerContainer}>
+          <BackHeader title="🎲 Probability" subtitle="Permutations, Combinations & More" />
+        </View>
 
-        <View style={styles.inputCard}>
-          <View style={styles.modeRow}>
+        <InputCard>
+          <View style={styles.modeGrid}>
             {['permutation', 'combination', 'binomial'].map(m => (
               <TouchableOpacity
                 key={m}
@@ -77,9 +89,9 @@ export default function ProbabilityScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>🎲 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
-        {error && <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text></View>}
+        {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
         {result && (
           <View style={styles.solutionArea}>
@@ -104,13 +116,25 @@ export default function ProbabilityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
+  },
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  modeBtn: { flex: 1, minWidth: '30%', paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
@@ -120,7 +144,6 @@ const styles = StyleSheet.create({
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
   errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  solutionArea: { gap: 0 },
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   finalText: { color: colors.white, fontSize: 24, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },

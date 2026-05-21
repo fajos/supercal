@@ -7,15 +7,20 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
 import { solveDeterminant, solveInverse, solveEigenvalues, solveTranspose } from '../solvers/matrixSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function MatrixScreen() {
   const [matrixSize, setMatrixSize] = useState('3');
@@ -395,10 +400,12 @@ export default function MatrixScreen() {
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <BackHeader title="🧮 Matrix Operations" subtitle="Determinant, Inverse, Eigenvalues" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="🧮 Matrix Operations" subtitle="Determinant, Inverse, Eigenvalues" />
+        </View>
 
         {/* Matrix Size */}
-        <View style={styles.inputCard}>
+        <InputCard style={isTablet && styles.tabletInputCard}>
           <Text style={styles.inputLabel}>Matrix Size (n × n):</Text>
           <TextInput
             style={styles.sizeInput}
@@ -452,7 +459,7 @@ export default function MatrixScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleOperation} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>🧮 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {/* Error */}
         {error && (
@@ -509,18 +516,27 @@ export default function MatrixScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
+  },
+  resultArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
+  },
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, letterSpacing: 0.3 },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-  },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, letterSpacing: 0.3 },
   sizeInput: {
     backgroundColor: colors.bgInput,
@@ -535,9 +551,9 @@ const styles = StyleSheet.create({
     width: 80,
   },
   matrixInputGrid: { gap: 8, marginTop: 8 },
-  inputRow: { flexDirection: 'row', gap: 8, justifyContent: 'center' },
+  inputRow: { flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap' },
   matrixInput: {
-    width: 55,
+    width: 65,
     height: 44,
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -581,7 +597,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  resultArea: { gap: 0 },
   stepText: {
     color: '#c8c8d8',
     fontSize: 14,

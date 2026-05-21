@@ -7,14 +7,19 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
+import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveSequence } from '../solvers/sequenceSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function SequenceScreen() {
   const [type, setType] = useState('arithmetic');
@@ -53,10 +58,12 @@ export default function SequenceScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <BackHeader title="🔢 Sequences & Series" subtitle="Arithmetic & Geometric" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="🔢 Sequences & Series" subtitle="Arithmetic & Geometric" />
+        </View>
 
-        <View style={styles.inputCard}>
-          <View style={styles.modeRow}>
+        <InputCard>
+          <View style={styles.modeGrid}>
             <TouchableOpacity
               style={[styles.modeBtn, type === 'arithmetic' && styles.modeBtnActive]}
               onPress={() => { setType('arithmetic'); setResult(null); }}
@@ -106,7 +113,7 @@ export default function SequenceScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>🔢 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && (
           <View style={styles.errorCard}>
@@ -137,21 +144,16 @@ export default function SequenceScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800 },
+  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-  },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
+  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
   modeBtn: {
     flex: 1,
+    minWidth: '40%',
     paddingVertical: 12,
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -191,7 +193,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  solutionArea: { gap: 0 },
   stepText: {
     color: '#c8c8d8',
     fontSize: 14,

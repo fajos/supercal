@@ -13,7 +13,15 @@ import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const CARD_WIDTH = (SCREEN_WIDTH - 48) / 2;
+
+const getGridConfig = () => {
+  if (SCREEN_WIDTH >= 768) return { cols: 4, gap: 16 }; // 10" tablet
+  if (SCREEN_WIDTH >= 600) return { cols: 3, gap: 14 }; // 7" tablet
+  return { cols: 2, gap: 12 }; // Phone
+};
+
+const { cols: COLUMN_COUNT, gap: GRID_GAP } = getGridConfig();
+const CARD_WIDTH = (SCREEN_WIDTH - 32 - (COLUMN_COUNT - 1) * GRID_GAP) / COLUMN_COUNT;
 
 const PHYSICS_SOLVERS = [
   {
@@ -418,8 +426,8 @@ export default function PhysicsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  header: { marginBottom: 24, paddingTop: 8 },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  header: { marginBottom: 24, paddingTop: 8, width: '100%', maxWidth: 800 },
   title: { fontSize: 32, fontWeight: '800', color: colors.white, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 6 },
   sectionTitle: {
@@ -428,12 +436,17 @@ const styles = StyleSheet.create({
     color: colors.white,
     marginBottom: 12,
     marginTop: 20,
+    width: '100%',
+    maxWidth: 800,
   },
   grid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
+    gap: GRID_GAP,
     marginBottom: 16,
+    justifyContent: 'center',
+    width: '100%',
+    maxWidth: 800,
   },
   card: {
     width: CARD_WIDTH,
@@ -460,6 +473,8 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 12,
+    width: '100%',
+    maxWidth: 800,
   },
   theoryHeader: {
     flexDirection: 'row',
@@ -488,6 +503,8 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 20,
     padding: 20,
+    width: '100%',
+    maxWidth: 800,
   },
   refTitle: { fontSize: 16, fontWeight: '600', color: colors.white, marginBottom: 12 },
   refRow: {

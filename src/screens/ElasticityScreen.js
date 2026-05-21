@@ -13,6 +13,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
+import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveElasticity } from '../solvers/elasticitySolver';
 import { BackHeader } from '../components/BackHeader';
@@ -50,10 +51,12 @@ export default function ElasticityScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-       <BackHeader title="📏 Elasticity" subtitle="Hooke's Law & Young's Modulus" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="📏 Elasticity" subtitle="Hooke's Law & Young's Modulus" />
+        </View>
 
-        <View style={styles.inputCard}>
-          <View style={styles.modeRow}>
+        <InputCard>
+          <View style={styles.modeGrid}>
             {[
               { id: 'hookesLaw', label: "Hooke's" },
               { id: 'youngsModulus', label: 'Youngs' },
@@ -89,7 +92,7 @@ export default function ElasticityScreen() {
           <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
             <Text style={styles.solveBtnText}>📏 CALCULATE</Text>
           </TouchableOpacity>
-        </View>
+        </InputCard>
 
         {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
 
@@ -117,10 +120,27 @@ export default function ElasticityScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800 },
+  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  modeBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: '28%',
+    flex: 1,
+  },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },

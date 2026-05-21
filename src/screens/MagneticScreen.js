@@ -8,6 +8,7 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -16,6 +17,9 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveMagnetic } from '../solvers/magneticSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function MagneticScreen() {
   const [mode, setMode] = useState('chargeForce');
@@ -55,9 +59,11 @@ export default function MagneticScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-       <BackHeader title="🧲 Magnetic Fields" subtitle="Electromagnetism & Forces" />
+        <View style={styles.headerContainer}>
+          <BackHeader title="🧲 Magnetic Fields" subtitle="Electromagnetism & Forces" />
+        </View>
 
-        <View style={styles.inputCard}>
+        <View style={[styles.inputCard, isTablet && styles.tabletInputCard]}>
           <View style={styles.modeRow}>
             {[
               { id: 'chargeForce', label: 'Charge' },
@@ -128,8 +134,25 @@ export default function MagneticScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
+  scrollContent: {
+    padding: 16,
+    paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
+  },
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
+  },
+  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16, width: '100%' },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
@@ -139,9 +162,8 @@ const styles = StyleSheet.create({
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 20 },
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
+  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16, width: '100%', maxWidth: 600 },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  solutionArea: { gap: 0 },
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },

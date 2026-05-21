@@ -8,16 +8,21 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveCubic } from '../solvers/polynomialSolver';
 import { useHistory } from '../utils/history';
 import { solvePolynomial } from '../solvers/polynomialSolver';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function PolynomialScreen() {
   const [degree, setDegree] = useState('3');
@@ -110,10 +115,12 @@ export default function PolynomialScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <BackHeader title="📈 Polynomial" subtitle="Cubic & Higher Degree Solver" />
+          <View style={styles.headerContainer}>
+            <BackHeader title="📈 Polynomial" subtitle="Cubic & Higher Degree Solver" />
+          </View>
 
           {/* Input Card */}
-          <View style={styles.inputCard}>
+          <InputCard style={isTablet && styles.tabletInputCard}>
             <Text style={styles.inputLabel}>Degree:</Text>
             <TextInput
               style={styles.degreeInput}
@@ -178,7 +185,7 @@ export default function PolynomialScreen() {
             >
               <Text style={styles.solveBtnText}>📈 FIND ROOTS</Text>
             </TouchableOpacity>
-          </View>
+          </InputCard>
 
           {/* Error */}
           {error && (
@@ -227,30 +234,20 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+    alignItems: 'center',
   },
-  header: {
-    marginBottom: 20,
-    paddingTop: 8,
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    letterSpacing: -0.5,
+  tabletInputCard: {
+    maxWidth: 600,
+    width: '100%',
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-    letterSpacing: 0.3,
-  },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
   },
   inputLabel: {
     fontSize: 13,
@@ -274,15 +271,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+    justifyContent: 'center',
   },
   coeffItem: {
     flex: 1,
-    minWidth: '45%',
+    minWidth: 100,
+    maxWidth: 150,
   },
   coeffLabel: {
     color: colors.textSecondary,
     fontSize: 11,
     marginBottom: 4,
+    textAlign: 'center',
   },
   coeffInput: {
     backgroundColor: colors.bgInput,
@@ -320,14 +320,13 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     padding: 16,
     marginBottom: 16,
+    width: '100%',
+    maxWidth: 600,
   },
   errorText: {
     color: colors.danger,
     fontSize: 14,
     fontWeight: '500',
-  },
-  solutionArea: {
-    gap: 0,
   },
   stepText: {
     color: '#c8c8d8',

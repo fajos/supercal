@@ -8,15 +8,20 @@ import {
   StyleSheet,
   KeyboardAvoidingView,
   Platform,
+  Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveLinearSystem } from '../solvers/linearSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function LinearScreen() {
   const [a1, setA1] = useState('2');
@@ -100,10 +105,12 @@ export default function LinearScreen() {
           showsVerticalScrollIndicator={false}
         >
           {/* Header */}
-          <BackHeader title="📏 Linear System" subtitle="2×2 Cramer's Rule" />  
+          <View style={styles.headerContainer}>
+            <BackHeader title="📏 Linear System" subtitle="2×2 Cramer's Rule" />
+          </View>
 
           {/* Input Card */}
-          <View style={styles.inputCard}>
+          <InputCard>
             <Text style={styles.inputLabel}>Equation 1:</Text>
             <View style={styles.eqRow}>
               <TextInput
@@ -173,7 +180,7 @@ export default function LinearScreen() {
             >
               <Text style={styles.solveBtnText}>📏 SOLVE SYSTEM</Text>
             </TouchableOpacity>
-          </View>
+          </InputCard>
 
           {/* Error */}
           {error && (
@@ -223,6 +230,16 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
+    alignItems: 'center',
+  },
+  headerContainer: {
+    width: '100%',
+    maxWidth: 800,
+  },
+  solutionArea: {
+    gap: 0,
+    width: '100%',
+    maxWidth: 800,
   },
   header: {
     marginBottom: 20,
@@ -259,10 +276,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginBottom: 4,
+    flexWrap: 'wrap',
+    justifyContent: 'center',
   },
   eqInput: {
     flex: 1,
-    minWidth: 45,
+    minWidth: 60,
+    maxWidth: 100,
     paddingVertical: 12,
     paddingHorizontal: 8,
     backgroundColor: colors.bgInput,
@@ -314,9 +334,6 @@ const styles = StyleSheet.create({
     color: colors.danger,
     fontSize: 14,
     fontWeight: '500',
-  },
-  solutionArea: {
-    gap: 0,
   },
   stepText: {
     color: '#c8c8d8',
