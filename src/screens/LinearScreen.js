@@ -19,6 +19,9 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { solveLinearSystem } from '../solvers/linearSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+import { SolveButton } from '../components/SolveButton';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -32,12 +35,17 @@ export default function LinearScreen() {
   const [c2, setC2] = useState('2');
   const [solution, setSolution] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
-  const handleSolve = () => {
+  const handleSolve = async () => {
+    setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
+
+    // Artificial delay for UI consistency
+    await new Promise(resolve => setTimeout(resolve, 600));
 
     try {
       const result = solveLinearSystem(
@@ -63,6 +71,23 @@ export default function LinearScreen() {
     } catch (err) {
       setError(err.message);
       setSolution(null);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (setter) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      setter(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
   };
 
@@ -111,7 +136,12 @@ export default function LinearScreen() {
 
           {/* Input Card */}
           <InputCard>
-            <Text style={styles.inputLabel}>Equation 1:</Text>
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>Equation 1:</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory(setA1)}>
+                <Text style={styles.recallBtn}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.eqRow}>
               <TextInput
                 style={styles.eqInput}
@@ -143,7 +173,12 @@ export default function LinearScreen() {
 
             <View style={styles.divider} />
 
-            <Text style={styles.inputLabel}>Equation 2:</Text>
+            <View style={styles.inputRow}>
+              <Text style={styles.inputLabel}>Equation 2:</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory(setA2)}>
+                <Text style={styles.recallBtn}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.eqRow}>
               <TextInput
                 style={styles.eqInput}
@@ -173,21 +208,14 @@ export default function LinearScreen() {
               />
             </View>
 
-            <TouchableOpacity
-              style={styles.solveBtn}
+            <SolveButton
               onPress={handleSolve}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.solveBtnText}>📏 SOLVE SYSTEM</Text>
-            </TouchableOpacity>
+              label="📏 SOLVE SYSTEM"
+              loading={loading}
+            />
           </InputCard>
 
-          {/* Error */}
-          {error && (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            </View>
-          )}
+          <ErrorCard message={error} />
 
           {/* Solution Steps */}
           {solution && (
@@ -204,12 +232,30 @@ export default function LinearScreen() {
               ))}
 
               <FinalAnswer label="🎯 Solution">
-                <Text style={styles.finalText}>
-                  x = {solution.x.toFixed(4)}
-                </Text>
-                <Text style={styles.finalText}>
-                  y = {solution.y.toFixed(4)}
-                </Text>
+                <View style={styles.finalRow}>
+                  <View>
+                    <Text style={styles.finalText}>
+                      x = {solution.x.toFixed(4)}
+                    </Text>
+                    <Text style={styles.finalText}>
+                      y = {solution.y.toFixed(4)}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(solution.x)}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>Mx</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(solution.y)}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>My</Text>
+                  </TouchableOpacity>
+                </View>
               </FinalAnswer>
             </View>
           )}
@@ -268,8 +314,19 @@ const styles = StyleSheet.create({
   inputLabel: {
     fontSize: 13,
     color: colors.textSecondary,
-    marginBottom: 8,
     letterSpacing: 0.3,
+  },
+  inputRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  recallBtn: {
+    color: colors.accent,
+    fontSize: 10,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   eqRow: {
     flexDirection: 'row',
@@ -336,7 +393,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
@@ -368,5 +425,27 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
+  },
+  finalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 4,
   },
 });

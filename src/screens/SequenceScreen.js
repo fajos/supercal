@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -15,8 +16,12 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
+import { ErrorCard } from '../components/ErrorCard';
+import { SolveButton } from '../components/SolveButton';
 import { solveSequence } from '../solvers/sequenceSolver';
 import { BackHeader } from '../components/BackHeader';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -28,24 +33,48 @@ export default function SequenceScreen() {
   const [n, setN] = useState('10');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
 
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (field) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      if (field === 'a1') setA1(memory.last_calculus_result);
+      if (field === 'diff') setDifference(memory.last_calculus_result);
+      if (field === 'n') setN(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   const handleSolve = () => {
+    setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
-    try {
-      const solverResult = solveSequence(
-        type,
-        parseFloat(a1) || 0,
-        parseFloat(difference) || 0,
-        parseInt(n) || 1
-      );
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    }
+
+    setTimeout(() => {
+      try {
+        const solverResult = solveSequence(
+          type,
+          parseFloat(a1) || 0,
+          parseFloat(difference) || 0,
+          parseInt(n) || 1
+        );
+        setResult(solverResult);
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const renderContent = (content) => {
@@ -57,71 +86,84 @@ export default function SequenceScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerContainer}>
-          <BackHeader title="🔢 Sequences & Series" subtitle="Arithmetic & Geometric" />
-        </View>
-
-        <InputCard>
-          <View style={styles.modeGrid}>
-            <TouchableOpacity
-              style={[styles.modeBtn, type === 'arithmetic' && styles.modeBtnActive]}
-              onPress={() => { setType('arithmetic'); setResult(null); }}
-            >
-              <Text style={[styles.modeText, type === 'arithmetic' && styles.modeTextActive]}>Arithmetic</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modeBtn, type === 'geometric' && styles.modeBtnActive]}
-              onPress={() => { setType('geometric'); setResult(null); }}
-            >
-              <Text style={[styles.modeText, type === 'geometric' && styles.modeTextActive]}>Geometric</Text>
-            </TouchableOpacity>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.headerContainer}>
+            <BackHeader title="🔢 Sequences & Series" subtitle="Arithmetic & Geometric" />
           </View>
 
-          <Text style={styles.inputLabel}>First term (a₁):</Text>
-          <TextInput
-            style={styles.input}
-            value={a1}
-            onChangeText={setA1}
-            keyboardType="decimal-pad"
-            placeholder="2"
-            placeholderTextColor={colors.textSecondary}
-          />
+          <InputCard>
+            <View style={styles.modeGrid}>
+              <TouchableOpacity
+                style={[styles.modeBtn, type === 'arithmetic' && styles.modeBtnActive]}
+                onPress={() => { setType('arithmetic'); setResult(null); }}
+              >
+                <Text style={[styles.modeText, type === 'arithmetic' && styles.modeTextActive]}>Arithmetic</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modeBtn, type === 'geometric' && styles.modeBtnActive]}
+                onPress={() => { setType('geometric'); setResult(null); }}
+              >
+                <Text style={[styles.modeText, type === 'geometric' && styles.modeTextActive]}>Geometric</Text>
+              </TouchableOpacity>
+            </View>
 
-          <Text style={styles.inputLabel}>
-            {type === 'arithmetic' ? 'Common difference (d):' : 'Common ratio (r):'}
-          </Text>
-          <TextInput
-            style={styles.input}
-            value={difference}
-            onChangeText={setDifference}
-            keyboardType="decimal-pad"
-            placeholder="3"
-            placeholderTextColor={colors.textSecondary}
-          />
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>First term (a₁):</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory('a1')}>
+                <Text style={styles.recallBtn}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={a1}
+              onChangeText={setA1}
+              keyboardType="decimal-pad"
+              placeholder="2"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-          <Text style={styles.inputLabel}>Number of terms (n):</Text>
-          <TextInput
-            style={styles.input}
-            value={n}
-            onChangeText={setN}
-            keyboardType="number-pad"
-            placeholder="10"
-            placeholderTextColor={colors.textSecondary}
-          />
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>
+                {type === 'arithmetic' ? 'Common difference (d):' : 'Common ratio (r):'}
+              </Text>
+              <TouchableOpacity onPress={() => handleRecallMemory('diff')}>
+                <Text style={styles.recallBtn}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={difference}
+              onChangeText={setDifference}
+              keyboardType="decimal-pad"
+              placeholder="3"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-          <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>🔢 CALCULATE</Text>
-          </TouchableOpacity>
-        </InputCard>
+            <Text style={styles.inputLabel}>Number of terms (n):</Text>
+            <TextInput
+              style={styles.input}
+              value={n}
+              onChangeText={setN}
+              keyboardType="number-pad"
+              placeholder="10"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-        {error && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        )}
+            <SolveButton
+              onPress={handleSolve}
+              loading={loading}
+              title="CALCULATE"
+              icon="infinite-outline"
+            />
+          </InputCard>
 
-        {result && (
+          <ErrorCard error={error} />
+
+          {result && (
           <View style={styles.solutionArea}>
             {result.steps.map((step, idx) => (
               <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
@@ -130,13 +172,33 @@ export default function SequenceScreen() {
             ))}
             <FinalAnswer label="🎯 Results">
               <Text style={styles.finalLabel}>Nth Term (a{n}):</Text>
-              <Text style={styles.finalText}>{result.nthTerm}</Text>
+              <View style={styles.finalResultRow}>
+                <Text style={styles.finalText}>{result.nthTerm}</Text>
+                <TouchableOpacity
+                  style={styles.memoryBtn}
+                  onPress={() => handleSaveToMemory(result.nthTerm)}
+                >
+                  <Ionicons name="save-outline" size={18} color={colors.accent} />
+                  <Text style={styles.memoryBtnText}>Ma</Text>
+                </TouchableOpacity>
+              </View>
+
               <Text style={styles.finalLabel}>Sum of first {n} terms (S{n}):</Text>
-              <Text style={styles.finalText}>{result.sum}</Text>
+              <View style={styles.finalResultRow}>
+                <Text style={styles.finalText}>{result.sum}</Text>
+                <TouchableOpacity
+                  style={styles.memoryBtn}
+                  onPress={() => handleSaveToMemory(result.sum)}
+                >
+                  <Ionicons name="save-outline" size={18} color={colors.accent} />
+                  <Text style={styles.memoryBtnText}>Mb</Text>
+                </TouchableOpacity>
+              </View>
             </FinalAnswer>
           </View>
         )}
       </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -164,7 +226,20 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
+  recallBtn: {
+    color: colors.accent,
+    fontSize: 10,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   input: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -218,5 +293,28 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
+  },
+  finalResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
 });

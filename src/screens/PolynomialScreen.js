@@ -20,6 +20,8 @@ import { solveCubic } from '../solvers/polynomialSolver';
 import { useHistory } from '../utils/history';
 import { solvePolynomial } from '../solvers/polynomialSolver';
 import { BackHeader } from '../components/BackHeader';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -35,6 +37,25 @@ export default function PolynomialScreen() {
   const [error, setError] = useState(null);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
+
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (field) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      if (field === 'a') setA(memory.last_calculus_result);
+      if (field === 'b') setB(memory.last_calculus_result);
+      if (field === 'c') setC(memory.last_calculus_result);
+      if (field === 'd') setD(memory.last_calculus_result);
+      if (field === 'e') setE(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const handleSolve = () => {
   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -121,7 +142,9 @@ export default function PolynomialScreen() {
 
           {/* Input Card */}
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <Text style={styles.inputLabel}>Degree:</Text>
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>Degree:</Text>
+            </View>
             <TextInput
               style={styles.degreeInput}
               value={degree}
@@ -131,13 +154,20 @@ export default function PolynomialScreen() {
               placeholderTextColor={colors.textSecondary}
             />
 
-            <Text style={[styles.inputLabel, { marginTop: 12 }]}>
-              Coefficients (highest to lowest degree):
-            </Text>
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>
+                Coefficients (highest to lowest degree):
+              </Text>
+            </View>
 
             <View style={styles.coeffGrid}>
               <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>a (x{degree})</Text>
+                <View style={styles.coeffHeader}>
+                  <Text style={styles.coeffLabel}>a (x{degree})</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('a')}>
+                    <Text style={styles.recallBtnMini}>MR</Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={styles.coeffInput}
                   value={a}
@@ -147,7 +177,12 @@ export default function PolynomialScreen() {
                 />
               </View>
               <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>b (x{parseInt(degree) - 1})</Text>
+                <View style={styles.coeffHeader}>
+                  <Text style={styles.coeffLabel}>b (x{parseInt(degree) - 1})</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('b')}>
+                    <Text style={styles.recallBtnMini}>MR</Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={styles.coeffInput}
                   value={b}
@@ -157,7 +192,12 @@ export default function PolynomialScreen() {
                 />
               </View>
               <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>c (x{parseInt(degree) - 2})</Text>
+                <View style={styles.coeffHeader}>
+                  <Text style={styles.coeffLabel}>c (x{parseInt(degree) - 2})</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('c')}>
+                    <Text style={styles.recallBtnMini}>MR</Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={styles.coeffInput}
                   value={c}
@@ -167,7 +207,12 @@ export default function PolynomialScreen() {
                 />
               </View>
               <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>d (x{parseInt(degree) - 3})</Text>
+                <View style={styles.coeffHeader}>
+                  <Text style={styles.coeffLabel}>d (x{parseInt(degree) - 3})</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('d')}>
+                    <Text style={styles.recallBtnMini}>MR</Text>
+                  </TouchableOpacity>
+                </View>
                 <TextInput
                   style={styles.coeffInput}
                   value={d}
@@ -178,21 +223,13 @@ export default function PolynomialScreen() {
               </View>
             </View>
 
-            <TouchableOpacity
-              style={styles.solveBtn}
+            <SolveButton
               onPress={handleSolve}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.solveBtnText}>📈 FIND ROOTS</Text>
-            </TouchableOpacity>
+              label="📈 FIND ROOTS"
+            />
           </InputCard>
 
-          {/* Error */}
-          {error && (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            </View>
-          )}
+          <ErrorCard message={error} />
 
           {/* Solution Steps */}
           {solution && (
@@ -210,9 +247,18 @@ export default function PolynomialScreen() {
 
               <FinalAnswer label="🎯 Roots Found">
                 {solution.roots.map((root, idx) => (
-                  <Text key={idx} style={styles.finalText}>
-                    x{idx + 1} = {typeof root === 'string' ? root : root.toFixed(6)}
-                  </Text>
+                  <View key={idx} style={styles.finalResultRow}>
+                    <Text style={styles.finalText}>
+                      x{idx + 1} = {typeof root === 'string' ? root : root.toFixed(6)}
+                    </Text>
+                    <TouchableOpacity
+                      style={styles.memoryBtn}
+                      onPress={() => handleSaveToMemory(typeof root === 'string' ? root : root.toFixed(6))}
+                    >
+                      <Ionicons name="save-outline" size={18} color={colors.accent} />
+                      <Text style={styles.memoryBtnText}>M{idx + 1}</Text>
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </FinalAnswer>
             </View>
@@ -249,11 +295,30 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
   inputLabel: {
     fontSize: 13,
     color: colors.textSecondary,
-    marginBottom: 8,
     letterSpacing: 0.3,
+  },
+  recallBtnMini: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
+  },
+  coeffHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+    paddingHorizontal: 2,
   },
   degreeInput: {
     backgroundColor: colors.bgInput,
@@ -374,5 +439,28 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 30,
+  },
+  finalResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
 });

@@ -8,14 +8,20 @@ import {
   ScrollView,
   StyleSheet,
   Platform,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
+import { ErrorCard } from '../components/ErrorCard';
+import { InputCard } from '../components/InputCard';
+import { SolveButton } from '../components/SolveButton';
 import { solveRadioactivity } from '../solvers/radioactivitySolver';
 import { BackHeader } from '../components/BackHeader';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 export default function RadioactivityScreen() {
   const [mode, setMode] = useState('halfLife');
@@ -25,89 +31,152 @@ export default function RadioactivityScreen() {
 
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
 
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_physics_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (field) => {
+    const memory = await getMemory();
+    if (memory.last_physics_result) {
+      if (field === 'initial') setInitialAmount(memory.last_physics_result);
+      if (field === 'time') setTime(memory.last_physics_result);
+      if (field === 'halfLife') setHalfLife(memory.last_physics_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
   const handleSolve = () => {
+    setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
-    try {
-      const params = {
-        initialAmount: parseFloat(initialAmount) || 0,
-        time: parseFloat(time) || 0,
-        halfLife: parseFloat(halfLife) || 1,
-      };
-      const solverResult = solveRadioactivity(mode, params);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    }
+
+    setTimeout(() => {
+      try {
+        const params = {
+          initialAmount: parseFloat(initialAmount) || 0,
+          time: parseFloat(time) || 0,
+          halfLife: parseFloat(halfLife) || 1,
+        };
+        const solverResult = solveRadioactivity(mode, params);
+        setResult(solverResult);
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-       <BackHeader title="⚛️ Radioactivity" subtitle="Decay & Half-Life" />
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <BackHeader title="⚛️ Radioactivity" subtitle="Decay & Half-Life" />
 
-        <View style={styles.inputCard}>
-          <View style={styles.modeRow}>
-            {[
-              { id: 'halfLife', label: 'Decay' },
-              { id: 'decayConstant', label: 'Constant' },
-            ].map(m => (
-              <TouchableOpacity
-                key={m.id}
-                style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                onPress={() => { setMode(m.id); setResult(null); }}
-              >
-                <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                  {m.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <InputCard>
+            <View style={styles.modeRow}>
+              {[
+                { id: 'halfLife', label: 'Decay' },
+                { id: 'decayConstant', label: 'Constant' },
+              ].map(m => (
+                <TouchableOpacity
+                  key={m.id}
+                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
+                  onPress={() => { setMode(m.id); setResult(null); }}
+                >
+                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
+                    {m.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          {mode === 'halfLife' ? (
-            <>
-              <Text style={styles.inputLabel}>Initial Amount (N₀):</Text>
-              <TextInput style={styles.input} value={initialAmount} onChangeText={setInitialAmount} keyboardType="decimal-pad" />
-              <Text style={styles.inputLabel}>Elapsed Time (t):</Text>
-              <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" />
-              <Text style={styles.inputLabel}>Half-life (T):</Text>
-              <TextInput style={styles.input} value={halfLife} onChangeText={setHalfLife} keyboardType="decimal-pad" />
-            </>
-          ) : (
-            <>
-              <Text style={styles.inputLabel}>Half-life (T) seconds:</Text>
-              <TextInput style={styles.input} value={halfLife} onChangeText={setHalfLife} keyboardType="decimal-pad" />
-            </>
+            {mode === 'halfLife' ? (
+              <>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.inputLabel}>Initial Amount (N₀):</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('initial')}>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.input} value={initialAmount} onChangeText={setInitialAmount} keyboardType="decimal-pad" />
+
+                <View style={styles.inputHeader}>
+                  <Text style={styles.inputLabel}>Elapsed Time (t):</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('time')}>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" />
+
+                <View style={styles.inputHeader}>
+                  <Text style={styles.inputLabel}>Half-life (T):</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('halfLife')}>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.input} value={halfLife} onChangeText={setHalfLife} keyboardType="decimal-pad" />
+              </>
+            ) : (
+              <>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.inputLabel}>Half-life (T) seconds:</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('halfLife')}>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.input} value={halfLife} onChangeText={setHalfLife} keyboardType="decimal-pad" />
+              </>
+            )}
+
+            <SolveButton
+              onPress={handleSolve}
+              loading={loading}
+              title="CALCULATE"
+              icon="nuclear-outline"
+            />
+          </InputCard>
+
+          <ErrorCard error={error} />
+
+          {result && (
+            <View style={styles.solutionArea}>
+              {result.steps.map((step, idx) => (
+                <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
+                  {step.content.map((item, i) => {
+                    if (item.type === 'highlight') return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
+                    if (item.type === 'formula') return <Text key={i} style={styles.formulaText}>{item.text}</Text>;
+                    return <Text key={i} style={styles.stepText}>{item.text}</Text>;
+                  })}
+                </StepCard>
+              ))}
+              <FinalAnswer label="⚛️ Result">
+                <View style={styles.finalRow}>
+                  <Text style={styles.finalText}>{result.result}</Text>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(result.result)}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>Save</Text>
+                  </TouchableOpacity>
+                </View>
+              </FinalAnswer>
+            </View>
           )}
-
-          <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>⚛️ CALCULATE</Text>
-          </TouchableOpacity>
-        </View>
-
-        {error && <View style={styles.errorCard}><Text style={styles.errorText}>⚠️ {error}</Text></View>}
-
-        {result && (
-          <View style={styles.solutionArea}>
-            {result.steps.map((step, idx) => (
-              <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
-                {step.content.map((item, i) => {
-                  if (item.type === 'highlight') return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
-                  if (item.type === 'formula') return <Text key={i} style={styles.formulaText}>{item.text}</Text>;
-                  return <Text key={i} style={styles.stepText}>{item.text}</Text>;
-                })}
-              </StepCard>
-            ))}
-            <FinalAnswer label="⚛️ Result">
-              <Text style={styles.finalText}>{result.result}</Text>
-            </FinalAnswer>
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -133,4 +202,9 @@ const styles = StyleSheet.create({
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
+  inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
+  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
+  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
+  memoryBtn: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.bgInput, paddingHorizontal: 10, paddingVertical: 6, borderRadius: 8, borderWidth: 1, borderColor: colors.accent + '40' },
+  memoryBtnText: { color: colors.accent, fontSize: 12, fontWeight: '700', marginLeft: 6 },
 });

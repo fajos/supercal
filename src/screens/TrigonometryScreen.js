@@ -13,11 +13,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 import { solveTrig } from '../solvers/trigSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -33,12 +38,29 @@ export default function TrigonometryScreen() {
   const [value, setValue] = useState('0.5');
   const [solution, setSolution] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
+
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async () => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      setValue(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
+    setLoading(true);
 
     try {
       const result = solveTrig(selectedFunc, parseFloat(value));
@@ -57,6 +79,8 @@ export default function TrigonometryScreen() {
     } catch (err) {
       setError(err.message);
       setSolution(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -103,8 +127,7 @@ export default function TrigonometryScreen() {
             <BackHeader title="🔺 Trigonometry" subtitle="sin, cos, tan Equations" />
           </View>
 
-          {/* Input Card */}
-          <View style={[styles.inputCard, isTablet && styles.tabletInputCard]}>
+          <InputCard style={isTablet && styles.tabletInputCard}>
             <Text style={styles.inputLabel}>Select function:</Text>
             <View style={styles.funcRow}>
               {TRIG_FUNCTIONS.map((func) => (
@@ -119,7 +142,8 @@ export default function TrigonometryScreen() {
                     setSelectedFunc(func.value);
                   }}
                 >
-                  <Text                    style={[
+                  <Text
+                    style={[
                       styles.funcBtnText,
                       selectedFunc === func.value && styles.funcBtnTextActive,
                     ]}
@@ -130,9 +154,14 @@ export default function TrigonometryScreen() {
               ))}
             </View>
 
-            <Text style={[styles.inputLabel, { marginTop: 16 }]}>
-              {selectedFunc}(x) = 
-            </Text>
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>
+                {selectedFunc}(x) =
+              </Text>
+              <TouchableOpacity onPress={handleRecallMemory}>
+                <Text style={styles.recallBtn}>MR</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput
               style={styles.valueInput}
               value={value}
@@ -142,21 +171,14 @@ export default function TrigonometryScreen() {
               placeholderTextColor={colors.textSecondary}
             />
 
-            <TouchableOpacity
-              style={styles.solveBtn}
+            <SolveButton
               onPress={handleSolve}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.solveBtnText}>📐 SOLVE EQUATION</Text>
-            </TouchableOpacity>
-          </View>
+              label="📐 SOLVE EQUATION"
+              loading={loading}
+            />
+          </InputCard>
 
-          {/* Error */}
-          {error && (
-            <View style={styles.errorCard}>
-              <Text style={styles.errorText}>⚠️ {error}</Text>
-            </View>
-          )}
+          <ErrorCard message={error} />
 
           {/* Solution Steps */}
           {solution && (
@@ -174,22 +196,44 @@ export default function TrigonometryScreen() {
 
               <FinalAnswer label="🎯 Solutions">
                 <Text style={styles.finalLabel}>Principal Value:</Text>
-                <Text style={styles.finalText}>
-                  x = {solution.solutions.principal.toFixed(6)} rad
-                </Text>
-                <Text style={styles.finalDeg}>
-                  = {solution.solutions.principalDeg.toFixed(4)}°
-                </Text>
+                <View style={styles.finalResultRow}>
+                  <View>
+                    <Text style={styles.finalText}>
+                      x = {solution.solutions.principal.toFixed(6)} rad
+                    </Text>
+                    <Text style={styles.finalDeg}>
+                      = {solution.solutions.principalDeg.toFixed(4)}°
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(solution.solutions.principal.toFixed(6))}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>M+</Text>
+                  </TouchableOpacity>
+                </View>
 
                 {solution.solutions.secondary !== null && (
                   <View style={{ marginTop: 12 }}>
                     <Text style={styles.finalLabel}>Second Solution (0 to 2π):</Text>
-                    <Text style={styles.finalText}>
-                      x = {solution.solutions.secondary.toFixed(6)} rad
-                    </Text>
-                    <Text style={styles.finalDeg}>
-                      = {solution.solutions.secondaryDeg.toFixed(4)}°
-                    </Text>
+                    <View style={styles.finalResultRow}>
+                      <View>
+                        <Text style={styles.finalText}>
+                          x = {solution.solutions.secondary.toFixed(6)} rad
+                        </Text>
+                        <Text style={styles.finalDeg}>
+                          = {solution.solutions.secondaryDeg.toFixed(4)}°
+                        </Text>
+                      </View>
+                      <TouchableOpacity
+                        style={styles.memoryBtn}
+                        onPress={() => handleSaveToMemory(solution.solutions.secondary.toFixed(6))}
+                      >
+                        <Ionicons name="save-outline" size={18} color={colors.accent} />
+                        <Text style={styles.memoryBtnText}>M2</Text>
+                      </TouchableOpacity>
+                    </View>
                   </View>
                 )}
 
@@ -248,6 +292,19 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginBottom: 8,
     letterSpacing: 0.3,
+  },
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  recallBtn: {
+    color: colors.accent,
+    fontSize: 10,
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
   funcRow: {
     flexDirection: 'row',
@@ -364,6 +421,28 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 20,
+  },
+  finalResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
   generalBox: {
     backgroundColor: 'rgba(0,212,170,0.08)',

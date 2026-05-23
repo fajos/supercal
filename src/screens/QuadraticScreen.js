@@ -12,14 +12,16 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
-import { InputCard } from '../components/InputCard';      // 🆕 Import
+import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
-import { SolveButton } from '../components/SolveButton';  // 🆕 Import
-import { ErrorCard } from '../components/ErrorCard';      // 🆕 Import
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 import { solveQuadratic } from '../solvers/quadraticSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -33,6 +35,23 @@ export default function QuadraticScreen() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
+
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (field) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      if (field === 'a') setA(memory.last_calculus_result);
+      if (field === 'b') setB(memory.last_calculus_result);
+      if (field === 'c') setC(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const handleSolve = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -114,6 +133,17 @@ export default function QuadraticScreen() {
 
           {/* 🆕 Using InputCard component */}
           <InputCard style={isTablet && styles.tabletInputCard}>
+            <View style={styles.inputHeader}>
+              <TouchableOpacity onPress={() => handleRecallMemory('a')}>
+                <Text style={styles.recallBtnMini}>Recall MR a</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleRecallMemory('b')}>
+                <Text style={styles.recallBtnMini}>Recall MR b</Text>
+              </TouchableOpacity>
+              <TouchableOpacity onPress={() => handleRecallMemory('c')}>
+                <Text style={styles.recallBtnMini}>Recall MR c</Text>
+              </TouchableOpacity>
+            </View>
             <View style={styles.coeffRow}>
               <TextInput style={styles.input} value={a} onChangeText={setA}
                 keyboardType="decimal-pad" placeholder="a" placeholderTextColor={colors.textSecondary} />
@@ -146,8 +176,26 @@ export default function QuadraticScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🎯 Solution">
-                <Text style={styles.finalRootText}>x₁ = {solution.roots[0]}</Text>
-                <Text style={styles.finalRootText}>x₂ = {solution.roots[1]}</Text>
+                <View style={styles.finalResultRow}>
+                  <Text style={styles.finalRootText}>x₁ = {solution.roots[0]}</Text>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(solution.roots[0])}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>M1</Text>
+                  </TouchableOpacity>
+                </View>
+                <View style={styles.finalResultRow}>
+                  <Text style={styles.finalRootText}>x₂ = {solution.roots[1]}</Text>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(solution.roots[1])}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>M2</Text>
+                  </TouchableOpacity>
+                </View>
               </FinalAnswer>
             </View>
           )}
@@ -206,6 +254,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 20,
     marginBottom: 16,
+  },
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 20,
+    marginBottom: 12,
+  },
+  recallBtnMini: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
   coeffRow: {
     flexDirection: 'row',
@@ -271,7 +331,7 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
@@ -316,5 +376,28 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
+  },
+  finalResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginBottom: 8,
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
 });

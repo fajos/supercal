@@ -13,6 +13,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useHistory } from '../utils/history';
+import { storeValue } from '../utils/memory';
+import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -88,31 +90,95 @@ export default function HistoryScreen() {
     return date.toLocaleDateString();
   };
 
+  const handleSaveToMemory = async (val, type) => {
+    const key = type === 'statistics' || type === 'trigonometry' || type === 'polynomial' || type === 'quadratic' || type === 'linear'
+      ? 'last_calculus_result'
+      : 'last_physics_result';
+
+    const success = await storeValue(key, val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
   const renderResultPreview = (entry) => {
     switch (entry.type) {
       case 'quadratic':
         return (
-          <Text style={styles.resultPreview}>
-            x₁ = {typeof entry.result.root1 === 'string' 
-              ? entry.result.root1 
-              : entry.result.root1?.toFixed(4)}
-            {'\n'}
-            x₂ = {typeof entry.result.root2 === 'string'
-              ? entry.result.root2
-              : entry.result.root2?.toFixed(4)}
-          </Text>
+          <View style={styles.resultContainer}>
+            <View style={styles.resultTextCol}>
+              <Text style={styles.resultPreview}>
+                x₁ = {typeof entry.result.root1 === 'string'
+                  ? entry.result.root1
+                  : entry.result.root1?.toFixed(4)}
+                {'\n'}
+                x₂ = {typeof entry.result.root2 === 'string'
+                  ? entry.result.root2
+                  : entry.result.root2?.toFixed(4)}
+              </Text>
+            </View>
+            <View style={styles.actionCol}>
+              <TouchableOpacity
+                style={styles.historyMemoryBtn}
+                onPress={() => handleSaveToMemory(entry.result.root1, entry.type)}
+              >
+                <Ionicons name="save-outline" size={16} color={colors.accent} />
+                <Text style={styles.historyMemoryBtnText}>Mx₁</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.historyMemoryBtn}
+                onPress={() => handleSaveToMemory(entry.result.root2, entry.type)}
+              >
+                <Ionicons name="save-outline" size={16} color={colors.accent} />
+                <Text style={styles.historyMemoryBtnText}>Mx₂</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         );
       case 'statistics':
         return (
-          <Text style={styles.resultPreview}>
-            Mean: {entry.result.mean?.toFixed(2)} | StdDev: {entry.result.stdDev?.toFixed(2)}
-          </Text>
+          <View style={styles.resultContainer}>
+            <View style={styles.resultTextCol}>
+              <Text style={styles.resultPreview}>
+                Mean: {entry.result.mean?.toFixed(2)}{'\n'}StdDev: {entry.result.stdDev?.toFixed(2)}
+              </Text>
+            </View>
+            <View style={styles.actionCol}>
+              <TouchableOpacity
+                style={styles.historyMemoryBtn}
+                onPress={() => handleSaveToMemory(entry.result.mean, entry.type)}
+              >
+                <Ionicons name="save-outline" size={16} color={colors.accent} />
+                <Text style={styles.historyMemoryBtnText}>Mμ</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         );
       case 'linear':
         return (
-          <Text style={styles.resultPreview}>
-            x = {entry.result.x?.toFixed(4)}, y = {entry.result.y?.toFixed(4)}
-          </Text>
+          <View style={styles.resultContainer}>
+            <View style={styles.resultTextCol}>
+              <Text style={styles.resultPreview}>
+                x = {entry.result.x?.toFixed(4)}, y = {entry.result.y?.toFixed(4)}
+              </Text>
+            </View>
+            <View style={styles.actionCol}>
+              <TouchableOpacity
+                style={styles.historyMemoryBtn}
+                onPress={() => handleSaveToMemory(entry.result.x, entry.type)}
+              >
+                <Ionicons name="save-outline" size={16} color={colors.accent} />
+                <Text style={styles.historyMemoryBtnText}>Mx</Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.historyMemoryBtn}
+                onPress={() => handleSaveToMemory(entry.result.y, entry.type)}
+              >
+                <Ionicons name="save-outline" size={16} color={colors.accent} />
+                <Text style={styles.historyMemoryBtnText}>My</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         );
       default:
         return (
@@ -247,10 +313,38 @@ const styles = StyleSheet.create({
     padding: 12,
   },
   resultPreview: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 13,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 20,
+  },
+  resultContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  resultTextCol: {
+    flex: 1,
+  },
+  actionCol: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  historyMemoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgCard,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '30',
+  },
+  historyMemoryBtnText: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '700',
+    marginLeft: 4,
   },
   emptyState: {
     flex: 1,

@@ -18,6 +18,8 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { useHistory } from '../utils/history';
 import { solveDeterminant, solveInverse, solveEigenvalues, solveTranspose } from '../solvers/matrixSolver';
 import { BackHeader } from '../components/BackHeader';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -34,6 +36,23 @@ export default function MatrixScreen() {
   const [error, setError] = useState(null);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
+
+  const handleSaveToMemory = async (val) => {
+    // Strip any non-numeric characters just in case, though these should be numbers
+    const numValue = typeof val === 'string' ? val.replace(/[^0-9.-]/g, '') : val;
+    const success = await storeValue('last_calculus_result', numValue.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (row, col) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      updateMatrixValue(row, col, memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const size = parseInt(matrixSize) || 3;
 
@@ -417,20 +436,30 @@ export default function MatrixScreen() {
           />
 
           {/* Matrix Grid */}
-          <Text style={[styles.inputLabel, { marginTop: 16 }]}>Enter values:</Text>
+          <View style={styles.inputHeader}>
+            <Text style={styles.inputLabel}>Enter values:</Text>
+            <Text style={styles.hintText}>Tap cell to recall MR</Text>
+          </View>
           <View style={styles.matrixInputGrid}>
             {Array.from({ length: size }, (_, i) => (
               <View key={i} style={styles.inputRow}>
                 {Array.from({ length: size }, (_, j) => (
-                  <TextInput
-                    key={`${i}-${j}`}
-                    style={styles.matrixInput}
-                    value={matrixValues[`${i}-${j}`] || ''}
-                    onChangeText={(text) => updateMatrixValue(i, j, text)}
-                    keyboardType="decimal-pad"
-                    placeholder="0"
-                    placeholderTextColor={colors.textSecondary}
-                  />
+                  <View key={`${i}-${j}`} style={styles.cellWrapper}>
+                    <TextInput
+                      style={styles.matrixInput}
+                      value={matrixValues[`${i}-${j}`] || ''}
+                      onChangeText={(text) => updateMatrixValue(i, j, text)}
+                      keyboardType="decimal-pad"
+                      placeholder="0"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                    <TouchableOpacity
+                      style={styles.cellRecall}
+                      onPress={() => handleRecallMemory(i, j)}
+                    >
+                      <Text style={styles.recallIcon}>R</Text>
+                    </TouchableOpacity>
+                  </View>
                 ))}
               </View>
             ))}
@@ -456,17 +485,13 @@ export default function MatrixScreen() {
             ))}
           </View>
 
-          <TouchableOpacity style={styles.solveBtn} onPress={handleOperation} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>🧮 CALCULATE</Text>
-          </TouchableOpacity>
+          <SolveButton
+            onPress={handleOperation}
+            label="🧮 CALCULATE"
+          />
         </InputCard>
 
-        {/* Error */}
-        {error && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        )}
+        <ErrorCard message={error} />
 
         {/* Results */}
         {result && (
@@ -491,7 +516,16 @@ export default function MatrixScreen() {
               }
             >
               {result.type === 'determinant' && (
-                <Text style={styles.finalValue}>{result.displayValue}</Text>
+                <View style={styles.finalRow}>
+                  <Text style={styles.finalValue}>{result.displayValue}</Text>
+                  <TouchableOpacity
+                    style={styles.memoryBtn}
+                    onPress={() => handleSaveToMemory(result.value)}
+                  >
+                    <Ionicons name="save-outline" size={18} color={colors.accent} />
+                    <Text style={styles.memoryBtnText}>M+</Text>
+                  </TouchableOpacity>
+                </View>
               )}
               {(result.type === 'inverse' || result.type === 'transpose') && (
                 renderMatrixDisplay(result.matrix, true)
@@ -499,9 +533,20 @@ export default function MatrixScreen() {
               {result.type === 'eigenvalues' && (
                 <View>
                   {result.eigenvalues.map((val, idx) => (
-                    <Text key={idx} style={styles.finalValue}>
-                      λ{idx + 1} = {typeof val === 'string' ? val : val.toFixed(6)}
-                    </Text>
+                    <View key={idx} style={styles.finalRow}>
+                      <Text style={styles.finalValue}>
+                        λ{idx + 1} = {typeof val === 'string' ? val : val.toFixed(6)}
+                      </Text>
+                      {typeof val === 'number' && (
+                        <TouchableOpacity
+                          style={styles.memoryBtn}
+                          onPress={() => handleSaveToMemory(val)}
+                        >
+                          <Ionicons name="save-outline" size={18} color={colors.accent} />
+                          <Text style={styles.memoryBtnText}>M{idx + 1}</Text>
+                        </TouchableOpacity>
+                      )}
+                    </View>
                   ))}
                 </View>
               )}
@@ -537,7 +582,9 @@ const styles = StyleSheet.create({
   header: { marginBottom: 20, paddingTop: 8 },
   title: { fontSize: 28, fontWeight: '700', color: colors.white, letterSpacing: -0.5 },
   subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, letterSpacing: 0.3 },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, letterSpacing: 0.3 },
+  inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, marginBottom: 8 },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
+  hintText: { fontSize: 10, color: colors.textSecondary, fontStyle: 'italic' },
   sizeInput: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -552,6 +599,7 @@ const styles = StyleSheet.create({
   },
   matrixInputGrid: { gap: 8, marginTop: 8 },
   inputRow: { flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap' },
+  cellWrapper: { position: 'relative' },
   matrixInput: {
     width: 65,
     height: 44,
@@ -564,6 +612,21 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'center',
   },
+  cellRecall: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: colors.bgCard,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent,
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10,
+  },
+  recallIcon: { color: colors.accent, fontSize: 8, fontWeight: '800' },
   opRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   opBtn: {
     flex: 1,
@@ -616,6 +679,29 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 36,
+  },
+  finalRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    width: '100%',
+    marginBottom: 4,
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 4,
   },
   matrixDisplay: { gap: 4 },
   matrixRow: { flexDirection: 'row', gap: 4, justifyContent: 'center' },

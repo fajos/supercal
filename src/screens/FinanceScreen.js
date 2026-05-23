@@ -15,8 +15,13 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 import { solveFinance } from '../solvers/financeSolver';
 import { BackHeader } from '../components/BackHeader';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
+import { KeyboardAvoidingView } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -30,11 +35,35 @@ export default function FinanceScreen() {
   const [payment, setPayment] = useState('100');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
 
-  const handleSolve = () => {
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (field) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      if (field === 'principal') setPrincipal(memory.last_calculus_result);
+      if (field === 'rate') setRate(memory.last_calculus_result);
+      if (field === 'time') setTime(memory.last_calculus_result);
+      if (field === 'payment') setPayment(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
+
+  const handleSolve = async () => {
+    setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
+
+    // Artificial delay for UI consistency
+    await new Promise(resolve => setTimeout(resolve, 600));
+
     try {
       const params = {
         principal: parseFloat(principal) || 0,
@@ -49,6 +78,8 @@ export default function FinanceScreen() {
     } catch (err) {
       setError(err.message);
       setResult(null);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -66,117 +97,141 @@ export default function FinanceScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerContainer}>
-          <BackHeader title="💰 Financial Math" subtitle="Interest, Loans & Investments" />
-        </View>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.headerContainer}>
+            <BackHeader title="💰 Financial Math" subtitle="Interest, Loans & Investments" />
+          </View>
 
-        <InputCard>
-          <View style={styles.modeGrid}>
-            {[
-              { id: 'compound', label: 'Compound\nInterest' },
-              { id: 'simple', label: 'Simple\nInterest' },
-              { id: 'loan', label: 'Loan\nPayment' },
-              { id: 'savings', label: 'Savings\nGoal' },
-            ].map(m => (
-              <TouchableOpacity
-                key={m.id}
-                style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                onPress={() => { setMode(m.id); setResult(null); }}
-              >
-                <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                  {m.label}
-                </Text>
+          <InputCard>
+            <View style={styles.modeGrid}>
+              {[
+                { id: 'compound', label: 'Compound\nInterest' },
+                { id: 'simple', label: 'Simple\nInterest' },
+                { id: 'loan', label: 'Loan\nPayment' },
+                { id: 'savings', label: 'Savings\nGoal' },
+              ].map(m => (
+                <TouchableOpacity
+                  key={m.id}
+                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
+                  onPress={() => { setMode(m.id); setResult(null); }}
+                >
+                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
+                    {m.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>Principal/Present Value ($):</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory('principal')}>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
-            ))}
-          </View>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={principal}
+              onChangeText={setPrincipal}
+              keyboardType="decimal-pad"
+              placeholder="1000"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-          <Text style={styles.inputLabel}>Principal/Present Value ($):</Text>
-          <TextInput
-            style={styles.input}
-            value={principal}
-            onChangeText={setPrincipal}
-            keyboardType="decimal-pad"
-            placeholder="1000"
-            placeholderTextColor={colors.textSecondary}
-          />
+            <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>Annual Interest Rate (%):</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory('rate')}>
+                <Text style={styles.recallBtn}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
+            <TextInput
+              style={styles.input}
+              value={rate}
+              onChangeText={setRate}
+              keyboardType="decimal-pad"
+              placeholder="5"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-          <Text style={styles.inputLabel}>Annual Interest Rate (%):</Text>
-          <TextInput
-            style={styles.input}
-            value={rate}
-            onChangeText={setRate}
-            keyboardType="decimal-pad"
-            placeholder="5"
-            placeholderTextColor={colors.textSecondary}
-          />
+            <Text style={styles.inputLabel}>Time Period (years):</Text>
+            <TextInput
+              style={styles.input}
+              value={time}
+              onChangeText={setTime}
+              keyboardType="decimal-pad"
+              placeholder="10"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-          <Text style={styles.inputLabel}>Time Period (years):</Text>
-          <TextInput
-            style={styles.input}
-            value={time}
-            onChangeText={setTime}
-            keyboardType="decimal-pad"
-            placeholder="10"
-            placeholderTextColor={colors.textSecondary}
-          />
+            {(mode === 'compound' || mode === 'savings') && (
+              <>
+                <Text style={styles.inputLabel}>Compounds per Year:</Text>
+                <TextInput
+                  style={styles.input}
+                  value={compoundFreq}
+                  onChangeText={setCompoundFreq}
+                  keyboardType="number-pad"
+                  placeholder="12 (monthly)"
+                  placeholderTextColor={colors.textSecondary}
+                />
+              </>
+            )}
 
-          {(mode === 'compound' || mode === 'savings') && (
-            <>
-              <Text style={styles.inputLabel}>Compounds per Year:</Text>
-              <TextInput
-                style={styles.input}
-                value={compoundFreq}
-                onChangeText={setCompoundFreq}
-                keyboardType="number-pad"
-                placeholder="12 (monthly)"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </>
+            {(mode === 'loan' || mode === 'savings') && (
+              <>
+                <Text style={styles.inputLabel}>Payment Amount ($):</Text>
+                <TextInput
+                  style={styles.input}
+                  value={payment}
+                  onChangeText={setPayment}
+                  keyboardType="decimal-pad"
+                  placeholder="100"
+                  placeholderTextColor={colors.textSecondary}
+                />
+              </>
+            )}
+
+            <SolveButton
+              onPress={handleSolve}
+              label="💰 CALCULATE"
+              loading={loading}
+            />
+          </InputCard>
+
+          <ErrorCard message={error} />
+
+          {result && (
+            <View style={styles.solutionArea}>
+              {result.steps.map((step, idx) => (
+                <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
+                  {renderContent(step.content)}
+                </StepCard>
+              ))}
+              <FinalAnswer label="💰 Result">
+                <View style={styles.finalResultRow}>
+                  <Text style={styles.finalText}>
+                    {typeof result.result === 'number'
+                      ? `$${result.result.toFixed(2)}`
+                      : result.result}
+                  </Text>
+                  {typeof result.result === 'number' && (
+                    <TouchableOpacity
+                      style={styles.memoryBtn}
+                      onPress={() => handleSaveToMemory(result.result.toFixed(2))}
+                    >
+                      <Ionicons name="save-outline" size={18} color={colors.accent} />
+                      <Text style={styles.memoryBtnText}>M+</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </FinalAnswer>
+            </View>
           )}
-
-          {(mode === 'loan' || mode === 'savings') && (
-            <>
-              <Text style={styles.inputLabel}>Payment Amount ($):</Text>
-              <TextInput
-                style={styles.input}
-                value={payment}
-                onChangeText={setPayment}
-                keyboardType="decimal-pad"
-                placeholder="100"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </>
-          )}
-
-          <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>💰 CALCULATE</Text>
-          </TouchableOpacity>
-        </InputCard>
-
-        {error && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        )}
-
-        {result && (
-          <View style={styles.solutionArea}>
-            {result.steps.map((step, idx) => (
-              <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
-                {renderContent(step.content)}
-              </StepCard>
-            ))}
-            <FinalAnswer label="💰 Result">
-              <Text style={styles.finalText}>
-                {typeof result.result === 'number' 
-                  ? `$${result.result.toFixed(2)}`
-                  : result.result}
-              </Text>
-            </FinalAnswer>
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
@@ -204,7 +259,20 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 12,
+    marginBottom: 8,
+  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
+  recallBtn: {
+    color: colors.accent,
+    fontSize: 10,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   input: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -234,7 +302,7 @@ const styles = StyleSheet.create({
   },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
@@ -266,5 +334,27 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 36,
+  },
+  finalResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
 });

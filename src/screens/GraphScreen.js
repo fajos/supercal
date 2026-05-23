@@ -1,4 +1,3 @@
-import React, { useState, useCallback, useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,11 +8,17 @@ import {
   Platform,
   Dimensions,
   Switch,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Line, Circle, Text as SvgText, Rect, G, Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { BackHeader } from '../components/BackHeader';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
+import { InputCard } from '../components/InputCard';
+import { storeValue, getMemory } from '../utils/memory';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -51,6 +56,18 @@ export default function GraphScreen() {
   const [derivativePoints, setDerivativePoints] = useState([]);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [traceMode, setTraceMode] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleRecallMemory = async (field) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      if (field === 'xMin') setXMin(memory.last_calculus_result);
+      if (field === 'xMax') setXMax(memory.last_calculus_result);
+      if (field === 'yMin') setYMin(memory.last_calculus_result);
+      if (field === 'yMax') setYMax(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   // Parse and evaluate equation
   const evaluateFunction = useCallback((expr, x) => {
@@ -110,52 +127,57 @@ export default function GraphScreen() {
   }, [xMin, xMax, evaluateFunction]);
 
   const plotGraph = useCallback(() => {
+    setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
-    try {
-      const xMinVal = parseFloat(xMin);
-      const xMaxVal = parseFloat(xMax);
-      const yMinVal = parseFloat(yMin);
-      const yMaxVal = parseFloat(yMax);
+    setTimeout(() => {
+      try {
+        const xMinVal = parseFloat(xMin);
+        const xMaxVal = parseFloat(xMax);
+        const yMinVal = parseFloat(yMin);
+        const yMaxVal = parseFloat(yMax);
 
-      if (xMinVal >= xMaxVal || yMinVal >= yMaxVal) {
-        throw new Error('Min must be less than Max values');
-      }
-
-      setPoints(generatePoints(equation));
-      
-      if (equation2.trim()) {
-        setPoints2(generatePoints(equation2));
-      } else {
-        setPoints2([]);
-      }
-      
-      if (equation3.trim()) {
-        setPoints3(generatePoints(equation3));
-      } else {
-        setPoints3([]);
-      }
-
-      if (showDerivative) {
-        const derivPoints = [];
-        const xMinV = parseFloat(xMin);
-        const xMaxV = parseFloat(xMax);
-        const step = (xMaxV - xMinV) / 200;
-        
-        for (let i = 0; i <= 200; i++) {
-          const x = xMinV + i * step;
-          const dy = evaluateDerivative(equation, x);
-          if (dy !== null && isFinite(dy)) {
-            derivPoints.push({ x, y: dy });
-          }
+        if (xMinVal >= xMaxVal || yMinVal >= yMaxVal) {
+          throw new Error('Min must be less than Max values');
         }
-        setDerivativePoints(derivPoints);
+
+        setPoints(generatePoints(equation));
+        
+        if (equation2.trim()) {
+          setPoints2(generatePoints(equation2));
+        } else {
+          setPoints2([]);
+        }
+
+        if (equation3.trim()) {
+          setPoints3(generatePoints(equation3));
+        } else {
+          setPoints3([]);
+        }
+
+        if (showDerivative) {
+          const derivPoints = [];
+          const xMinV = parseFloat(xMin);
+          const xMaxV = parseFloat(xMax);
+          const step = (xMaxV - xMinV) / 200;
+
+          for (let i = 0; i <= 200; i++) {
+            const x = xMinV + i * step;
+            const dy = evaluateDerivative(equation, x);
+            if (dy !== null && isFinite(dy)) {
+              derivPoints.push({ x, y: dy });
+            }
+          }
+          setDerivativePoints(derivPoints);
+        }
+      } catch (err) {
+        setError(err.message);
+        setPoints([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err.message);
-      setPoints([]);
-    }
+    }, 600);
   }, [equation, equation2, equation3, xMin, xMax, yMin, yMax, generatePoints, showDerivative, evaluateDerivative]);
 
   // Convert math coords to SVG coords
@@ -387,136 +409,155 @@ export default function GraphScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
-        <View style={styles.headerContainer}>
-          <View style={styles.header}>
-            <Text style={styles.title}>📈 Graphing Calculator</Text>
-            <Text style={styles.subtitle}>Multi-Function Plotter with Analysis</Text>
-          </View>
-        </View>
-
-        {/* Preset Functions */}
-        <View style={styles.headerContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
-            {PRESET_FUNCTIONS.map((preset, idx) => (
-              <TouchableOpacity
-                key={idx}
-                style={styles.presetBtn}
-                onPress={() => applyPreset(preset)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.presetText}>{preset.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Input Card */}
-        <View style={[styles.inputCard, isTablet && styles.tabletInputCard]}>
-          <Text style={styles.inputLabel}>Function f(x) =</Text>
-          <TextInput
-            style={styles.eqInput}
-            value={equation}
-            onChangeText={setEquation}
-            placeholder="e.g., x^2 - 4"
-            placeholderTextColor={colors.textSecondary}
-          />
-
-          <Text style={[styles.inputLabel, { marginTop: 12 }]}>Function g(x) = (optional)</Text>
-          <TextInput
-            style={[styles.eqInput, styles.eqInputSecondary]}
-            value={equation2}
-            onChangeText={setEquation2}
-            placeholder="e.g., 2x + 1"
-            placeholderTextColor={colors.textSecondary}
-          />
-
-          <Text style={[styles.inputLabel, { marginTop: 12 }]}>Function h(x) = (optional)</Text>
-          <TextInput
-            style={[styles.eqInput, styles.eqInputSecondary]}
-            value={equation3}
-            onChangeText={setEquation3}
-            placeholder="e.g., sin(x)"
-            placeholderTextColor={colors.textSecondary}
-          />
-
-          {/* View Options */}
-          <View style={styles.optionsRow}>
-            <View style={styles.optionItem}>
-              <Text style={styles.optionLabel}>Grid</Text>
-              <Switch
-                value={showGrid}
-                onValueChange={setShowGrid}
-                trackColor={{ false: colors.border, true: colors.accent + '60' }}
-                thumbColor={showGrid ? colors.accent : colors.textSecondary}
-              />
-            </View>
-            <View style={styles.optionItem}>
-              <Text style={styles.optionLabel}>Roots</Text>
-              <Switch
-                value={showRoots}
-                onValueChange={setShowRoots}
-                trackColor={{ false: colors.border, true: colors.accent + '60' }}
-                thumbColor={showRoots ? colors.accent : colors.textSecondary}
-              />
-            </View>
-            <View style={styles.optionItem}>
-              <Text style={styles.optionLabel}>Extrema</Text>
-              <Switch
-                value={showExtrema}
-                onValueChange={setShowExtrema}
-                trackColor={{ false: colors.border, true: colors.accent + '60' }}
-                thumbColor={showExtrema ? colors.accent : colors.textSecondary}
-              />
-            </View>
-            <View style={styles.optionItem}>
-              <Text style={styles.optionLabel}>f'(x)</Text>
-              <Switch
-                value={showDerivative}
-                onValueChange={setShowDerivative}
-                trackColor={{ false: colors.border, true: '#ff6b6b60' }}
-                thumbColor={showDerivative ? '#ff6b6b' : colors.textSecondary}
-              />
-            </View>
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerContainer}>
+            <BackHeader title="📈 Graphing Calculator" subtitle="Multi-Function Plotter" />
           </View>
 
-          <View style={styles.rangeRow}>
-            <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>X Min</Text>
-              <TextInput style={styles.rangeInput} value={xMin} onChangeText={setXMin} keyboardType="decimal-pad" />
-            </View>
-            <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>X Max</Text>
-              <TextInput style={styles.rangeInput} value={xMax} onChangeText={setXMax} keyboardType="decimal-pad" />
-            </View>
-            <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>Y Min</Text>
-              <TextInput style={styles.rangeInput} value={yMin} onChangeText={setYMin} keyboardType="decimal-pad" />
-            </View>
-            <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>Y Max</Text>
-              <TextInput style={styles.rangeInput} value={yMax} onChangeText={setYMax} keyboardType="decimal-pad" />
-            </View>
+          {/* Preset Functions */}
+          <View style={styles.headerContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
+              {PRESET_FUNCTIONS.map((preset, idx) => (
+                <TouchableOpacity
+                  key={idx}
+                  style={styles.presetBtn}
+                  onPress={() => applyPreset(preset)}
+                  activeOpacity={0.7}
+                >
+                  <Text style={styles.presetText}>{preset.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
           </View>
 
-          <TouchableOpacity style={styles.solveBtn} onPress={plotGraph} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>📈 PLOT GRAPH</Text>
-          </TouchableOpacity>
-        </View>
+          {/* Input Card */}
+          <InputCard>
+            <Text style={styles.inputLabel}>Function f(x) =</Text>
+            <TextInput
+              style={styles.eqInput}
+              value={equation}
+              onChangeText={setEquation}
+              placeholder="e.g., x^2 - 4"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-        {/* Error */}
-        {error && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        )}
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Function g(x) = (optional)</Text>
+            <TextInput
+              style={[styles.eqInput, styles.eqInputSecondary]}
+              value={equation2}
+              onChangeText={setEquation2}
+              placeholder="e.g., 2x + 1"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-        {/* Graph Display */}
-        {points.length > 0 && (
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Function h(x) = (optional)</Text>
+            <TextInput
+              style={[styles.eqInput, styles.eqInputSecondary]}
+              value={equation3}
+              onChangeText={setEquation3}
+              placeholder="e.g., sin(x)"
+              placeholderTextColor={colors.textSecondary}
+            />
+
+            {/* View Options */}
+            <View style={styles.optionsRow}>
+              <View style={styles.optionItem}>
+                <Text style={styles.optionLabel}>Grid</Text>
+                <Switch
+                  value={showGrid}
+                  onValueChange={setShowGrid}
+                  trackColor={{ false: colors.border, true: colors.accent + '60' }}
+                  thumbColor={showGrid ? colors.accent : colors.textSecondary}
+                />
+              </View>
+              <View style={styles.optionItem}>
+                <Text style={styles.optionLabel}>Roots</Text>
+                <Switch
+                  value={showRoots}
+                  onValueChange={setShowRoots}
+                  trackColor={{ false: colors.border, true: colors.accent + '60' }}
+                  thumbColor={showRoots ? colors.accent : colors.textSecondary}
+                />
+              </View>
+              <View style={styles.optionItem}>
+                <Text style={styles.optionLabel}>Extrema</Text>
+                <Switch
+                  value={showExtrema}
+                  onValueChange={setShowExtrema}
+                  trackColor={{ false: colors.border, true: colors.accent + '60' }}
+                  thumbColor={showExtrema ? colors.accent : colors.textSecondary}
+                />
+              </View>
+              <View style={styles.optionItem}>
+                <Text style={styles.optionLabel}>f'(x)</Text>
+                <Switch
+                  value={showDerivative}
+                  onValueChange={setShowDerivative}
+                  trackColor={{ false: colors.border, true: '#ff6b6b60' }}
+                  thumbColor={showDerivative ? '#ff6b6b' : colors.textSecondary}
+                />
+              </View>
+            </View>
+
+            <View style={styles.rangeRow}>
+              <View style={styles.rangeItem}>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.rangeLabel}>X Min</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('xMin')}>
+                    <Text style={styles.recallBtn}>MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.rangeInput} value={xMin} onChangeText={setXMin} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.rangeItem}>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.rangeLabel}>X Max</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('xMax')}>
+                    <Text style={styles.recallBtn}>MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.rangeInput} value={xMax} onChangeText={setXMax} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.rangeItem}>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.rangeLabel}>Y Min</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('yMin')}>
+                    <Text style={styles.recallBtn}>MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.rangeInput} value={yMin} onChangeText={setYMin} keyboardType="decimal-pad" />
+              </View>
+              <View style={styles.rangeItem}>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.rangeLabel}>Y Max</Text>
+                  <TouchableOpacity onPress={() => handleRecallMemory('yMax')}>
+                    <Text style={styles.recallBtn}>MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput style={styles.rangeInput} value={yMax} onChangeText={setYMax} keyboardType="decimal-pad" />
+              </View>
+            </View>
+
+            <SolveButton
+              onPress={plotGraph}
+              loading={loading}
+              title="PLOT GRAPH"
+              icon="stats-chart-outline"
+            />
+          </InputCard>
+
+          <ErrorCard error={error} />
+
+          {/* Graph Display */}
+          {points.length > 0 && (
           <View style={[styles.graphCard, isTablet && styles.headerContainer]}>
             <Text style={styles.graphTitle}>
               {[equation, equation2, equation3].filter(e => e.trim()).join(' | ')}
@@ -705,13 +746,26 @@ export default function GraphScreen() {
             <Text style={styles.helpText}>• Roots show where f(x) = 0 (x-intercepts)</Text>
           </View>
         </View>
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 // Add these new styles to your existing StyleSheet
 const additionalStyles = {
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  recallBtn: {
+    color: colors.accent,
+    fontSize: 9,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
+  },
   presetScroll: {
     marginBottom: 12,
   },

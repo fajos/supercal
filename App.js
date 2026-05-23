@@ -50,6 +50,7 @@ import FluidsScreen from './src/screens/FluidsScreen';
 import GravitationScreen from './src/screens/GravitationScreen';
 import InductionScreen from './src/screens/InductionScreen';
 import QuantumScreen from './src/screens/QuantumScreen';
+import ConstantsScreen from './src/screens/ConstantsScreen';
 
 
 const Tab = createBottomTabNavigator();
@@ -110,6 +111,7 @@ function PhysicsStackScreen() {
       <PhysicsStack.Screen name="GravitationScreen" component={GravitationScreen} />
       <PhysicsStack.Screen name="InductionScreen" component={InductionScreen} />
       <PhysicsStack.Screen name="QuantumScreen" component={QuantumScreen} />
+      <PhysicsStack.Screen name="ConstantsScreen" component={ConstantsScreen} />
     </PhysicsStack.Navigator>
   );
 }

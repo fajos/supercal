@@ -17,6 +17,8 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveComplexOperation } from '../solvers/complexSolver';
 import { BackHeader } from '../components/BackHeader';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -30,6 +32,21 @@ export default function ComplexScreen() {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const scrollRef = useRef();
+
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async (setter) => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      setter(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -80,28 +97,50 @@ export default function ComplexScreen() {
             ))}
           </View>
 
-          <Text style={styles.inputLabel}>Real part (a):</Text>
+          <View style={styles.inputRow}>
+            <Text style={styles.inputLabel}>Real part (a):</Text>
+            <TouchableOpacity onPress={() => handleRecallMemory(setReal1)}>
+              <Text style={styles.recallBtn}>Recall MR</Text>
+            </TouchableOpacity>
+          </View>
           <TextInput style={styles.input} value={real1} onChangeText={setReal1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
           
-          <Text style={styles.inputLabel}>Imaginary part (b):</Text>
+          <View style={styles.inputRow}>
+            <Text style={styles.inputLabel}>Imaginary part (b):</Text>
+            <TouchableOpacity onPress={() => handleRecallMemory(setImag1)}>
+              <Text style={styles.recallBtn}>Recall MR</Text>
+            </TouchableOpacity>
+          </View>
           <TextInput style={styles.input} value={imag1} onChangeText={setImag1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
           {showSecondInput && (
             <>
-              <Text style={[styles.inputLabel, { marginTop: 12 }]}>Second Number:</Text>
-              <Text style={styles.inputLabel}>Real part (c):</Text>
+              <Text style={[styles.inputLabel, { marginTop: 12, marginBottom: 4, fontWeight: '600' }]}>Second Number:</Text>
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Real part (c):</Text>
+                <TouchableOpacity onPress={() => handleRecallMemory(setReal2)}>
+                  <Text style={styles.recallBtn}>Recall MR</Text>
+                </TouchableOpacity>
+              </View>
               <TextInput style={styles.input} value={real2} onChangeText={setReal2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-              <Text style={styles.inputLabel}>Imaginary part (d):</Text>
+
+              <View style={styles.inputRow}>
+                <Text style={styles.inputLabel}>Imaginary part (d):</Text>
+                <TouchableOpacity onPress={() => handleRecallMemory(setImag2)}>
+                  <Text style={styles.recallBtn}>Recall MR</Text>
+                </TouchableOpacity>
+              </View>
               <TextInput style={styles.input} value={imag2} onChangeText={setImag2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
             </>
           )}
 
-          <TouchableOpacity style={styles.solveBtn} onPress={handleSolve} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>🔄 CALCULATE</Text>
-          </TouchableOpacity>
+          <SolveButton
+            onPress={handleSolve}
+            label="🔄 CALCULATE"
+          />
         </InputCard>
 
-        {error && <View style={styles.errorCard}><Text style={styles.errorText}>{error}</Text></View>}
+        <ErrorCard message={error} />
 
         {result && (
           <View style={styles.solutionArea}>
@@ -111,11 +150,32 @@ export default function ComplexScreen() {
               </StepCard>
             ))}
             <FinalAnswer label="🎯 Result">
-              <Text style={styles.finalText}>
-                {typeof result.result === 'object' 
-                  ? `${result.result.real} ${result.result.imag >= 0 ? '+' : '-'} ${Math.abs(result.result.imag)}i`
-                  : result.result}
-              </Text>
+              <View style={styles.finalRow}>
+                <Text style={styles.finalText}>
+                  {typeof result.result === 'object'
+                    ? `${result.result.real} ${result.result.imag >= 0 ? '+' : '-'} ${Math.abs(result.result.imag)}i`
+                    : result.result}
+                </Text>
+                <View style={styles.memoryActions}>
+                  {typeof result.result === 'object' ? (
+                    <>
+                      <TouchableOpacity style={styles.memoryBtn} onPress={() => handleSaveToMemory(result.result.real)}>
+                        <Ionicons name="save-outline" size={16} color={colors.accent} />
+                        <Text style={styles.memoryBtnText}>Ma</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity style={styles.memoryBtn} onPress={() => handleSaveToMemory(result.result.imag)}>
+                        <Ionicons name="save-outline" size={16} color={colors.accent} />
+                        <Text style={styles.memoryBtnText}>Mb</Text>
+                      </TouchableOpacity>
+                    </>
+                  ) : (
+                    <TouchableOpacity style={styles.memoryBtn} onPress={() => handleSaveToMemory(result.result)}>
+                      <Ionicons name="save-outline" size={16} color={colors.accent} />
+                      <Text style={styles.memoryBtnText}>M+</Text>
+                    </TouchableOpacity>
+                  )}
+                </View>
+              </View>
             </FinalAnswer>
           </View>
         )}
@@ -141,7 +201,9 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 11, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
+  inputRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 8, marginBottom: 4 },
+  inputLabel: { fontSize: 13, color: colors.textSecondary },
+  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 16 },
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },

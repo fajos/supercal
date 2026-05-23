@@ -186,6 +186,15 @@ const PHYSICS_SOLVERS = [
     screen: 'QuantumScreen',
     category: 'Modern Physics',
   },
+  {
+    id: 'constants',
+    title: 'Constants',
+    icon: '📚',
+    description: 'Physical constants & Units',
+    color: colors.accent,
+    screen: 'ConstantsScreen',
+    category: 'Tools',
+  },
 ];
 
 const THEORIES = [

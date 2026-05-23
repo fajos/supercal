@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -15,9 +16,13 @@ import { colors } from '../theme/colors';
 import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
+import { SolveButton } from '../components/SolveButton';
+import { ErrorCard } from '../components/ErrorCard';
 import { useHistory } from '../utils/history';
 import { solveDerivative, solveIntegral, evaluateExpression } from '../solvers/calculusSolver';
 import { BackHeader } from '../components/BackHeader';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -29,350 +34,263 @@ export default function CalculusScreen() {
   const [point, setPoint] = useState('2');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
-  // Symbolic derivative calculator with steps
-  const symbolicDerivative = (expr, varName = 'x') => {
-    const steps = [];
-    let processed = expr.replace(/\s/g, '');
-
-    steps.push({
-      type: 'text',
-      text: `Computing derivative d/d${varName}[${expr}]`,
-    });
-
-    // Parse terms
-    const terms = [];
-    let currentTerm = '';
-    let depth = 0;
-
-    for (let i = 0; i < processed.length; i++) {
-      const ch = processed[i];
-      if (ch === '(') depth++;
-      if (ch === ')') depth--;
-      if ((ch === '+' || ch === '-') && depth === 0 && currentTerm.length > 0) {
-        terms.push(currentTerm);
-        currentTerm = ch;
-      } else {
-        currentTerm += ch;
-      }
-    }
-    if (currentTerm) terms.push(currentTerm);
-
-    steps.push({
-      type: 'text',
-      text: `Breaking into terms: ${terms.join('  +  ')}`,
-    });
-
-    // Differentiate each term
-    const powerRule = (term) => {
-      // Match ax^n
-      const match = term.match(/^(-?\d*\.?\d*)\*?x\^?(\d*\.?\d*)?$/);
-      if (match) {
-        const coef = match[1] === '' || match[1] === '-' ? (match[1] === '-' ? -1 : 1) : parseFloat(match[1]);
-        const exp = match[2] === '' ? 1 : parseFloat(match[2] || '1');
-        const newCoef = coef * exp;
-        const newExp = exp - 1;
-        if (newExp === 0) return `${newCoef}`;
-        if (newExp === 1) return `${newCoef}x`;
-        return `${newCoef}x^${newExp}`;
-      }
-      // Constant
-      if (!term.includes(varName)) return '0';
-      return term; // Keep as is for unsupported
-    };
-
-    const derivatives = terms.map(term => {
-      const result = powerRule(term);
-      steps.push({
-        type: 'text',
-        text: `  d/dx[${term}] = ${result}`,
-      });
-      return result;
-    });
-
-    // Combine
-    let combined = derivatives.filter(d => d !== '0').join(' + ');
-    if (!combined) combined = '0';
-    combined = combined.replace(/\+\s*-/g, '- ').replace(/1x/g, 'x');
-
-    steps.push({
-      type: 'highlight',
-      text: `Result: f'(x) = ${combined}`,
-    });
-
-    return { derivative: combined, steps };
-  };
-
-  // Numerical integration using Simpson's rule
-  const numericalIntegral = (expr, varName = 'x', lower = 0, upper = 1, n = 1000) => {
-    const steps = [];
-    
-    const evalExpr = (expr, x) => {
-      let processed = expr
-        .replace(/\^/g, '**')
-        .replace(new RegExp(varName, 'g'), `(${x})`)
-        .replace(/sin/g, 'Math.sin')
-        .replace(/cos/g, 'Math.cos')
-        .replace(/tan/g, 'Math.tan')
-        .replace(/log/g, 'Math.log')
-        .replace(/sqrt/g, 'Math.sqrt')
-        .replace(/pi/g, 'Math.PI')
-        .replace(/e(?![xp])/g, 'Math.E');
-      try {
-        return eval(processed);
-      } catch {
-        return NaN;
-      }
-    };
-
-    steps.push({
-      type: 'text',
-      text: `Numerically integrating ∫[${lower} to ${upper}] (${expr}) d${varName}`,
-    });
-    steps.push({
-      type: 'text',
-      text: `Using Simpson's Rule with n = ${n} subintervals`,
-    });
-
-    const h = (upper - lower) / n;
-    let sum = evalExpr(expr, lower) + evalExpr(expr, upper);
-
-    for (let i = 1; i < n; i++) {
-      const x = lower + i * h;
-      const weight = i % 2 === 0 ? 2 : 4;
-      sum += weight * evalExpr(expr, x);
-    }
-
-    const integral = (h / 3) * sum;
-
-    steps.push({
-      type: 'text',
-      text: `Step size h = (${upper} − ${lower}) / ${n} = ${h.toFixed(6)}`,
-    });
-    steps.push({
-      type: 'highlight',
-      text: `∫[${lower}, ${upper}] f(x)dx ≈ ${integral.toFixed(6)}`,
-    });
-
-    return { value: integral, steps };
-  };
-
   const handleCalculate = () => {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  setError(null);
-  setResult(null);
-
-  try {
-    if (mode === 'derivative') {
-      const derivResult = solveDerivative(expression, variable);
-      
-      // Evaluate at point if provided
-      let pointValue = null;
-      const evalPoint = parseFloat(point);
-      if (!isNaN(evalPoint)) {
-        pointValue = evaluateExpression(
-          derivResult.derivative, 
-          variable, 
-          evalPoint
-        );
-      }
-
-      setResult({
-        type: 'derivative',
-        expression: derivResult.derivative,
-        pointValue,
-        steps: derivResult.steps,
-      });
-
-    } else if (mode === 'integral') {
-      const lower = parseFloat(point) || 0;
-      // You might want to add an upper bound input, for now using 5
-      const upper = 5;
-      
-      const intResult = solveIntegral(expression, variable, lower, upper);
-
-      setResult({
-        type: 'integral',
-        value: intResult.value,
-        antiderivative: intResult.antiderivative,
-        lower,
-        upper,
-        steps: intResult.steps,
-      });
-    }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setError(null);
+    setLoading(true);
 
     setTimeout(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
-    }, 300);
-  } catch (err) {
-    setError(err.message);
-  }
-};
+      try {
+        if (mode === 'derivative') {
+          const derivResult = solveDerivative(expression, variable);
+
+          // Evaluate at point if provided
+          let pointValue = null;
+          const evalPoint = parseFloat(point);
+          if (!isNaN(evalPoint)) {
+            pointValue = evaluateExpression(
+              derivResult.derivative,
+              variable,
+              evalPoint
+            );
+          }
+
+          setResult({
+            type: 'derivative',
+            expression: derivResult.derivative,
+            pointValue,
+            steps: derivResult.steps,
+          });
+
+          addToHistory({
+            type: 'calculus',
+            mode: 'derivative',
+            input: { expression, variable, point },
+            result: { derivative: derivResult.derivative, value: pointValue },
+            timestamp: new Date().toISOString(),
+          });
+
+        } else if (mode === 'integral') {
+          const lower = parseFloat(point) || 0;
+          // Using 5 as a default upper bound for now
+          const upper = 5;
+
+          const intResult = solveIntegral(expression, variable, lower, upper);
+
+          setResult({
+            type: 'integral',
+            value: intResult.value,
+            antiderivative: intResult.antiderivative,
+            lower,
+            upper,
+            steps: intResult.steps,
+          });
+
+          addToHistory({
+            type: 'calculus',
+            mode: 'integral',
+            input: { expression, variable, lower, upper },
+            result: { value: intResult.value, antiderivative: intResult.antiderivative },
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 300);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
+  };
+
+  const handleSaveToMemory = async (val) => {
+    const success = await storeValue('last_calculus_result', val.toString());
+    if (success) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    }
+  };
+
+  const handleRecallMemory = async () => {
+    const memory = await getMemory();
+    if (memory.last_calculus_result) {
+      setPoint(memory.last_calculus_result);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+  };
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView
-        ref={scrollRef}
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.flex}
       >
-        <View style={styles.headerContainer}>
-          <BackHeader title="∫ Calculus" subtitle="Derivatives & Integrals" />
-        </View>
-
-        <InputCard style={isTablet && styles.tabletInputCard}>
-          {/* Mode Toggle */}
-          <View style={styles.modeRow}>
-            <TouchableOpacity
-              style={[styles.modeBtn, mode === 'derivative' && styles.modeBtnActive]}
-              onPress={() => { Haptics.selectionAsync(); setMode('derivative'); setResult(null); }}
-            >
-              <Text style={[styles.modeText, mode === 'derivative' && styles.modeTextActive]}>
-                d/dx Derivative
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.modeBtn, mode === 'integral' && styles.modeBtnActive]}
-              onPress={() => { Haptics.selectionAsync(); setMode('integral'); setResult(null); }}
-            >
-              <Text style={[styles.modeText, mode === 'integral' && styles.modeTextActive]}>
-                ∫ Integral
-              </Text>
-            </TouchableOpacity>
+        <ScrollView
+          ref={scrollRef}
+          style={styles.flex}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <View style={styles.headerContainer}>
+            <BackHeader title="∫ Calculus" subtitle="Derivatives & Integrals" />
           </View>
 
-          <Text style={styles.inputLabel}>
-            {mode === 'derivative' ? 'Function f(x) =' : 'Integrand f(x) ='}
-          </Text>
-          <TextInput
-            style={styles.exprInput}
-            value={expression}
-            onChangeText={setExpression}
-            placeholder="e.g., x^3 + 2x^2 - 5x + 1"
-            placeholderTextColor={colors.textSecondary}
-          />
-
-          <View style={styles.varRow}>
-            <View style={styles.varItem}>
-              <Text style={styles.varLabel}>Variable</Text>
-              <TextInput
-                style={styles.varInput}
-                value={variable}
-                onChangeText={setVariable}
-                maxLength={1}
-              />
+          <InputCard style={isTablet && styles.tabletInputCard}>
+            {/* Mode Toggle */}
+            <View style={styles.modeRow}>
+              <TouchableOpacity
+                style={[styles.modeBtn, mode === 'derivative' && styles.modeBtnActive]}
+                onPress={() => { Haptics.selectionAsync(); setMode('derivative'); setResult(null); }}
+              >
+                <Text style={[styles.modeText, mode === 'derivative' && styles.modeTextActive]}>
+                  d/dx Derivative
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={[styles.modeBtn, mode === 'integral' && styles.modeBtnActive]}
+                onPress={() => { Haptics.selectionAsync(); setMode('integral'); setResult(null); }}
+              >
+                <Text style={[styles.modeText, mode === 'integral' && styles.modeTextActive]}>
+                  ∫ Integral
+                </Text>
+              </TouchableOpacity>
             </View>
-            <View style={styles.varItem}>
-              <Text style={styles.varLabel}>
-                {mode === 'derivative' ? 'Evaluate at' : 'Lower bound'}
-              </Text>
-              <TextInput
-                style={styles.varInput}
-                value={point}
-                onChangeText={setPoint}
-                keyboardType="decimal-pad"
-              />
-            </View>
-          </View>
 
-          <TouchableOpacity style={styles.solveBtn} onPress={handleCalculate} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>
-              {mode === 'derivative' ? '📐 DIFFERENTIATE' : '📐 INTEGRATE'}
+            <Text style={styles.inputLabel}>
+              {mode === 'derivative' ? 'Function f(x) =' : 'Integrand f(x) ='}
             </Text>
-          </TouchableOpacity>
-        </InputCard>
+            <TextInput
+              style={styles.exprInput}
+              value={expression}
+              onChangeText={setExpression}
+              placeholder="e.g., x^3 + 2x^2 - 5x + 1"
+              placeholderTextColor={colors.textSecondary}
+            />
 
-        {error && (
-          <View style={styles.errorCard}>
-            <Text style={styles.errorText}>⚠️ {error}</Text>
-          </View>
-        )}
-
-        {result && (
-          <View style={styles.resultArea}>
-            {result.steps.map((step, idx) => (
-              <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
-                {step.content.map((item, i) => {
-                  if (item.type === 'highlight') {
-                    return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
-                  }
-                  return <Text key={i} style={styles.stepText}>{item.text}</Text>;
-                })}
-              </StepCard>
-            ))}
-
-            <FinalAnswer
-              label={result.type === 'derivative' ? '📐 Derivative' : '📐 Definite Integral'}
-            >
-              {result.type === 'derivative' && (
-                <View>
-                  <Text style={styles.finalExpr}>
-                    f'({variable}) = {result.expression}
+            <View style={styles.varRow}>
+              <View style={styles.varItem}>
+                <Text style={styles.varLabel}>Variable</Text>
+                <TextInput
+                  style={styles.varInput}
+                  value={variable}
+                  onChangeText={setVariable}
+                  maxLength={1}
+                />
+              </View>
+              <View style={styles.varItem}>
+                <View style={styles.inputHeader}>
+                  <Text style={styles.varLabel}>
+                    {mode === 'derivative' ? 'Evaluate at' : 'Lower bound'}
                   </Text>
-                  {result.pointValue !== null && (
-                    <Text style={styles.finalPoint}>
-                      f'({point}) = {result.pointValue.toFixed(6)}
+                  <TouchableOpacity onPress={handleRecallMemory}>
+                    <Text style={styles.recallBtnMini}>Recall MR</Text>
+                  </TouchableOpacity>
+                </View>
+                <TextInput
+                  style={styles.varInput}
+                  value={point}
+                  onChangeText={setPoint}
+                  keyboardType="decimal-pad"
+                />
+              </View>
+            </View>
+
+            <SolveButton
+              onPress={handleCalculate}
+              label={mode === 'derivative' ? '📐 DIFFERENTIATE' : '📐 INTEGRATE'}
+              loading={loading}
+            />
+          </InputCard>
+
+          <ErrorCard message={error} />
+
+          {result && (
+            <View style={styles.resultArea}>
+              {result.steps.map((step, idx) => (
+                <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
+                  {step.content.map((item, i) => {
+                    if (item.type === 'highlight') {
+                      return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
+                    }
+                    return <Text key={i} style={styles.stepText}>{item.text}</Text>;
+                  })}
+                </StepCard>
+              ))}
+
+              <FinalAnswer
+                label={result.type === 'derivative' ? '📐 Derivative' : '📐 Definite Integral'}
+              >
+                {result.type === 'derivative' && (
+                  <View style={styles.finalContainer}>
+                    <Text style={styles.finalExpr}>
+                      f'({variable}) = {result.expression}
                     </Text>
-                  )}
-                </View>
-              )}
-              {result.type === 'integral' && (
-                <View>
-                  <Text style={styles.finalExpr}>
-                    ∫[{result.lower}, {result.upper}] f(x)dx
-                  </Text>
-                  <Text style={styles.finalPoint}>
-                    = {result.value.toFixed(6)}
-                  </Text>
-                </View>
-              )}
-            </FinalAnswer>
-          </View>
-        )}
+                    {result.pointValue !== null && (
+                      <View style={styles.finalResultRow}>
+                        <Text style={styles.finalPoint}>
+                          f'({point}) = {result.pointValue.toFixed(6)}
+                        </Text>
+                        <TouchableOpacity
+                          style={styles.memoryBtn}
+                          onPress={() => handleSaveToMemory(result.pointValue)}
+                        >
+                          <Ionicons name="save-outline" size={18} color={colors.accent} />
+                          <Text style={styles.memoryBtnText}>M+</Text>
+                        </TouchableOpacity>
+                      </View>
+                    )}
+                  </View>
+                )}
+                {result.type === 'integral' && (
+                  <View style={styles.finalContainer}>
+                    <Text style={styles.finalExpr}>
+                      ∫[{result.lower}, {result.upper}] f(x)dx
+                    </Text>
+                    <View style={styles.finalResultRow}>
+                      <Text style={styles.finalPoint}>
+                        = {result.value.toFixed(6)}
+                      </Text>
+                      <TouchableOpacity
+                        style={styles.memoryBtn}
+                        onPress={() => handleSaveToMemory(result.value)}
+                      >
+                        <Ionicons name="save-outline" size={18} color={colors.accent} />
+                        <Text style={styles.memoryBtnText}>M+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                )}
+              </FinalAnswer>
+            </View>
+          )}
 
-        <View style={styles.helpCard}>
-          <Text style={styles.helpTitle}>💡 Examples</Text>
-          <Text style={styles.helpText}>• Polynomials: x^3, 2x^2 - 5x + 1</Text>
-          <Text style={styles.helpText}>• Trig: sin(x), cos(2x)</Text>
-          <Text style={styles.helpText}>• Exponential: e^x, 2^x</Text>
-          <Text style={styles.helpText}>• Log: log(x), ln(x)</Text>
-        </View>
-      </ScrollView>
+          <View style={styles.helpCard}>
+            <Text style={styles.helpTitle}>💡 Examples</Text>
+            <Text style={styles.helpText}>• Polynomials: x^3, 2x^2 - 5x + 1</Text>
+            <Text style={styles.helpText}>• Trig: sin(x), cos(2x)</Text>
+            <Text style={styles.helpText}>• Exponential: e^x, 2^x</Text>
+            <Text style={styles.helpText}>• Log: log(x), ln(x)</Text>
+          </View>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
-  scrollView: { flex: 1 },
+  flex: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
   headerContainer: { width: '100%', maxWidth: 800 },
   tabletInputCard: { maxWidth: 600, width: '100%' },
   resultArea: { gap: 0, width: '100%', maxWidth: 800 },
-  helpCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    width: '100%',
-    maxWidth: 800,
-  },
-  header: { marginBottom: 20, paddingTop: 8 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.white, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-  },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap' },
+  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', width: '100%' },
   modeBtn: {
     flex: 1,
     minWidth: 140,
@@ -386,7 +304,7 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, alignSelf: 'flex-start' },
   exprInput: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -397,10 +315,11 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     padding: 16,
     textAlign: 'center',
+    width: '100%',
   },
-  varRow: { flexDirection: 'row', gap: 12, marginTop: 12 },
+  varRow: { flexDirection: 'row', gap: 12, marginTop: 12, width: '100%' },
   varItem: { flex: 1 },
-  varLabel: { color: colors.textSecondary, fontSize: 11, marginBottom: 4, textAlign: 'center' },
+  varLabel: { color: colors.textSecondary, fontSize: 11 },
   varInput: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -412,23 +331,18 @@ const styles = StyleSheet.create({
     padding: 12,
     textAlign: 'center',
   },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
+  inputHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    marginTop: 16,
+    marginBottom: 4,
   },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
-  errorCard: {
-    backgroundColor: 'rgba(255,71,87,0.1)',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
+  recallBtnMini: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '600',
+    textDecorationLine: 'underline',
   },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
     color: '#c8c8d8',
     fontSize: 14,
@@ -450,10 +364,36 @@ const styles = StyleSheet.create({
     lineHeight: 28,
   },
   finalPoint: {
-    color: colors.accentGlow,
+    color: colors.white,
     fontSize: 16,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    marginTop: 8,
+  },
+  finalContainer: {
+    width: '100%',
+    alignItems: 'center',
+  },
+  finalResultRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    marginTop: 12,
+  },
+  memoryBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.bgInput,
+    paddingHorizontal: 8,
+    paddingVertical: 6,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: colors.accent + '40',
+  },
+  memoryBtnText: {
+    color: colors.accent,
+    fontSize: 12,
+    fontWeight: '700',
+    marginLeft: 6,
   },
   helpCard: {
     backgroundColor: colors.bgCard,
@@ -461,6 +401,9 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     borderRadius: 20,
     padding: 20,
+    width: '100%',
+    maxWidth: 800,
+    marginTop: 16,
   },
   helpTitle: { color: colors.white, fontSize: 16, fontWeight: '600', marginBottom: 10 },
   helpText: {
