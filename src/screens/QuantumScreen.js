@@ -21,8 +21,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveQuantum } from '../solvers/quantumSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -37,23 +35,6 @@ export default function QuantumScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    const val = memory.last_physics_result || memory.last_calculus_result;
-    if (val) {
-      setter(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -110,30 +91,15 @@ export default function QuantumScreen() {
 
             {mode === 'photon_e' ? (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Frequency (f) [Hz]:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setF)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Frequency (f) [Hz]:</Text>
                 <TextInput style={styles.input} value={f} onChangeText={setF} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Particle Mass (m) [kg]:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Particle Mass (m) [kg]:</Text>
                 <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Velocity (v) [m/s]:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setV)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Velocity (v) [m/s]:</Text>
                 <TextInput style={styles.input} value={v} onChangeText={setV} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             )}
@@ -159,16 +125,7 @@ export default function QuantumScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🔮 Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -202,46 +159,10 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  recallBtnMini: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '700',
-    textDecorationLine: 'underline',
-  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
 });

@@ -21,8 +21,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveOptics } from '../solvers/opticsSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -68,23 +66,6 @@ export default function OpticsScreen() {
     }, 600);
   };
 
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    const val = memory.last_physics_result || memory.last_calculus_result;
-    if (val) {
-      setter(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -125,54 +106,24 @@ export default function OpticsScreen() {
 
             {mode === 'lens' ? (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Focal Length (f):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setFocalLength)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Focal Length (f):</Text>
                 <TextInput style={styles.input} value={focalLength} onChangeText={setFocalLength} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Object Distance (u):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setObjectDistance)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Object Distance (u):</Text>
                 <TextInput style={styles.input} value={objectDistance} onChangeText={setObjectDistance} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Image Distance (v):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setImageDistance)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Image Distance (v):</Text>
                 <TextInput style={styles.input} value={imageDistance} onChangeText={setImageDistance} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Index n₁ (Initial):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setN1)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Index n₁ (Initial):</Text>
                 <TextInput style={styles.input} value={n1} onChangeText={setN1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Index n₂ (Final):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setN2)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Index n₂ (Final):</Text>
                 <TextInput style={styles.input} value={n2} onChangeText={setN2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Incident Angle θ₁ (°):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setTheta1)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Incident Angle θ₁ (°):</Text>
                 <TextInput style={styles.input} value={theta1} onChangeText={setTheta1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             )}
@@ -198,16 +149,7 @@ export default function OpticsScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🔭 Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -229,29 +171,10 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
 });

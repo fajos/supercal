@@ -12,8 +12,6 @@ import { solveDynamics } from '../solvers/dynamicsSolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -61,22 +59,6 @@ export default function DynamicsScreen() {
     }, 600);
   };
 
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    if (memory.last_physics_result) {
-      setter(memory.last_physics_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   const renderContent = (content) => {
     return content.map((item, idx) => {
       if (item.type === 'highlight') return <Text key={idx} style={styles.highlightText}>{item.text}</Text>;
@@ -117,64 +99,34 @@ export default function DynamicsScreen() {
               ))}
             </View>
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Mass (kg):</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (kg):</Text>
             <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>
-                {mode === 'momentum' ? 'Force (N) - for impulse:' : 'Applied Force (N):'}
-              </Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setForce)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>
+              {mode === 'momentum' ? 'Force (N) - for impulse:' : 'Applied Force (N):'}
+            </Text>
             <TextInput style={styles.input} value={force} onChangeText={setForce} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             {mode === 'friction' || mode === 'inclinedPlane' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Coefficient of Friction (μ):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setFriction)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Coefficient of Friction (μ):</Text>
                 <TextInput style={styles.input} value={friction} onChangeText={setFriction} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : null}
 
             {mode === 'inclinedPlane' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Angle of Incline (degrees):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setAngle)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Angle of Incline (degrees):</Text>
                 <TextInput style={styles.input} value={angle} onChangeText={setAngle} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : null}
 
             {mode === 'momentum' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Initial Velocity (m/s):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Initial Velocity (m/s):</Text>
                 <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Time of Force Application (s):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setTime)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Time of Force Application (s):</Text>
                 <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : null}
@@ -196,16 +148,7 @@ export default function DynamicsScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="💪 Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -257,29 +200,10 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  inputRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
 });

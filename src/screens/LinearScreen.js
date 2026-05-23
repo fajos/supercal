@@ -20,8 +20,7 @@ import { solveLinearSystem } from '../solvers/linearSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
+import { ErrorCard } from '../components/ErrorCard';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -76,21 +75,6 @@ export default function LinearScreen() {
     }
   };
 
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      setter(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   const renderContent = (content) => {
     return content.map((item, idx) => {
       switch (item.type) {
@@ -136,11 +120,8 @@ export default function LinearScreen() {
 
           {/* Input Card */}
           <InputCard>
-            <View style={styles.inputRow}>
+            <View style={styles.inputLabel}>
               <Text style={styles.inputLabel}>Equation 1:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setA1)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
             </View>
             <View style={styles.eqRow}>
               <TextInput
@@ -173,11 +154,8 @@ export default function LinearScreen() {
 
             <View style={styles.divider} />
 
-            <View style={styles.inputRow}>
+            <View style={styles.inputLabel}>
               <Text style={styles.inputLabel}>Equation 2:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setA2)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
             </View>
             <View style={styles.eqRow}>
               <TextInput
@@ -232,29 +210,13 @@ export default function LinearScreen() {
               ))}
 
               <FinalAnswer label="🎯 Solution">
-                <View style={styles.finalRow}>
-                  <View>
-                    <Text style={styles.finalText}>
-                      x = {solution.x.toFixed(4)}
-                    </Text>
-                    <Text style={styles.finalText}>
-                      y = {solution.y.toFixed(4)}
-                    </Text>
-                  </View>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(solution.x)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>Mx</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(solution.y)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>My</Text>
-                  </TouchableOpacity>
+                <View>
+                  <Text style={styles.finalText}>
+                    x = {solution.x.toFixed(4)}
+                  </Text>
+                  <Text style={styles.finalText}>
+                    y = {solution.y.toFixed(4)}
+                  </Text>
                 </View>
               </FinalAnswer>
             </View>
@@ -287,46 +249,11 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  header: {
-    marginBottom: 20,
-    paddingTop: 8,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: '700',
-    color: colors.white,
-    letterSpacing: -0.5,
-  },
-  subtitle: {
-    fontSize: 14,
-    color: colors.textSecondary,
-    marginTop: 4,
-    letterSpacing: 0.3,
-  },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-  },
   inputLabel: {
     fontSize: 13,
     color: colors.textSecondary,
     letterSpacing: 0.3,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 8,
-  },
-  recallBtn: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
   },
   eqRow: {
     flexDirection: 'row',
@@ -361,37 +288,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.border,
     marginVertical: 14,
   },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 16,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  solveBtnText: {
-    color: colors.black,
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  errorCard: {
-    backgroundColor: 'rgba(255,71,87,0.1)',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    fontWeight: '500',
-  },
   stepText: {
     color: colors.textPrimary,
     fontSize: 14,
@@ -425,27 +321,5 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
-  },
-  finalRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
   },
 });

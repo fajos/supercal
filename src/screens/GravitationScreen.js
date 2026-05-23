@@ -20,8 +20,6 @@ import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveGravitation } from '../solvers/gravitationSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 export default function GravitationScreen() {
   const [mode, setMode] = useState('force');
@@ -33,24 +31,6 @@ export default function GravitationScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    // Extract numeric value from result string (e.g., "9.81 m/s²" -> "9.81")
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    const val = memory.last_physics_result;
-    if (val) {
-      setter(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     setLoading(true);
@@ -83,7 +63,9 @@ export default function GravitationScreen() {
         style={{ flex: 1 }}
       >
         <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-          <BackHeader title="🌍 Gravitation" subtitle="Universal Gravity & Field Strength" />
+          <View style={styles.headerContainer}>
+            <BackHeader title="🌍 Gravitation" subtitle="Universal Gravity & Field Strength" />
+          </View>
 
           <InputCard>
             <View style={styles.modeRow}>
@@ -103,39 +85,23 @@ export default function GravitationScreen() {
               ))}
             </View>
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Mass (M) [kg]:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setM)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (M) [kg]:</Text>
             <TextInput style={styles.input} value={M} onChangeText={setM} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             {mode === 'force' && (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Mass (m) [kg]:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setM_small)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (m) [kg]:</Text>
                 <TextInput style={styles.input} value={m} onChangeText={setM_small} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             )}
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Distance (r) [m]:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setR)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Distance (r) [m]:</Text>
             <TextInput style={styles.input} value={r} onChangeText={setR} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             <SolveButton
               onPress={handleSolve}
               loading={loading}
-              title="CALCULATE"
-              icon="earth-outline"
+              label="🌍 CALCULATE"
             />
           </InputCard>
 
@@ -153,16 +119,7 @@ export default function GravitationScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🌍 Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -175,42 +132,18 @@ export default function GravitationScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
   scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
+  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
+  headerContainer: { width: '100%', maxWidth: 800, marginBottom: 16 },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
-  solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 20 },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  solutionArea: { gap: 0 },
+  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
-  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
 });

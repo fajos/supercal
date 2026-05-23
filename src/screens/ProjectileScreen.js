@@ -21,8 +21,6 @@ import { solveProjectile } from '../solvers/projectileSolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -61,22 +59,6 @@ export default function ProjectileScreen() {
     }, 600);
   };
 
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    if (memory.last_physics_result) {
-      setter(memory.last_physics_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -106,34 +88,19 @@ export default function ProjectileScreen() {
               ))}
             </View>
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Initial Velocity (u) m/s:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Initial Velocity (u) m/s:</Text>
             <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             {mode === 'groundLaunch' && (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Launch Angle (θ) degrees:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setAngle)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Launch Angle (θ) degrees:</Text>
                 <TextInput style={styles.input} value={angle} onChangeText={setAngle} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             )}
 
             {mode === 'horizontalLaunch' && (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Initial Height (h) meters:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setHeight)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Initial Height (h) meters:</Text>
                 <TextInput style={styles.input} value={height} onChangeText={setHeight} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             )}
@@ -159,16 +126,7 @@ export default function ProjectileScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🎯 Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -209,29 +167,10 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  inputRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
 });

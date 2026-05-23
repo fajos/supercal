@@ -21,9 +21,6 @@ import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
-
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
 
@@ -41,23 +38,6 @@ export default function MatrixScreen() {
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
-  const handleSaveToMemory = async (val) => {
-    // Strip any non-numeric characters just in case, though these should be numbers
-    const numValue = typeof val === 'string' ? val.replace(/[^0-9.-]/g, '') : val;
-    const success = await storeValue('last_calculus_result', numValue.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (row, col) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      updateMatrixValue(row, col, memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   const size = parseInt(matrixSize) || 3;
 
   const getMatrix = () => {
@@ -69,260 +49,6 @@ export default function MatrixScreen() {
       }
     }
     return matrix;
-  };
-
-  // Calculate determinant with steps
-  const calculateDeterminant = (matrix) => {
-    const n = matrix.length;
-    const steps = [];
-
-    if (n === 1) {
-      return { value: matrix[0][0], steps: [{ type: 'text', text: `det = ${matrix[0][0]}` }] };
-    }
-
-    if (n === 2) {
-      const det = matrix[0][0] * matrix[1][1] - matrix[0][1] * matrix[1][0];
-      steps.push({
-        type: 'text',
-        text: `For 2×2 matrix: det = a₁₁×a₂₂ − a₁₂×a₂₁`,
-      });
-      steps.push({
-        type: 'text',
-        text: `det = (${matrix[0][0]})×(${matrix[1][1]}) − (${matrix[0][1]})×(${matrix[1][0]})`,
-      });
-      steps.push({
-        type: 'highlight',
-        text: `det = ${matrix[0][0] * matrix[1][1]} − ${matrix[0][1] * matrix[1][0]} = ${det}`,
-      });
-      return { value: det, steps };
-    }
-
-    // For n≥3, use cofactor expansion along first row
-    steps.push({
-      type: 'text',
-      text: `Using cofactor expansion along first row for ${n}×${n} matrix:`,
-    });
-
-    let det = 0;
-    for (let j = 0; j < n; j++) {
-      const sign = j % 2 === 0 ? '+' : '−';
-      const cofactor = matrix[0][j];
-      const subMatrix = [];
-      for (let i = 1; i < n; i++) {
-        subMatrix.push(matrix[i].filter((_, idx) => idx !== j));
-      }
-      const subDet = calculateDeterminant(subMatrix);
-      const contribution = sign === '+' ? cofactor * subDet.value : -cofactor * subDet.value;
-      det += contribution;
-
-      steps.push({
-        type: 'text',
-        text: `${sign} ${cofactor} × det(minor₁${j + 1}) = ${sign} ${cofactor} × ${subDet.value.toFixed(4)}`,
-      });
-    }
-
-    steps.push({
-      type: 'highlight',
-      text: `det = ${det.toFixed(6)}`,
-    });
-
-    return { value: det, steps };
-  };
-
-  // Calculate inverse with steps
-  const calculateInverse = (matrix) => {
-    const n = matrix.length;
-    const steps = [];
-    const detResult = calculateDeterminant(matrix);
-    
-    if (Math.abs(detResult.value) < 1e-10) {
-      throw new Error('Matrix is singular (determinant = 0). Inverse does not exist.');
-    }
-
-    steps.push({
-      type: 'text',
-      text: 'Step 1: Calculate determinant',
-    });
-    steps.push(...detResult.steps);
-    steps.push({
-      type: 'text',
-      text: `\nStep 2: Find matrix of cofactors`,
-    });
-
-    const cofactors = [];
-    for (let i = 0; i < n; i++) {
-      cofactors[i] = [];
-      for (let j = 0; j < n; j++) {
-        const subMatrix = [];
-        for (let r = 0; r < n; r++) {
-          if (r !== i) {
-            subMatrix.push(matrix[r].filter((_, c) => c !== j));
-          }
-        }
-        const subDet = calculateDeterminant(subMatrix);
-        cofactors[i][j] = ((i + j) % 2 === 0 ? 1 : -1) * subDet.value;
-      }
-    }
-
-    steps.push({
-      type: 'text',
-      text: 'Step 3: Transpose cofactor matrix (adjugate)',
-    });
-    steps.push({
-      type: 'text',
-      text: `Step 4: Divide adjugate by determinant (${detResult.value.toFixed(4)})`,
-    });
-
-    const inverse = [];
-    for (let i = 0; i < n; i++) {
-      inverse[i] = [];
-      for (let j = 0; j < n; j++) {
-        inverse[i][j] = cofactors[j][i] / detResult.value;
-      }
-    }
-
-    return { matrix: inverse, steps, det: detResult.value };
-  };
-
-    // Calculate eigenvalues (for 2×2 and 3×3 using characteristic polynomial)
-  const calculateEigenvalues = (matrix) => {
-    const n = matrix.length;
-    const steps = [];
-
-    if (n === 2) {
-      const a = matrix[0][0];
-      const b = matrix[0][1];
-      const c = matrix[1][0];
-      const d = matrix[1][1];
-      const trace = a + d;
-      const det = a * d - b * c;
-      const discriminant = trace * trace - 4 * det;
-
-      steps.push({
-        type: 'text',
-        text: 'Characteristic equation: λ² − trace·λ + det = 0',
-      });
-      steps.push({
-        type: 'text',
-        text: `λ² − (${trace})λ + (${det}) = 0`,
-      });
-      steps.push({
-        type: 'text',
-        text: `Discriminant = ${trace}² − 4(${det}) = ${discriminant.toFixed(4)}`,
-      });
-
-      let eigenvalues;
-      if (discriminant >= 0) {
-        const lambda1 = (trace + Math.sqrt(discriminant)) / 2;
-        const lambda2 = (trace - Math.sqrt(discriminant)) / 2;
-        eigenvalues = [lambda1, lambda2];
-        steps.push({
-          type: 'highlight',
-          text: `λ₁ = ${lambda1.toFixed(4)}, λ₂ = ${lambda2.toFixed(4)}`,
-        });
-      } else {
-        const realPart = trace / 2;
-        const imagPart = Math.sqrt(-discriminant) / 2;
-        eigenvalues = [
-          `${realPart.toFixed(4)} + ${imagPart.toFixed(4)}i`,
-          `${realPart.toFixed(4)} − ${imagPart.toFixed(4)}i`,
-        ];
-        steps.push({
-          type: 'highlight',
-          text: `λ₁ = ${eigenvalues[0]}, λ₂ = ${eigenvalues[1]} (complex)`,
-        });
-      }
-
-      return { eigenvalues, steps };
-    }
-
-    // For 3×3, use numerical method (power iteration approximation)
-    steps.push({
-      type: 'text',
-      text: 'For 3×3 matrices, computing eigenvalues numerically...',
-    });
-
-    // Characteristic polynomial coefficients
-    const a = matrix[0][0];
-    const b = matrix[0][1];
-    const c = matrix[0][2];
-    const d = matrix[1][0];
-    const e = matrix[1][1];
-    const f = matrix[1][2];
-    const g = matrix[2][0];
-    const h = matrix[2][1];
-    const i = matrix[2][2];
-
-    const trace = a + e + i;
-    const det2 = a*e - b*d + a*i - c*g + e*i - f*h;
-    const det3 = a*(e*i - f*h) - b*(d*i - f*g) + c*(d*h - e*g);
-
-    steps.push({
-      type: 'text',
-      text: `Characteristic: λ³ − ${trace}λ² + ${det2.toFixed(2)}λ − ${det3.toFixed(2)} = 0`,
-    });
-
-    // Solve cubic using Newton's method
-    const f_cubic = (x) => {
-      return -(x ** 3) + trace * (x ** 2) - det2 * x + det3;
-    };
-    
-    const f_prime = (x) => {
-      return -3 * (x ** 2) + 2 * trace * x - det2;
-    };
-
-    const eigenvalues = [];
-    const starters = [0, trace / 2, trace];
-
-    for (const start of starters) {
-      let x = start;
-      let converged = false;
-      
-      for (let iter = 0; iter < 100; iter++) {
-        const fx = f_cubic(x);
-        const fpx = f_prime(x);
-        
-        if (Math.abs(fpx) < 1e-12) break;
-        
-        const x1 = x - fx / fpx;
-        
-        if (Math.abs(x1 - x) < 1e-10 && Math.abs(f_cubic(x1)) < 1e-8) {
-          const rounded = Math.round(x1 * 10000) / 10000;
-          // Check if this eigenvalue is already found (within tolerance)
-          if (!eigenvalues.some(ev => Math.abs(ev - rounded) < 0.001)) {
-            eigenvalues.push(rounded);
-          }
-          converged = true;
-          break;
-        }
-        x = x1;
-      }
-      
-      // If Newton didn't converge from this starting point, try next one
-      if (!converged) continue;
-    }
-
-    // If we didn't find all 3 eigenvalues, note it
-    if (eigenvalues.length < 3) {
-      steps.push({
-        type: 'text',
-        text: `Note: Found ${eigenvalues.length} real eigenvalue(s). Complex eigenvalues may exist.`,
-      });
-    }
-
-    if (eigenvalues.length > 0) {
-      steps.push({
-        type: 'highlight',
-        text: `Eigenvalues: ${eigenvalues.map((v, idx) => `λ${idx + 1} = ${v.toFixed(4)}`).join(', ')}`,
-      });
-    } else {
-      steps.push({
-        type: 'text',
-        text: 'Could not find real eigenvalues. Matrix may have only complex eigenvalues.',
-      });
-    }
-
-    return { eigenvalues, steps };
   };
 
   const handleOperation = () => {
@@ -445,30 +171,20 @@ export default function MatrixScreen() {
           />
 
           {/* Matrix Grid */}
-          <View style={styles.inputHeader}>
-            <Text style={styles.inputLabel}>Enter values:</Text>
-            <Text style={styles.hintText}>Tap cell to recall MR</Text>
-          </View>
+          <Text style={[styles.inputLabel, { marginTop: 16, marginBottom: 8 }]}>Enter values:</Text>
           <View style={styles.matrixInputGrid}>
             {Array.from({ length: size }, (_, i) => (
               <View key={i} style={styles.inputRow}>
                 {Array.from({ length: size }, (_, j) => (
-                  <View key={`${i}-${j}`} style={styles.cellWrapper}>
-                    <TextInput
-                      style={styles.matrixInput}
-                      value={matrixValues[`${i}-${j}`] || ''}
-                      onChangeText={(text) => updateMatrixValue(i, j, text)}
-                      keyboardType="decimal-pad"
-                      placeholder="0"
-                      placeholderTextColor={colors.textSecondary}
-                    />
-                    <TouchableOpacity
-                      style={styles.cellRecall}
-                      onPress={() => handleRecallMemory(i, j)}
-                    >
-                      <Text style={styles.recallIcon}>R</Text>
-                    </TouchableOpacity>
-                  </View>
+                  <TextInput
+                    key={`${i}-${j}`}
+                    style={styles.matrixInput}
+                    value={matrixValues[`${i}-${j}`] || ''}
+                    onChangeText={(text) => updateMatrixValue(i, j, text)}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor={colors.textSecondary}
+                  />
                 ))}
               </View>
             ))}
@@ -526,16 +242,7 @@ export default function MatrixScreen() {
               }
             >
               {result.type === 'determinant' && (
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalValue}>{result.displayValue}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.value)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalValue}>{result.displayValue}</Text>
               )}
               {(result.type === 'inverse' || result.type === 'transpose') && (
                 renderMatrixDisplay(result.matrix, true)
@@ -543,20 +250,9 @@ export default function MatrixScreen() {
               {result.type === 'eigenvalues' && (
                 <View>
                   {result.eigenvalues.map((val, idx) => (
-                    <View key={idx} style={styles.finalRow}>
-                      <Text style={styles.finalValue}>
-                        λ{idx + 1} = {typeof val === 'string' ? val : val.toFixed(6)}
-                      </Text>
-                      {typeof val === 'number' && (
-                        <TouchableOpacity
-                          style={styles.memoryBtn}
-                          onPress={() => handleSaveToMemory(val)}
-                        >
-                          <Ionicons name="save-outline" size={18} color={colors.accent} />
-                          <Text style={styles.memoryBtnText}>M{idx + 1}</Text>
-                        </TouchableOpacity>
-                      )}
-                    </View>
+                    <Text key={idx} style={styles.finalValue}>
+                      λ{idx + 1} = {typeof val === 'string' ? val : val.toFixed(6)}
+                    </Text>
                   ))}
                 </View>
               )}
@@ -589,12 +285,7 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  header: { marginBottom: 20, paddingTop: 8 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.white, letterSpacing: -0.5 },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4, letterSpacing: 0.3 },
-  inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, marginBottom: 8 },
   inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
-  hintText: { fontSize: 10, color: colors.textSecondary, fontStyle: 'italic' },
   sizeInput: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -609,7 +300,6 @@ const styles = StyleSheet.create({
   },
   matrixInputGrid: { gap: 8, marginTop: 8 },
   inputRow: { flexDirection: 'row', gap: 8, justifyContent: 'center', flexWrap: 'wrap' },
-  cellWrapper: { position: 'relative' },
   matrixInput: {
     width: 65,
     height: 44,
@@ -622,21 +312,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'center',
   },
-  cellRecall: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    backgroundColor: colors.bgCard,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent,
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10,
-  },
-  recallIcon: { color: colors.accent, fontSize: 8, fontWeight: '800' },
   opRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
   opBtn: {
     flex: 1,
@@ -653,23 +328,6 @@ const styles = StyleSheet.create({
   opIcon: { fontSize: 18 },
   opText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   opTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700', letterSpacing: 0.5 },
-  errorCard: {
-    backgroundColor: 'rgba(255,71,87,0.1)',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
     color: colors.textPrimary,
     fontSize: 14,
@@ -689,29 +347,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 36,
-  },
-  finalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginBottom: 4,
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
   },
   matrixDisplay: { gap: 4 },
   matrixRow: { flexDirection: 'row', gap: 4, justifyContent: 'center' },

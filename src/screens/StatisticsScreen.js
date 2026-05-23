@@ -21,8 +21,6 @@ import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -34,21 +32,6 @@ export default function StatisticsScreen() {
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async () => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      setDataInput(prev => prev ? `${prev}, ${memory.last_calculus_result}` : memory.last_calculus_result.toString());
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -122,14 +105,9 @@ export default function StatisticsScreen() {
 
           {/* Input Card */}
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>
-                Enter dataset (comma-separated values):
-              </Text>
-              <TouchableOpacity onPress={handleRecallMemory}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.inputLabel}>
+              Enter dataset (comma-separated values):
+            </Text>
             <TextInput
               style={styles.dataInput}
               value={dataInput}
@@ -167,49 +145,29 @@ export default function StatisticsScreen() {
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Mean</Text>
-                    <View style={styles.valueWithMemory}>
-                      <Text style={styles.summaryValue}>
-                        {solution.summary.mean.toFixed(4)}
-                      </Text>
-                      <TouchableOpacity onPress={() => handleSaveToMemory(solution.summary.mean)}>
-                        <Ionicons name="save-outline" size={14} color={colors.accent} />
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.summaryValue}>
+                      {solution.summary.mean.toFixed(4)}
+                    </Text>
                   </View>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Median</Text>
-                    <View style={styles.valueWithMemory}>
-                      <Text style={styles.summaryValue}>
-                        {solution.summary.median.toFixed(4)}
-                      </Text>
-                      <TouchableOpacity onPress={() => handleSaveToMemory(solution.summary.median)}>
-                        <Ionicons name="save-outline" size={14} color={colors.accent} />
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.summaryValue}>
+                      {solution.summary.median.toFixed(4)}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Std Dev</Text>
-                    <View style={styles.valueWithMemory}>
-                      <Text style={styles.summaryValue}>
-                        {solution.summary.stdDev.toFixed(4)}
-                      </Text>
-                      <TouchableOpacity onPress={() => handleSaveToMemory(solution.summary.stdDev)}>
-                        <Ionicons name="save-outline" size={14} color={colors.accent} />
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.summaryValue}>
+                      {solution.summary.stdDev.toFixed(4)}
+                    </Text>
                   </View>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Range</Text>
-                    <View style={styles.valueWithMemory}>
-                      <Text style={styles.summaryValue}>
-                        {solution.summary.range.toFixed(4)}
-                      </Text>
-                      <TouchableOpacity onPress={() => handleSaveToMemory(solution.summary.range)}>
-                        <Ionicons name="save-outline" size={14} color={colors.accent} />
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.summaryValue}>
+                      {solution.summary.range.toFixed(4)}
+                    </Text>
                   </View>
                 </View>
                 <View style={styles.summaryRow}>
@@ -221,14 +179,9 @@ export default function StatisticsScreen() {
                   </View>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>IQR</Text>
-                    <View style={styles.valueWithMemory}>
-                      <Text style={styles.summaryValue}>
-                        {solution.summary.iqr.toFixed(4)}
-                      </Text>
-                      <TouchableOpacity onPress={() => handleSaveToMemory(solution.summary.iqr)}>
-                        <Ionicons name="save-outline" size={14} color={colors.accent} />
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.summaryValue}>
+                      {solution.summary.iqr.toFixed(4)}
+                    </Text>
                   </View>
                 </View>
               </FinalAnswer>
@@ -270,18 +223,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: colors.textSecondary,
     letterSpacing: 0.3,
-  },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 12,
-  },
-  recallBtn: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
   },
   dataInput: {
     backgroundColor: colors.bgInput,
@@ -294,40 +236,6 @@ const styles = StyleSheet.create({
     padding: 14,
     minHeight: 60,
     textAlignVertical: 'top',
-  },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 16,
-    shadowColor: colors.accent,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
-  },
-  solveBtnText: {
-    color: colors.black,
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
-  },
-  errorCard: {
-    backgroundColor: 'rgba(255,71,87,0.1)',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: colors.danger,
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  solutionArea: {
-    gap: 0,
   },
   stepText: {
     color: colors.textPrimary,

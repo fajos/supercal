@@ -144,8 +144,8 @@ export default function App() {
                   case 'Graph':
                     iconName = focused ? 'trending-up' : 'trending-up-outline';
                     break;
-                  case 'Matrix':
-                    iconName = focused ? 'grid' : 'grid-outline';
+                  case 'Constants':
+                    iconName = focused ? 'information-circle' : 'information-circle-outline';
                     break;
                   default:
                     iconName = 'help-circle-outline';
@@ -158,6 +158,7 @@ export default function App() {
             <Tab.Screen name="Solve" component={SolveStackScreen} options={{ tabBarLabel: 'Solve' }} />
             <Tab.Screen name="Physics" component={PhysicsStackScreen} options={{ tabBarLabel: 'Physics' }} />
             <Tab.Screen name="Graph" component={GraphScreen} options={{ tabBarLabel: 'Graph' }} />
+            <Tab.Screen name="Constants" component={ConstantsScreen} options={{ tabBarLabel: 'Constants' }} />
           </Tab.Navigator>
         </NavigationContainer>
       </HistoryProvider>

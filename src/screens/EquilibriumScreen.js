@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { InputCard } from '../components/InputCard';
@@ -21,7 +20,6 @@ import { ErrorCard } from '../components/ErrorCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveEquilibrium } from '../solvers/equilibriumSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
 
 export default function EquilibriumScreen() {
   const [mode, setMode] = useState('moment');
@@ -38,27 +36,6 @@ export default function EquilibriumScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_physics_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_physics_result) {
-      const val = memory.last_physics_result;
-      if (field === 'force') setForce(val);
-      if (field === 'distance') setDistance(val);
-      if (field === 'angle') setAngle(val);
-      if (field === 'force1') setForce1(val);
-      if (field === 'dist1') setDist1(val);
-      if (field === 'dist2') setDist2(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     setLoading(true);
@@ -126,54 +103,24 @@ export default function EquilibriumScreen() {
 
             {mode === 'moment' ? (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Force (F) N:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('force')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Force (F) N:</Text>
                 <TextInput style={styles.input} value={force} onChangeText={setForce} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Distance from pivot (d) m:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('distance')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Distance from pivot (d) m:</Text>
                 <TextInput style={styles.input} value={distance} onChangeText={setDistance} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Angle (θ) degrees:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('angle')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Angle (θ) degrees:</Text>
                 <TextInput style={styles.input} value={angle} onChangeText={setAngle} keyboardType="decimal-pad" />
               </>
             ) : (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Effort/Force 1 (F1) N:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('force1')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Effort/Force 1 (F1) N:</Text>
                 <TextInput style={styles.input} value={force1} onChangeText={setForce1} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Distance 1 (d1) m:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('dist1')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Distance 1 (d1) m:</Text>
                 <TextInput style={styles.input} value={dist1} onChangeText={setDist1} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Distance 2 (d2) m:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('dist2')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Distance 2 (d2) m:</Text>
                 <TextInput style={styles.input} value={dist2} onChangeText={setDist2} keyboardType="decimal-pad" />
               </>
             )}
@@ -195,16 +142,7 @@ export default function EquilibriumScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="⚖️ Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -213,7 +151,6 @@ export default function EquilibriumScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
@@ -242,20 +179,7 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
-  recallBtn: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 8 },
   input: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -295,27 +219,5 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
-  },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
   },
 });

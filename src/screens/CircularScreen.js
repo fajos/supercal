@@ -9,6 +9,7 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -20,9 +21,6 @@ import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
-import { KeyboardAvoidingView } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -69,24 +67,6 @@ export default function CircularScreen() {
     }
   };
 
-  const handleSaveToMemory = async (val) => {
-    // Extract numeric value from result string (e.g., "5.00 N" -> "5.00")
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    const val = memory.last_physics_result || memory.last_calculus_result;
-    if (val) {
-      setter(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -116,48 +96,23 @@ export default function CircularScreen() {
               ))}
             </View>
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Mass (m) kg:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (m) kg:</Text>
             <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" />
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Radius (r) meters:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setRadius)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Radius (r) meters:</Text>
             <TextInput style={styles.input} value={radius} onChangeText={setRadius} keyboardType="decimal-pad" />
 
             {mode === 'centripetal' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Linear Velocity (v) m/s:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Linear Velocity (v) m/s:</Text>
                 <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" />
               </>
             ) : (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Frequency (f) Hz (optional):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setFrequency)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Frequency (f) Hz (optional):</Text>
                 <TextInput style={styles.input} value={frequency} onChangeText={setFrequency} keyboardType="decimal-pad" />
 
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Period (T) s (optional):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setPeriod)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Period (T) s (optional):</Text>
                 <TextInput style={styles.input} value={period} onChangeText={setPeriod} keyboardType="decimal-pad" />
               </>
             )}
@@ -183,16 +138,7 @@ export default function CircularScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🎡 Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -223,39 +169,15 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16, width: '100%' },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  inputRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
-  solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 20 },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16, width: '100%', maxWidth: 600 },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
 });

@@ -20,8 +20,6 @@ import { ErrorCard } from '../components/ErrorCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveSequence } from '../solvers/sequenceSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -35,23 +33,6 @@ export default function SequenceScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      if (field === 'a1') setA1(memory.last_calculus_result);
-      if (field === 'diff') setDifference(memory.last_calculus_result);
-      if (field === 'n') setN(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     setLoading(true);
@@ -111,12 +92,7 @@ export default function SequenceScreen() {
               </TouchableOpacity>
             </View>
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>First term (a₁):</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('a1')}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>First term (a₁):</Text>
             <TextInput
               style={styles.input}
               value={a1}
@@ -126,14 +102,9 @@ export default function SequenceScreen() {
               placeholderTextColor={colors.textSecondary}
             />
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>
-                {type === 'arithmetic' ? 'Common difference (d):' : 'Common ratio (r):'}
-              </Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('diff')}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>
+              {type === 'arithmetic' ? 'Common difference (d):' : 'Common ratio (r):'}
+            </Text>
             <TextInput
               style={styles.input}
               value={difference}
@@ -143,7 +114,7 @@ export default function SequenceScreen() {
               placeholderTextColor={colors.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>Number of terms (n):</Text>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Number of terms (n):</Text>
             <TextInput
               style={styles.input}
               value={n}
@@ -156,8 +127,7 @@ export default function SequenceScreen() {
             <SolveButton
               onPress={handleSolve}
               loading={loading}
-              title="CALCULATE"
-              icon="infinite-outline"
+              label="🔢 CALCULATE"
             />
           </InputCard>
 
@@ -172,28 +142,10 @@ export default function SequenceScreen() {
             ))}
             <FinalAnswer label="🎯 Results">
               <Text style={styles.finalLabel}>Nth Term (a{n}):</Text>
-              <View style={styles.finalResultRow}>
-                <Text style={styles.finalText}>{result.nthTerm}</Text>
-                <TouchableOpacity
-                  style={styles.memoryBtn}
-                  onPress={() => handleSaveToMemory(result.nthTerm)}
-                >
-                  <Ionicons name="save-outline" size={18} color={colors.accent} />
-                  <Text style={styles.memoryBtnText}>M+</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.finalText}>{result.nthTerm}</Text>
 
               <Text style={styles.finalLabel}>Sum of first {n} terms (S{n}):</Text>
-              <View style={styles.finalResultRow}>
-                <Text style={styles.finalText}>{result.sum}</Text>
-                <TouchableOpacity
-                  style={styles.memoryBtn}
-                  onPress={() => handleSaveToMemory(result.sum)}
-                >
-                  <Ionicons name="save-outline" size={18} color={colors.accent} />
-                  <Text style={styles.memoryBtnText}>M+</Text>
-                </TouchableOpacity>
-              </View>
+              <Text style={styles.finalText}>{result.sum}</Text>
             </FinalAnswer>
           </View>
         )}
@@ -209,9 +161,6 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
   headerContainer: { width: '100%', maxWidth: 800 },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  header: { marginBottom: 20, paddingTop: 8 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.white },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
   modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
   modeBtn: {
     flex: 1,
@@ -226,20 +175,7 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
-  recallBtn: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 8 },
   input: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -251,23 +187,6 @@ const styles = StyleSheet.create({
     padding: 14,
     textAlign: 'center',
   },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: {
-    backgroundColor: 'rgba(255,71,87,0.1)',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
     color: colors.textPrimary,
     fontSize: 14,
@@ -293,28 +212,5 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
-  },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginBottom: 8,
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
   },
 });

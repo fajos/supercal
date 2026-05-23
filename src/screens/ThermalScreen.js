@@ -21,8 +21,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveThermal } from '../solvers/thermalSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -75,23 +73,6 @@ export default function ThermalScreen() {
     }, 600);
   };
 
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    const val = memory.last_physics_result || memory.last_calculus_result;
-    if (val) {
-      setter(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -124,64 +105,39 @@ export default function ThermalScreen() {
 
             {mode === 'specificHeat' && (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Mass (m) kg:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (m) kg:</Text>
                 <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Spec. Heat (c) J/kg·K:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setSpecificHeat)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Spec. Heat (c) J/kg·K:</Text>
                 <TextInput style={styles.input} value={specificHeat} onChangeText={setSpecificHeat} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Temp Change (Δθ) K:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setDeltaTemp)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Temp Change (Δθ) K:</Text>
                 <TextInput style={styles.input} value={deltaTemp} onChangeText={setDeltaTemp} keyboardType="decimal-pad" />
               </>
             )}
 
             {mode === 'latentHeat' && (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Mass (m) kg:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (m) kg:</Text>
                 <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Latent Heat (L) J/kg:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setLatentHeat)}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Latent Heat (L) J/kg:</Text>
                 <TextInput style={styles.input} value={latentHeat} onChangeText={setLatentHeat} keyboardType="decimal-pad" />
               </>
             )}
 
             {mode === 'gasLaws' && (
               <>
-                <Text style={styles.inputLabel}>P1 (Pa), V1, T1 (K):</Text>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>P1 (Pa), V1, T1 (K):</Text>
                 <View style={styles.row}>
-                  <TextInput style={[styles.input, { flex: 1 }]} value={p1} onChangeText={setP1} keyboardType="decimal-pad" placeholder="P1" />
-                  <TextInput style={[styles.input, { flex: 1 }]} value={v1} onChangeText={setV1} keyboardType="decimal-pad" placeholder="V1" />
-                  <TextInput style={[styles.input, { flex: 1 }]} value={t1} onChangeText={setT1} keyboardType="decimal-pad" placeholder="T1" />
+                  <TextInput style={[styles.input, { flex: 1 }]} value={p1} onChangeText={setP1} keyboardType="decimal-pad" placeholder="P1" placeholderTextColor={colors.textSecondary} />
+                  <TextInput style={[styles.input, { flex: 1 }]} value={v1} onChangeText={setV1} keyboardType="decimal-pad" placeholder="V1" placeholderTextColor={colors.textSecondary} />
+                  <TextInput style={[styles.input, { flex: 1 }]} value={t1} onChangeText={setT1} keyboardType="decimal-pad" placeholder="T1" placeholderTextColor={colors.textSecondary} />
                 </View>
-                <Text style={styles.inputLabel}>P2 (Pa), T2 (K) [Find V2]:</Text>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>P2 (Pa), T2 (K) [Find V2]:</Text>
                 <View style={styles.row}>
-                  <TextInput style={[styles.input, { flex: 1 }]} value={p2} onChangeText={setP2} keyboardType="decimal-pad" placeholder="P2" />
-                  <TextInput style={[styles.input, { flex: 1 }]} value={t2} onChangeText={setT2} keyboardType="decimal-pad" placeholder="T2" />
+                  <TextInput style={[styles.input, { flex: 1 }]} value={p2} onChangeText={setP2} keyboardType="decimal-pad" placeholder="P2" placeholderTextColor={colors.textSecondary} />
+                  <TextInput style={[styles.input, { flex: 1 }]} value={t2} onChangeText={setT2} keyboardType="decimal-pad" placeholder="T2" placeholderTextColor={colors.textSecondary} />
                 </View>
               </>
             )}
@@ -207,16 +163,7 @@ export default function ThermalScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🌡️ Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -261,37 +208,11 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    width: '100%',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  recallBtnMini: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   row: { flexDirection: 'row', gap: 8, width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 20, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalResultRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
 });

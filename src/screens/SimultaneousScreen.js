@@ -19,8 +19,6 @@ import { solveSimultaneous3x3 } from '../solvers/simultaneousSolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -33,21 +31,6 @@ export default function SimultaneousScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      setter(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -94,9 +77,6 @@ export default function SimultaneousScreen() {
         <InputCard style={isTablet && styles.tabletInputCard}>
           <View style={styles.inputHeader}>
             <Text style={styles.inputLabel}>Equation 1: a₁x + b₁y + c₁z = d₁</Text>
-            <TouchableOpacity onPress={() => handleRecallMemory(setA1)}>
-              <Text style={styles.recallBtn}>Recall MR</Text>
-            </TouchableOpacity>
           </View>
           <View style={styles.coeffRow}>
             <TextInput style={styles.input} value={a1} onChangeText={setA1} keyboardType="decimal-pad" placeholder="a₁" placeholderTextColor={colors.textSecondary} />
@@ -110,9 +90,6 @@ export default function SimultaneousScreen() {
 
           <View style={[styles.inputHeader, { marginTop: 12 }]}>
             <Text style={styles.inputLabel}>Equation 2: a₂x + b₂y + c₂z = d₂</Text>
-            <TouchableOpacity onPress={() => handleRecallMemory(setA2)}>
-              <Text style={styles.recallBtn}>Recall MR</Text>
-            </TouchableOpacity>
           </View>
           <View style={styles.coeffRow}>
             <TextInput style={styles.input} value={a2} onChangeText={setA2} keyboardType="decimal-pad" placeholder="a₂" placeholderTextColor={colors.textSecondary} />
@@ -126,9 +103,6 @@ export default function SimultaneousScreen() {
 
           <View style={[styles.inputHeader, { marginTop: 12 }]}>
             <Text style={styles.inputLabel}>Equation 3: a₃x + b₃y + c₃z = d₃</Text>
-            <TouchableOpacity onPress={() => handleRecallMemory(setA3)}>
-              <Text style={styles.recallBtn}>Recall MR</Text>
-            </TouchableOpacity>
           </View>
           <View style={styles.coeffRow}>
             <TextInput style={styles.input} value={a3} onChangeText={setA3} keyboardType="decimal-pad" placeholder="a₃" placeholderTextColor={colors.textSecondary} />
@@ -157,26 +131,10 @@ export default function SimultaneousScreen() {
               </StepCard>
             ))}
             <FinalAnswer label="🎯 Solution">
-              <View style={styles.finalRow}>
-                <View>
-                  <Text style={styles.finalText}>x = {solution.x.toFixed(6)}</Text>
-                  <Text style={styles.finalText}>y = {solution.y.toFixed(6)}</Text>
-                  <Text style={styles.finalText}>z = {solution.z.toFixed(6)}</Text>
-                </View>
-                <View style={styles.memoryActions}>
-                  <TouchableOpacity style={styles.memoryBtn} onPress={() => handleSaveToMemory(solution.x)}>
-                    <Ionicons name="save-outline" size={16} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>Mx</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.memoryBtn} onPress={() => handleSaveToMemory(solution.y)}>
-                    <Ionicons name="save-outline" size={16} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>My</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity style={styles.memoryBtn} onPress={() => handleSaveToMemory(solution.z)}>
-                    <Ionicons name="save-outline" size={16} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>Mz</Text>
-                  </TouchableOpacity>
-                </View>
+              <View>
+                <Text style={styles.finalText}>x = {solution.x.toFixed(6)}</Text>
+                <Text style={styles.finalText}>y = {solution.y.toFixed(6)}</Text>
+                <Text style={styles.finalText}>z = {solution.z.toFixed(6)}</Text>
               </View>
             </FinalAnswer>
           </View>
@@ -207,13 +165,8 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  header: { marginBottom: 20, paddingTop: 8 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.white },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
   inputLabel: { fontSize: 13, color: colors.textSecondary },
   inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
   coeffRow: { flexDirection: 'row', alignItems: 'center', gap: 6, flexWrap: 'wrap', justifyContent: 'center' },
   input: {
     flex: 1,
@@ -231,24 +184,7 @@ const styles = StyleSheet.create({
     textAlign: 'center'
   },
   sep: { color: colors.textSecondary, fontSize: 12 },
-  solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 16 },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16 },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 30 },
-  finalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', width: '100%' },
-  memoryActions: { gap: 8 },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: { color: colors.accent, fontSize: 11, fontWeight: '700', marginLeft: 4 },
 });

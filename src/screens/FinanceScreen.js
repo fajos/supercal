@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -19,9 +20,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveFinance } from '../solvers/financeSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
-import { KeyboardAvoidingView } from 'react-native';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -37,24 +35,6 @@ export default function FinanceScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      if (field === 'principal') setPrincipal(memory.last_calculus_result);
-      if (field === 'rate') setRate(memory.last_calculus_result);
-      if (field === 'time') setTime(memory.last_calculus_result);
-      if (field === 'payment') setPayment(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = async () => {
     setLoading(true);
@@ -126,12 +106,7 @@ export default function FinanceScreen() {
               ))}
             </View>
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Principal/Present Value ($):</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('principal')}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Principal/Present Value ($):</Text>
             <TextInput
               style={styles.input}
               value={principal}
@@ -141,12 +116,7 @@ export default function FinanceScreen() {
               placeholderTextColor={colors.textSecondary}
             />
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Annual Interest Rate (%):</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('rate')}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Annual Interest Rate (%):</Text>
             <TextInput
               style={styles.input}
               value={rate}
@@ -156,7 +126,7 @@ export default function FinanceScreen() {
               placeholderTextColor={colors.textSecondary}
             />
 
-            <Text style={styles.inputLabel}>Time Period (years):</Text>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Time Period (years):</Text>
             <TextInput
               style={styles.input}
               value={time}
@@ -168,7 +138,7 @@ export default function FinanceScreen() {
 
             {(mode === 'compound' || mode === 'savings') && (
               <>
-                <Text style={styles.inputLabel}>Compounds per Year:</Text>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Compounds per Year:</Text>
                 <TextInput
                   style={styles.input}
                   value={compoundFreq}
@@ -182,7 +152,7 @@ export default function FinanceScreen() {
 
             {(mode === 'loan' || mode === 'savings') && (
               <>
-                <Text style={styles.inputLabel}>Payment Amount ($):</Text>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Payment Amount ($):</Text>
                 <TextInput
                   style={styles.input}
                   value={payment}
@@ -211,22 +181,11 @@ export default function FinanceScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="💰 Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>
-                    {typeof result.result === 'number'
-                      ? `$${result.result.toFixed(2)}`
-                      : result.result}
-                  </Text>
-                  {typeof result.result === 'number' && (
-                    <TouchableOpacity
-                      style={styles.memoryBtn}
-                      onPress={() => handleSaveToMemory(result.result.toFixed(2))}
-                    >
-                      <Ionicons name="save-outline" size={18} color={colors.accent} />
-                      <Text style={styles.memoryBtnText}>M+</Text>
-                    </TouchableOpacity>
-                  )}
-                </View>
+                <Text style={styles.finalText}>
+                  {typeof result.result === 'number'
+                    ? `$${result.result.toFixed(2)}`
+                    : result.result}
+                </Text>
               </FinalAnswer>
             </View>
           )}
@@ -242,9 +201,6 @@ const styles = StyleSheet.create({
   scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
   headerContainer: { width: '100%', maxWidth: 800 },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  header: { marginBottom: 20, paddingTop: 8 },
-  title: { fontSize: 28, fontWeight: '700', color: colors.white },
-  subtitle: { fontSize: 14, color: colors.textSecondary, marginTop: 4 },
   modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
   modeBtn: {
     flex: 1,
@@ -259,20 +215,7 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
-  recallBtn: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 8 },
   input: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -284,23 +227,6 @@ const styles = StyleSheet.create({
     padding: 14,
     textAlign: 'center',
   },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 20,
-  },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: {
-    backgroundColor: 'rgba(255,71,87,0.1)',
-    borderWidth: 1,
-    borderColor: colors.danger,
-    borderRadius: 14,
-    padding: 16,
-    marginBottom: 16,
-  },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
     color: colors.textPrimary,
     fontSize: 14,
@@ -334,27 +260,5 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 36,
-  },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
   },
 });

@@ -21,8 +21,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveMagnetic } from '../solvers/magneticSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -69,23 +67,6 @@ export default function MagneticScreen() {
     }, 600);
   };
 
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    const val = memory.last_physics_result || memory.last_calculus_result;
-    if (val) {
-      setter(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -126,56 +107,26 @@ export default function MagneticScreen() {
 
             {mode === 'chargeForce' ? (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Charge (q) C:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setCharge)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Charge (q) C:</Text>
                 <TextInput style={styles.input} value={charge} onChangeText={setCharge} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Velocity (v) m/s:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Velocity (v) m/s:</Text>
                 <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Current (I) A:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setCurrent)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Current (I) A:</Text>
                 <TextInput style={styles.input} value={current} onChangeText={setCurrent} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Length (L) m:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setLength)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Length (L) m:</Text>
                 <TextInput style={styles.input} value={length} onChangeText={setLength} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             )}
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Magnetic Field (B) Tesla:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setField)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Magnetic Field (B) Tesla:</Text>
             <TextInput style={styles.input} value={field} onChangeText={setField} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Angle (θ) degrees:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setAngle)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Angle (θ) degrees:</Text>
             <TextInput style={styles.input} value={angle} onChangeText={setAngle} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             <SolveButton
@@ -199,16 +150,7 @@ export default function MagneticScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="🧲 Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -244,29 +186,10 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
 });

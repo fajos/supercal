@@ -12,8 +12,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveRadicalWithValues } from '../solvers/radicalSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -27,23 +25,6 @@ export default function RadicalScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      if (field === 'a') setCoeffA(memory.last_calculus_result);
-      if (field === 'b') setCoeffB(memory.last_calculus_result);
-      if (field === 'c') setCoeffC(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -99,25 +80,16 @@ export default function RadicalScreen() {
 
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Coefficient a:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('a')}>
-                <Text style={styles.recallBtnMini}>Recall MR</Text>
-              </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={coeffA} onChangeText={setCoeffA} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             <View style={[styles.inputHeader, { marginTop: 12 }]}>
               <Text style={styles.inputLabel}>Constant b:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('b')}>
-                <Text style={styles.recallBtnMini}>Recall MR</Text>
-              </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={coeffB} onChangeText={setCoeffB} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             <View style={[styles.inputHeader, { marginTop: 12 }]}>
               <Text style={styles.inputLabel}>{mode === 'quadratic' ? 'Coefficient c:' : 'Right side c:'}</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('c')}>
-                <Text style={styles.recallBtnMini}>Recall MR</Text>
-              </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={coeffC} onChangeText={setCoeffC} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
@@ -142,16 +114,7 @@ export default function RadicalScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="√ Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>{String(result.result)}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{String(result.result)}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -196,12 +159,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 8,
   },
-  recallBtnMini: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
@@ -210,28 +167,6 @@ const styles = StyleSheet.create({
   inputLabel: { fontSize: 13, color: colors.textSecondary },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
   stepText: {
     color: colors.textPrimary,
     fontSize: 14,

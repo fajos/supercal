@@ -12,8 +12,6 @@ import { solveEnergy } from '../solvers/energySolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -55,22 +53,6 @@ export default function EnergyScreen() {
         setLoading(false);
       }
     }, 600);
-  };
-
-  const handleSaveToMemory = async (val) => {
-    const numericValue = val.toString().split(' ')[0];
-    const success = await storeValue('last_physics_result', numericValue);
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (setter) => {
-    const memory = await getMemory();
-    if (memory.last_physics_result) {
-      setter(memory.last_physics_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
   };
 
   const renderContent = (content) => {
@@ -117,54 +99,29 @@ export default function EnergyScreen() {
               ))}
             </View>
 
-            <View style={styles.inputRow}>
-              <Text style={styles.inputLabel}>Mass (kg):</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (kg):</Text>
             <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             {mode === 'kinetic' || mode === 'conservation' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Velocity (m/s):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Velocity (m/s):</Text>
                 <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : null}
 
             {mode === 'potential' || mode === 'conservation' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Height (m):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setHeight)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Height (m):</Text>
                 <TextInput style={styles.input} value={height} onChangeText={setHeight} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : null}
 
             {mode === 'spring' ? (
               <>
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Spring Constant k (N/m):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setSpringConstant)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Spring Constant k (N/m):</Text>
                 <TextInput style={styles.input} value={springConstant} onChangeText={setSpringConstant} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-                <View style={styles.inputRow}>
-                  <Text style={styles.inputLabel}>Compression/Extension x (m):</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory(setSpringCompression)}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Compression/Extension x (m):</Text>
                 <TextInput style={styles.input} value={springCompression} onChangeText={setSpringCompression} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
               </>
             ) : null}
@@ -172,12 +129,11 @@ export default function EnergyScreen() {
             <SolveButton
               onPress={handleSolve}
               loading={loading}
-              title="CALCULATE"
-              icon="flash-outline"
+              label="⚡ CALCULATE"
             />
           </InputCard>
 
-          <ErrorCard error={error} />
+          <ErrorCard message={error} />
 
           {result && (
             <View style={styles.solutionArea}>
@@ -187,16 +143,7 @@ export default function EnergyScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="⚡ Result">
-                <View style={styles.finalRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -213,42 +160,17 @@ const styles = StyleSheet.create({
   headerContainer: { width: '100%', maxWidth: 800 },
   tabletInputCard: { maxWidth: 600, width: '100%' },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  inputCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 20, padding: 20, marginBottom: 16 },
   modeRow: { flexDirection: 'row', gap: 6, marginBottom: 16, flexWrap: 'wrap' },
   modeBtn: { flex: 1, minWidth: 100, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary },
-  inputRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
-  recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '600', textDecorationLine: 'underline' },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
-  solveBtn: { backgroundColor: colors.accent, paddingVertical: 16, borderRadius: 16, alignItems: 'center', marginTop: 20 },
-  solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
-  errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16, width: '100%', maxWidth: 600 },
-  errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   resultBox: { backgroundColor: '#2a2a40', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginVertical: 2 },
   resultText: { color: '#c4b5fd', fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontSize: 14, fontWeight: '600' },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', width: '100%' },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 4,
-  },
-  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
 });

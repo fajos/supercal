@@ -21,8 +21,6 @@ import { ErrorCard } from '../components/ErrorCard';
 import { useHistory } from '../utils/history';
 import { solveDerivative, solveIntegral, evaluateExpression } from '../solvers/calculusSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -110,21 +108,6 @@ export default function CalculusScreen() {
     }, 600);
   };
 
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async () => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      setPoint(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -184,14 +167,9 @@ export default function CalculusScreen() {
                 />
               </View>
               <View style={styles.varItem}>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.varLabel}>
-                    {mode === 'derivative' ? 'Evaluate at' : 'Lower bound'}
-                  </Text>
-                  <TouchableOpacity onPress={handleRecallMemory}>
-                    <Text style={styles.recallBtnMini}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.varLabel}>
+                  {mode === 'derivative' ? 'Evaluate at' : 'Lower bound'}
+                </Text>
                 <TextInput
                   style={styles.varInput}
                   value={point}
@@ -232,18 +210,9 @@ export default function CalculusScreen() {
                       f'({variable}) = {result.expression}
                     </Text>
                     {result.pointValue !== null && (
-                      <View style={styles.finalResultRow}>
-                        <Text style={styles.finalPoint}>
-                          f'({point}) = {result.pointValue.toFixed(6)}
-                        </Text>
-                        <TouchableOpacity
-                          style={styles.memoryBtn}
-                          onPress={() => handleSaveToMemory(result.pointValue)}
-                        >
-                          <Ionicons name="save-outline" size={18} color={colors.accent} />
-                          <Text style={styles.memoryBtnText}>M+</Text>
-                        </TouchableOpacity>
-                      </View>
+                      <Text style={styles.finalPoint}>
+                        f'({point}) = {result.pointValue.toFixed(6)}
+                      </Text>
                     )}
                   </View>
                 )}
@@ -252,18 +221,9 @@ export default function CalculusScreen() {
                     <Text style={styles.finalExpr}>
                       ∫[{result.lower}, {result.upper}] f(x)dx
                     </Text>
-                    <View style={styles.finalResultRow}>
-                      <Text style={styles.finalPoint}>
-                        = {result.value.toFixed(6)}
-                      </Text>
-                      <TouchableOpacity
-                        style={styles.memoryBtn}
-                        onPress={() => handleSaveToMemory(result.value)}
-                      >
-                        <Ionicons name="save-outline" size={18} color={colors.accent} />
-                        <Text style={styles.memoryBtnText}>M+</Text>
-                      </TouchableOpacity>
-                    </View>
+                    <Text style={styles.finalPoint}>
+                      = {result.value.toFixed(6)}
+                    </Text>
                   </View>
                 )}
               </FinalAnswer>
@@ -319,7 +279,7 @@ const styles = StyleSheet.create({
   },
   varRow: { flexDirection: 'row', gap: 12, marginTop: 12, width: '100%' },
   varItem: { flex: 1 },
-  varLabel: { color: colors.textSecondary, fontSize: 11 },
+  varLabel: { color: colors.textSecondary, fontSize: 11, marginBottom: 4 },
   varInput: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -330,18 +290,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     padding: 12,
     textAlign: 'center',
-  },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 4,
-  },
-  recallBtnMini: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
   },
   stepText: {
     color: colors.textPrimary,
@@ -367,33 +315,11 @@ const styles = StyleSheet.create({
     color: colors.white,
     fontSize: 16,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    marginTop: 8,
   },
   finalContainer: {
     width: '100%',
     alignItems: 'center',
-  },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 12,
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
   },
   helpCard: {
     backgroundColor: colors.bgCard,

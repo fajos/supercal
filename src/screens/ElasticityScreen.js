@@ -12,7 +12,6 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
-import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { InputCard } from '../components/InputCard';
@@ -21,7 +20,6 @@ import { ErrorCard } from '../components/ErrorCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveElasticity } from '../solvers/elasticitySolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
 
 export default function ElasticityScreen() {
   const [mode, setMode] = useState('hookesLaw');
@@ -34,25 +32,6 @@ export default function ElasticityScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_physics_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_physics_result) {
-      const val = memory.last_physics_result;
-      if (field === 'force') setForce(val);
-      if (field === 'extension') setExtension(val);
-      if (field === 'originalLength') setOriginalLength(val);
-      if (field === 'area') setArea(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     setLoading(true);
@@ -117,38 +96,18 @@ export default function ElasticityScreen() {
               ))}
             </View>
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Applied Force (F) N:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('force')}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Applied Force (F) N:</Text>
             <TextInput style={styles.input} value={force} onChangeText={setForce} keyboardType="decimal-pad" />
 
-            <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Extension (e) meters:</Text>
-              <TouchableOpacity onPress={() => handleRecallMemory('extension')}>
-                <Text style={styles.recallBtn}>Recall MR</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Extension (e) meters:</Text>
             <TextInput style={styles.input} value={extension} onChangeText={setExtension} keyboardType="decimal-pad" />
 
             {mode === 'youngsModulus' && (
               <>
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Original Length (L) m:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('originalLength')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Original Length (L) m:</Text>
                 <TextInput style={styles.input} value={originalLength} onChangeText={setOriginalLength} keyboardType="decimal-pad" />
 
-                <View style={styles.inputHeader}>
-                  <Text style={styles.inputLabel}>Area (A) m²:</Text>
-                  <TouchableOpacity onPress={() => handleRecallMemory('area')}>
-                    <Text style={styles.recallBtn}>Recall MR</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Area (A) m²:</Text>
                 <TextInput style={styles.input} value={area} onChangeText={setArea} keyboardType="decimal-pad" />
               </>
             )}
@@ -170,16 +129,7 @@ export default function ElasticityScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="📏 Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>{result.result}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -188,7 +138,6 @@ export default function ElasticityScreen() {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bgPrimary },
@@ -217,20 +166,7 @@ const styles = StyleSheet.create({
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3 },
-  recallBtn: {
-    color: colors.accent,
-    fontSize: 10,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
+  inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 8 },
   input: {
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
@@ -270,27 +206,5 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     lineHeight: 32,
-  },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
   },
 });

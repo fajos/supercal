@@ -12,8 +12,6 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveExponential } from '../solvers/exponentialSolver';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -29,26 +27,6 @@ export default function ExponentialScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
-
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      const val = memory.last_calculus_result;
-      if (field === 'base') setBase(val);
-      if (field === 'value') setValue(val);
-      if (field === 'principal') setPrincipal(val);
-      if (field === 'rate') setRate(val);
-      if (field === 'time') setTime(val);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -110,31 +88,6 @@ export default function ExponentialScreen() {
               ))}
             </View>
 
-            <View style={styles.inputHeader}>
-              {mode !== 'growth' ? (
-                <>
-                  <TouchableOpacity onPress={() => handleRecallMemory('base')}>
-                    <Text style={styles.recallBtnMini}>Recall MR Base</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleRecallMemory('value')}>
-                    <Text style={styles.recallBtnMini}>Recall MR Value</Text>
-                  </TouchableOpacity>
-                </>
-              ) : (
-                <>
-                  <TouchableOpacity onPress={() => handleRecallMemory('principal')}>
-                    <Text style={styles.recallBtnMini}>Recall MR P</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleRecallMemory('rate')}>
-                    <Text style={styles.recallBtnMini}>Recall MR R</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => handleRecallMemory('time')}>
-                    <Text style={styles.recallBtnMini}>Recall MR T</Text>
-                  </TouchableOpacity>
-                </>
-              )}
-            </View>
-
             {mode !== 'growth' ? (
               <>
                 <Text style={styles.inputLabel}>{mode === 'natural' ? 'Not applicable' : 'Base a:'}</Text>
@@ -181,16 +134,7 @@ export default function ExponentialScreen() {
                 </StepCard>
               ))}
               <FinalAnswer label="📊 Result">
-                <View style={styles.finalResultRow}>
-                  <Text style={styles.finalText}>{String(result.result)}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(result.result)}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M+</Text>
-                  </TouchableOpacity>
-                </View>
+                <Text style={styles.finalText}>{String(result.result)}</Text>
               </FinalAnswer>
             </View>
           )}
@@ -216,18 +160,6 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     width: '100%',
   },
-  inputHeader: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 12,
-  },
-  recallBtnMini: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '600',
-    textDecorationLine: 'underline',
-  },
   modeRow: { flexDirection: 'row', gap: 6, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
   modeBtn: { flex: 1, minWidth: '22%', paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
@@ -237,28 +169,6 @@ const styles = StyleSheet.create({
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   disabledInput: { opacity: 0.5, backgroundColor: colors.bgCard },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  finalResultRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-  },
-  memoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgInput,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '40',
-  },
-  memoryBtnText: {
-    color: colors.accent,
-    fontSize: 12,
-    fontWeight: '700',
-    marginLeft: 6,
-  },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
