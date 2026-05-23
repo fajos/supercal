@@ -202,6 +202,10 @@ export default function CalculusScreen() {
         steps: intResult.steps,
       });
     }
+
+    setTimeout(() => {
+      scrollRef.current?.scrollTo({ y: 0, animated: true });
+    }, 300);
   } catch (err) {
     setError(err.message);
   }

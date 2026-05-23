@@ -39,7 +39,7 @@ export default function ComplexScreen() {
       const z2 = { real: parseFloat(real2) || 0, imag: parseFloat(imag2) || 0 };
       const solverResult = solveComplexOperation(operation, z1, z2);
       setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
+      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
     } catch (err) {
       setError(err.message);
       setResult(null);

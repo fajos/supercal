@@ -33,7 +33,7 @@ export default function RadicalScreen() {
         parseFloat(coeffC) || 0
       );
       setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
+      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
     } catch (err) {
       setError(err.message);
       setResult(null);

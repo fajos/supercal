@@ -38,7 +38,7 @@ export default function GravitationScreen() {
       };
       const solverResult = solveGravitation(mode, params);
       setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
+      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
     } catch (err) {
       setError(err.message);
       setResult(null);

@@ -46,7 +46,7 @@ export default function StatisticsScreen() {
       });
 
       setTimeout(() => {
-        scrollRef.current?.scrollToEnd({ animated: true });
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
       }, 300);
     } catch (err) {
       setError(err.message);

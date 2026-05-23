@@ -39,7 +39,7 @@ export default function SimultaneousScreen() {
         parseFloat(a3), parseFloat(b3), parseFloat(c3), parseFloat(d3)
       );
       setSolution(result);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 300);
+      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
     } catch (err) {
       setError(err.message);
       setSolution(null);
