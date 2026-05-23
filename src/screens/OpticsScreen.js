@@ -46,24 +46,26 @@ export default function OpticsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
-    try {
-      const params = {
-        focalLength: parseFloat(focalLength),
-        objectDistance: parseFloat(objectDistance),
-        imageDistance: parseFloat(imageDistance),
-        n1: parseFloat(n1),
-        n2: parseFloat(n2),
-        theta1: parseFloat(theta1),
-      };
-      const solverResult = solveOptics(mode, params);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+    setTimeout(() => {
+      try {
+        const params = {
+          focalLength: parseFloat(focalLength),
+          objectDistance: parseFloat(objectDistance),
+          imageDistance: parseFloat(imageDistance),
+          n1: parseFloat(n1),
+          n2: parseFloat(n2),
+          theta1: parseFloat(theta1),
+        };
+        const solverResult = solveOptics(mode, params);
+        setResult(solverResult);
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const handleSaveToMemory = async (val) => {
@@ -126,7 +128,7 @@ export default function OpticsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Focal Length (f):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setFocalLength)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={focalLength} onChangeText={setFocalLength} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -134,7 +136,7 @@ export default function OpticsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Object Distance (u):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setObjectDistance)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={objectDistance} onChangeText={setObjectDistance} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -142,7 +144,7 @@ export default function OpticsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Image Distance (v):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setImageDistance)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={imageDistance} onChangeText={setImageDistance} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -152,7 +154,7 @@ export default function OpticsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Index n₁ (Initial):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setN1)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={n1} onChangeText={setN1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -160,7 +162,7 @@ export default function OpticsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Index n₂ (Final):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setN2)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={n2} onChangeText={setN2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -168,7 +170,7 @@ export default function OpticsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Incident Angle θ₁ (°):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setTheta1)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={theta1} onChangeText={setTheta1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -231,7 +233,7 @@ const styles = StyleSheet.create({
   inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
   recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
-  stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
+  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },

@@ -46,24 +46,27 @@ export default function MagneticScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
-    try {
-      const params = {
-        charge: parseFloat(charge) || 0,
-        velocity: parseFloat(velocity) || 0,
-        field: parseFloat(field) || 0,
-        angle: parseFloat(angle) || 90,
-        current: parseFloat(current) || 0,
-        length: parseFloat(length) || 0,
-      };
-      const solverResult = solveMagnetic(mode, params);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+
+    setTimeout(() => {
+      try {
+        const params = {
+          charge: parseFloat(charge) || 0,
+          velocity: parseFloat(velocity) || 0,
+          field: parseFloat(field) || 0,
+          angle: parseFloat(angle) || 90,
+          current: parseFloat(current) || 0,
+          length: parseFloat(length) || 0,
+        };
+        const solverResult = solveMagnetic(mode, params);
+        setResult(solverResult);
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const handleSaveToMemory = async (val) => {
@@ -126,7 +129,7 @@ export default function MagneticScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Charge (q) C:</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setCharge)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={charge} onChangeText={setCharge} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -134,7 +137,7 @@ export default function MagneticScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Velocity (v) m/s:</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -144,7 +147,7 @@ export default function MagneticScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Current (I) A:</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setCurrent)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={current} onChangeText={setCurrent} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -152,7 +155,7 @@ export default function MagneticScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Length (L) m:</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setLength)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={length} onChangeText={setLength} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -162,7 +165,7 @@ export default function MagneticScreen() {
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Magnetic Field (B) Tesla:</Text>
               <TouchableOpacity onPress={() => handleRecallMemory(setField)}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={field} onChangeText={setField} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -170,7 +173,7 @@ export default function MagneticScreen() {
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Angle (θ) degrees:</Text>
               <TouchableOpacity onPress={() => handleRecallMemory(setAngle)}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={angle} onChangeText={setAngle} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -245,7 +248,7 @@ const styles = StyleSheet.create({
   inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
   recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
-  stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
+  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },

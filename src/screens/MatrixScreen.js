@@ -21,6 +21,9 @@ import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
+
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
 
@@ -34,6 +37,7 @@ export default function MatrixScreen() {
   const [operation, setOperation] = useState('determinant');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
@@ -322,65 +326,70 @@ export default function MatrixScreen() {
   };
 
   const handleOperation = () => {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  setError(null);
-  setResult(null);
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setError(null);
+    setResult(null);
+    setLoading(true);
 
-  try {
-    const matrix = getMatrix();
-    let solverResult;
+    setTimeout(() => {
+      try {
+        const matrix = getMatrix();
+        let solverResult;
 
-    switch (operation) {
-      case 'determinant':
-        solverResult = solveDeterminant(matrix);
-        setResult({
-          type: 'determinant',
-          value: solverResult.value,
-          displayValue: solverResult.value.toFixed(6),
-          steps: solverResult.steps,
+        switch (operation) {
+          case 'determinant':
+            solverResult = solveDeterminant(matrix);
+            setResult({
+              type: 'determinant',
+              value: solverResult.value,
+              displayValue: solverResult.value.toFixed(6),
+              steps: solverResult.steps,
+            });
+            break;
+
+          case 'inverse':
+            solverResult = solveInverse(matrix);
+            setResult({
+              type: 'inverse',
+              matrix: solverResult.matrix,
+              steps: solverResult.steps,
+            });
+            break;
+
+          case 'eigenvalues':
+            solverResult = solveEigenvalues(matrix);
+            setResult({
+              type: 'eigenvalues',
+              eigenvalues: solverResult.eigenvalues,
+              steps: solverResult.steps,
+            });
+            break;
+
+          case 'transpose':
+            solverResult = solveTranspose(matrix);
+            setResult({
+              type: 'transpose',
+              matrix: solverResult.matrix,
+              steps: solverResult.steps,
+            });
+            break;
+        }
+
+        addToHistory({
+          type: 'matrix',
+          input: { size, matrix, operation },
+          result: solverResult,
+          timestamp: new Date().toISOString(),
         });
-        break;
 
-      case 'inverse':
-        solverResult = solveInverse(matrix);
-        setResult({
-          type: 'inverse',
-          matrix: solverResult.matrix,
-          steps: solverResult.steps,
-        });
-        break;
-
-      case 'eigenvalues':
-        solverResult = solveEigenvalues(matrix);
-        setResult({
-          type: 'eigenvalues',
-          eigenvalues: solverResult.eigenvalues,
-          steps: solverResult.steps,
-        });
-        break;
-
-      case 'transpose':
-        solverResult = solveTranspose(matrix);
-        setResult({
-          type: 'transpose',
-          matrix: solverResult.matrix,
-          steps: solverResult.steps,
-        });
-        break;
-    }
-
-    addToHistory({
-      type: 'matrix',
-      input: { size, matrix, operation },
-      result: solverResult,
-      timestamp: new Date().toISOString(),
-    });
-
-    setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-  } catch (err) {
-    setError(err.message);
-  }
-};
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
+  };
 
   const updateMatrixValue = (row, col, value) => {
     setMatrixValues(prev => ({ ...prev, [`${row}-${col}`]: value }));
@@ -488,6 +497,7 @@ export default function MatrixScreen() {
           <SolveButton
             onPress={handleOperation}
             label="🧮 CALCULATE"
+            loading={loading}
           />
         </InputCard>
 
@@ -661,7 +671,7 @@ const styles = StyleSheet.create({
   },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,

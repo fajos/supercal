@@ -202,7 +202,7 @@ export default function EquilibriumScreen() {
                     onPress={() => handleSaveToMemory(result.result)}
                   >
                     <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>Save</Text>
+                    <Text style={styles.memoryBtnText}>M+</Text>
                   </TouchableOpacity>
                 </View>
               </FinalAnswer>
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,

@@ -505,7 +505,7 @@ const styles = StyleSheet.create({
   keyPointsContainer: { gap: 8 },
   keyPoint: { flexDirection: 'row', gap: 8 },
   bullet: { color: colors.accent, fontSize: 16, lineHeight: 20 },
-  keyPointText: { flex: 1, fontSize: 13, color: '#c8c8d8', lineHeight: 20 },
+  keyPointText: { flex: 1, fontSize: 13, color: colors.textPrimary, lineHeight: 20 },
   referenceCard: {
     backgroundColor: colors.bgCard,
     borderWidth: 1,

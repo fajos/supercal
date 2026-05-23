@@ -50,27 +50,29 @@ export default function ThermalScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
-    try {
-      const params = {
-        mass: parseFloat(mass) || 0,
-        specificHeat: parseFloat(specificHeat) || 0,
-        deltaTemp: parseFloat(deltaTemp) || 0,
-        latentHeat: parseFloat(latentHeat) || 0,
-        initialPressure: parseFloat(p1) || 0,
-        initialVolume: parseFloat(v1) || 0,
-        initialTemp: parseFloat(t1) || 1,
-        finalPressure: parseFloat(p2) || 0,
-        finalTemp: parseFloat(t2) || 1,
-      };
-      const solverResult = solveThermal(mode, params);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+    setTimeout(() => {
+      try {
+        const params = {
+          mass: parseFloat(mass) || 0,
+          specificHeat: parseFloat(specificHeat) || 0,
+          deltaTemp: parseFloat(deltaTemp) || 0,
+          latentHeat: parseFloat(latentHeat) || 0,
+          initialPressure: parseFloat(p1) || 0,
+          initialVolume: parseFloat(v1) || 0,
+          initialTemp: parseFloat(t1) || 1,
+          finalPressure: parseFloat(p2) || 0,
+          finalTemp: parseFloat(t2) || 1,
+        };
+        const solverResult = solveThermal(mode, params);
+        setResult(solverResult);
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const handleSaveToMemory = async (val) => {
@@ -271,7 +273,7 @@ const styles = StyleSheet.create({
   recallBtnMini: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   row: { flexDirection: 'row', gap: 8, width: '100%' },
-  stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
+  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   finalText: { color: colors.white, fontSize: 20, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },

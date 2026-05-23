@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
     textDecorationLine: 'underline',
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,

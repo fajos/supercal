@@ -179,7 +179,7 @@ export default function SequenceScreen() {
                   onPress={() => handleSaveToMemory(result.nthTerm)}
                 >
                   <Ionicons name="save-outline" size={18} color={colors.accent} />
-                  <Text style={styles.memoryBtnText}>Ma</Text>
+                  <Text style={styles.memoryBtnText}>M+</Text>
                 </TouchableOpacity>
               </View>
 
@@ -191,7 +191,7 @@ export default function SequenceScreen() {
                   onPress={() => handleSaveToMemory(result.sum)}
                 >
                   <Ionicons name="save-outline" size={18} color={colors.accent} />
-                  <Text style={styles.memoryBtnText}>Mb</Text>
+                  <Text style={styles.memoryBtnText}>M+</Text>
                 </TouchableOpacity>
               </View>
             </FinalAnswer>
@@ -269,7 +269,7 @@ const styles = StyleSheet.create({
   },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,

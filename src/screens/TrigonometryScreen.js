@@ -62,26 +62,26 @@ export default function TrigonometryScreen() {
     setError(null);
     setLoading(true);
 
-    try {
-      const result = solveTrig(selectedFunc, parseFloat(value));
-      setSolution(result);
+    setTimeout(() => {
+      try {
+        const result = solveTrig(selectedFunc, parseFloat(value));
+        setSolution(result);
 
-      addToHistory({
-        type: 'trigonometry',
-        input: { function: selectedFunc, value: parseFloat(value) },
-        result: result.solutions,
-        timestamp: new Date().toISOString(),
-      });
+        addToHistory({
+          type: 'trigonometry',
+          input: { function: selectedFunc, value: parseFloat(value) },
+          result: result.solutions,
+          timestamp: new Date().toISOString(),
+        });
 
-      setTimeout(() => {
         scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 300);
-    } catch (err) {
-      setError(err.message);
-      setSolution(null);
-    } finally {
-      setLoading(false);
-    }
+      } catch (err) {
+        setError(err.message);
+        setSolution(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const renderContent = (content) => {
@@ -159,7 +159,7 @@ export default function TrigonometryScreen() {
                 {selectedFunc}(x) =
               </Text>
               <TouchableOpacity onPress={handleRecallMemory}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,

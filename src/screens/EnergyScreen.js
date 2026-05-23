@@ -120,7 +120,7 @@ export default function EnergyScreen() {
             <View style={styles.inputRow}>
               <Text style={styles.inputLabel}>Mass (kg):</Text>
               <TouchableOpacity onPress={() => handleRecallMemory(setMass)}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -130,7 +130,7 @@ export default function EnergyScreen() {
                 <View style={styles.inputRow}>
                   <Text style={styles.inputLabel}>Velocity (m/s):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setVelocity)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -142,7 +142,7 @@ export default function EnergyScreen() {
                 <View style={styles.inputRow}>
                   <Text style={styles.inputLabel}>Height (m):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setHeight)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={height} onChangeText={setHeight} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -154,7 +154,7 @@ export default function EnergyScreen() {
                 <View style={styles.inputRow}>
                   <Text style={styles.inputLabel}>Spring Constant k (N/m):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setSpringConstant)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={springConstant} onChangeText={setSpringConstant} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -162,7 +162,7 @@ export default function EnergyScreen() {
                 <View style={styles.inputRow}>
                   <Text style={styles.inputLabel}>Compression/Extension x (m):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setSpringCompression)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={springCompression} onChangeText={setSpringCompression} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -194,7 +194,7 @@ export default function EnergyScreen() {
                     onPress={() => handleSaveToMemory(result.result)}
                   >
                     <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>Save</Text>
+                    <Text style={styles.memoryBtnText}>M+</Text>
                   </TouchableOpacity>
                 </View>
               </FinalAnswer>
@@ -227,7 +227,7 @@ const styles = StyleSheet.create({
   solveBtnText: { color: colors.black, fontSize: 16, fontWeight: '700' },
   errorCard: { backgroundColor: 'rgba(255,71,87,0.1)', borderWidth: 1, borderColor: colors.danger, borderRadius: 14, padding: 16, marginBottom: 16, width: '100%', maxWidth: 600 },
   errorText: { color: colors.danger, fontSize: 14, fontWeight: '500' },
-  stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
+  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   resultBox: { backgroundColor: '#2a2a40', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginVertical: 2 },

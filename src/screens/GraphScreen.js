@@ -512,7 +512,7 @@ export default function GraphScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.rangeLabel}>X Min</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('xMin')}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.rangeInput} value={xMin} onChangeText={setXMin} keyboardType="decimal-pad" />
@@ -521,7 +521,7 @@ export default function GraphScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.rangeLabel}>X Max</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('xMax')}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.rangeInput} value={xMax} onChangeText={setXMax} keyboardType="decimal-pad" />
@@ -530,7 +530,7 @@ export default function GraphScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.rangeLabel}>Y Min</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('yMin')}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.rangeInput} value={yMin} onChangeText={setYMin} keyboardType="decimal-pad" />
@@ -539,7 +539,7 @@ export default function GraphScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.rangeLabel}>Y Max</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('yMax')}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.rangeInput} value={yMax} onChangeText={setYMax} keyboardType="decimal-pad" />
@@ -852,7 +852,7 @@ const additionalStyles = {
     borderRadius: 4,
   },
   pointText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 12,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },

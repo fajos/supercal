@@ -21,6 +21,8 @@ import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -29,6 +31,7 @@ export default function StatisticsScreen() {
   const [dataInput, setDataInput] = useState('12, 15, 18, 22, 25, 30');
   const [solution, setSolution] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
@@ -50,25 +53,28 @@ export default function StatisticsScreen() {
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
+    setLoading(true);
 
-    try {
-      const result = solveStatistics(dataInput);
-      setSolution(result);
+    setTimeout(() => {
+      try {
+        const result = solveStatistics(dataInput);
+        setSolution(result);
 
-      addToHistory({
-        type: 'statistics',
-        input: { data: dataInput },
-        result: result.summary,
-        timestamp: new Date().toISOString(),
-      });
+        addToHistory({
+          type: 'statistics',
+          input: { data: dataInput },
+          result: result.summary,
+          timestamp: new Date().toISOString(),
+        });
 
-      setTimeout(() => {
         scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 300);
-    } catch (err) {
-      setError(err.message);
-      setSolution(null);
-    }
+      } catch (err) {
+        setError(err.message);
+        setSolution(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const renderContent = (content) => {
@@ -137,6 +143,7 @@ export default function StatisticsScreen() {
             <SolveButton
               onPress={handleSolve}
               label="📊 ANALYZE DATA"
+              loading={loading}
             />
           </InputCard>
 
@@ -323,7 +330,7 @@ const styles = StyleSheet.create({
     gap: 0,
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
@@ -336,7 +343,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   subText: {
-    color: '#888',
+    color: colors.textSecondary,
     fontSize: 12,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 18,

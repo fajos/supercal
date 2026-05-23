@@ -16,12 +16,13 @@ import { colors } from '../theme/colors';
 import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
-import { solveCubic } from '../solvers/polynomialSolver';
-import { useHistory } from '../utils/history';
 import { solvePolynomial } from '../solvers/polynomialSolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { useHistory } from '../utils/history';
+import { storeValue, getMemory } from '../utils/memory';
+import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -35,6 +36,7 @@ export default function PolynomialScreen() {
   const [e, setE] = useState('0');
   const [solution, setSolution] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
@@ -58,38 +60,43 @@ export default function PolynomialScreen() {
   };
 
   const handleSolve = () => {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-  setError(null);
-
-  try {
-    const deg = parseInt(degree) || 3;
-    const coeffs = [];
-    
-    // Collect coefficients based on degree
-    coeffs.push(parseFloat(a) || 0);
-    if (deg >= 2) coeffs.push(parseFloat(b) || 0);
-    if (deg >= 3) coeffs.push(parseFloat(c) || 0);
-    if (deg >= 4) coeffs.push(parseFloat(d) || 0);
-    if (deg >= 5) coeffs.push(parseFloat(e) || 0);
-
-    const result = solvePolynomial(coeffs);
-    setSolution(result);
-
-    addToHistory({
-      type: 'polynomial',
-      input: { degree: deg, coefficients: coeffs },
-      result: result.roots,
-      timestamp: new Date().toISOString(),
-    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setError(null);
+    setLoading(true);
 
     setTimeout(() => {
-      scrollRef.current?.scrollTo({ y: 0, animated: true });
-    }, 300);
-  } catch (err) {
-    setError(err.message);
-    setSolution(null);
-  }
-};
+      try {
+        const deg = parseInt(degree) || 3;
+        const coeffs = [];
+
+        // Collect coefficients based on degree
+        coeffs.push(parseFloat(a) || 0);
+        if (deg >= 2) coeffs.push(parseFloat(b) || 0);
+        if (deg >= 3) coeffs.push(parseFloat(c) || 0);
+        if (deg >= 4) coeffs.push(parseFloat(d) || 0);
+        if (deg >= 5) coeffs.push(parseFloat(e) || 0);
+
+        const result = solvePolynomial(coeffs);
+        setSolution(result);
+
+        addToHistory({
+          type: 'polynomial',
+          input: { degree: deg, coefficients: coeffs },
+          result: result.roots,
+          timestamp: new Date().toISOString(),
+        });
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 300);
+      } catch (err) {
+        setError(err.message);
+        setSolution(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
+  };
 
   const renderContent = (content) => {
     return content.map((item, idx) => {
@@ -165,7 +172,7 @@ export default function PolynomialScreen() {
                 <View style={styles.coeffHeader}>
                   <Text style={styles.coeffLabel}>a (x{degree})</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('a')}>
-                    <Text style={styles.recallBtnMini}>MR</Text>
+                    <Text style={styles.recallBtnMini}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput
@@ -180,7 +187,7 @@ export default function PolynomialScreen() {
                 <View style={styles.coeffHeader}>
                   <Text style={styles.coeffLabel}>b (x{parseInt(degree) - 1})</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('b')}>
-                    <Text style={styles.recallBtnMini}>MR</Text>
+                    <Text style={styles.recallBtnMini}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput
@@ -195,7 +202,7 @@ export default function PolynomialScreen() {
                 <View style={styles.coeffHeader}>
                   <Text style={styles.coeffLabel}>c (x{parseInt(degree) - 2})</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('c')}>
-                    <Text style={styles.recallBtnMini}>MR</Text>
+                    <Text style={styles.recallBtnMini}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput
@@ -210,7 +217,7 @@ export default function PolynomialScreen() {
                 <View style={styles.coeffHeader}>
                   <Text style={styles.coeffLabel}>d (x{parseInt(degree) - 3})</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory('d')}>
-                    <Text style={styles.recallBtnMini}>MR</Text>
+                    <Text style={styles.recallBtnMini}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput
@@ -226,6 +233,7 @@ export default function PolynomialScreen() {
             <SolveButton
               onPress={handleSolve}
               label="📈 FIND ROOTS"
+              loading={loading}
             />
           </InputCard>
 
@@ -309,7 +317,7 @@ const styles = StyleSheet.create({
   },
   recallBtnMini: {
     color: colors.accent,
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '700',
     textDecorationLine: 'underline',
   },
@@ -394,7 +402,7 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   stepText: {
-    color: '#c8c8d8',
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
@@ -415,7 +423,7 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   resultText: {
-    color: '#c4b5fd',
+    color: colors.accent,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 14,
     fontWeight: '600',

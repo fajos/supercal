@@ -42,23 +42,26 @@ export default function CircuitsScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
-    try {
-      const params = {
-        voltage: parseFloat(voltage) || 0,
-        current: parseFloat(current) || 0,
-        resistance: parseFloat(resistance) || 0,
-        resistance2: parseFloat(resistance2) || 0,
-        power: parseFloat(power) || 0,
-      };
-      const solverResult = solveCircuits(mode, params);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+
+    setTimeout(() => {
+      try {
+        const params = {
+          voltage: parseFloat(voltage) || 0,
+          current: parseFloat(current) || 0,
+          resistance: parseFloat(resistance) || 0,
+          resistance2: parseFloat(resistance2) || 0,
+          power: parseFloat(power) || 0,
+        };
+        const solverResult = solveCircuits(mode, params);
+        setResult(solverResult);
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const handleSaveToMemory = async (val) => {
@@ -134,7 +137,7 @@ export default function CircuitsScreen() {
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Voltage (V):</Text>
               <TouchableOpacity onPress={() => handleRecallMemory(setVoltage)}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={voltage} onChangeText={setVoltage} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -142,7 +145,7 @@ export default function CircuitsScreen() {
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Current (A):</Text>
               <TouchableOpacity onPress={() => handleRecallMemory(setCurrent)}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={current} onChangeText={setCurrent} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -150,7 +153,7 @@ export default function CircuitsScreen() {
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Resistance R₁ (Ω):</Text>
               <TouchableOpacity onPress={() => handleRecallMemory(setResistance)}>
-                <Text style={styles.recallBtn}>MR</Text>
+                <Text style={styles.recallBtn}>Recall MR</Text>
               </TouchableOpacity>
             </View>
             <TextInput style={styles.input} value={resistance} onChangeText={setResistance} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -160,7 +163,7 @@ export default function CircuitsScreen() {
                 <View style={styles.inputHeader}>
                   <Text style={styles.inputLabel}>Resistance R₂ (Ω):</Text>
                   <TouchableOpacity onPress={() => handleRecallMemory(setResistance2)}>
-                    <Text style={styles.recallBtn}>MR</Text>
+                    <Text style={styles.recallBtn}>Recall MR</Text>
                   </TouchableOpacity>
                 </View>
                 <TextInput style={styles.input} value={resistance2} onChangeText={setResistance2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
@@ -236,7 +239,7 @@ const styles = StyleSheet.create({
   inputHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 12, marginBottom: 8 },
   recallBtn: { color: colors.accent, fontSize: 10, fontWeight: '700', textDecorationLine: 'underline' },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
-  stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
+  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
   formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
   resultBox: { backgroundColor: '#2a2a40', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8, alignSelf: 'flex-start', marginVertical: 2 },

@@ -98,24 +98,27 @@ export default function RadicalScreen() {
             </View>
 
             <View style={styles.inputHeader}>
+              <Text style={styles.inputLabel}>Coefficient a:</Text>
               <TouchableOpacity onPress={() => handleRecallMemory('a')}>
-                <Text style={styles.recallBtnMini}>Recall MR a</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleRecallMemory('b')}>
-                <Text style={styles.recallBtnMini}>Recall MR b</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleRecallMemory('c')}>
-                <Text style={styles.recallBtnMini}>Recall MR c</Text>
+                <Text style={styles.recallBtnMini}>Recall MR</Text>
               </TouchableOpacity>
             </View>
-
-            <Text style={styles.inputLabel}>Coefficient a:</Text>
             <TextInput style={styles.input} value={coeffA} onChangeText={setCoeffA} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-            <Text style={styles.inputLabel}>Constant b:</Text>
+            <View style={[styles.inputHeader, { marginTop: 12 }]}>
+              <Text style={styles.inputLabel}>Constant b:</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory('b')}>
+                <Text style={styles.recallBtnMini}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput style={styles.input} value={coeffB} onChangeText={setCoeffB} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-            <Text style={styles.inputLabel}>{mode === 'quadratic' ? 'Coefficient c:' : 'Right side c:'}</Text>
+            <View style={[styles.inputHeader, { marginTop: 12 }]}>
+              <Text style={styles.inputLabel}>{mode === 'quadratic' ? 'Coefficient c:' : 'Right side c:'}</Text>
+              <TouchableOpacity onPress={() => handleRecallMemory('c')}>
+                <Text style={styles.recallBtnMini}>Recall MR</Text>
+              </TouchableOpacity>
+            </View>
             <TextInput style={styles.input} value={coeffC} onChangeText={setCoeffC} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             <SolveButton
@@ -133,6 +136,7 @@ export default function RadicalScreen() {
                 <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
                   {step.content.map((item, i) => {
                     if (item.type === 'highlight') return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
+                    if (item.type === 'formula') return <Text key={i} style={styles.formulaText}>{item.text}</Text>;
                     return <Text key={i} style={styles.stepText}>{item.text}</Text>;
                   })}
                 </StepCard>
@@ -188,9 +192,9 @@ const styles = StyleSheet.create({
   },
   inputHeader: {
     flexDirection: 'row',
-    justifyContent: 'center',
-    gap: 20,
-    marginBottom: 12,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
   },
   recallBtnMini: {
     color: colors.accent,
@@ -201,9 +205,9 @@ const styles = StyleSheet.create({
   modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
   modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.white, fontSize: 12, fontWeight: '500' },
+  modeText: { color: colors.textSecondary, fontSize: 12, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
+  inputLabel: { fontSize: 13, color: colors.textSecondary },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
   finalResultRow: {
@@ -229,7 +233,7 @@ const styles = StyleSheet.create({
     marginLeft: 6,
   },
   stepText: {
-    color: colors.white,
+    color: colors.textPrimary,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
@@ -243,5 +247,6 @@ const styles = StyleSheet.create({
   },
   tipCard: { backgroundColor: colors.bgCard, borderWidth: 1, borderColor: colors.border, borderRadius: 16, padding: 16, marginTop: 12, width: '100%', maxWidth: 600 },
   tipTitle: { color: colors.accent, fontSize: 14, fontWeight: '600', marginBottom: 8 },
-  tipText: { color: colors.white, fontSize: 12, lineHeight: 20 },
+  tipText: { color: colors.textSecondary, fontSize: 12, lineHeight: 20 },
+  formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
 });
