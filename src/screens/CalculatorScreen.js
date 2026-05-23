@@ -58,26 +58,19 @@ export default function CalculatorScreen() {
     tabBarHeight = 0;
   }
 
-  const isTablet = SCREEN_WIDTH >= 600;
-  const GAP = isTablet ? 6 : 1.5;
-  const PAD = isTablet ? 16 : 6;
+  const GAP = 2;
+  const PAD = 8;
 
-  // AVAILABLE_HEIGHT is the total vertical space for our content,
-  // excluding system-reserved areas (notch, status bar, and tab bar).
-  // Use a single offset for the bottom to avoid redundant spacing.
-  const bottomOffset = Math.max(tabBarHeight, insets.bottom);
-  const AVAILABLE_HEIGHT = SCREEN_HEIGHT - insets.top - STATUS_H - bottomOffset;
+  // Total vertical space excluding system-reserved areas for proportionality
+  const bottomReserved = tabBarHeight > 0 ? tabBarHeight : insets.bottom;
+  const AVAILABLE_HEIGHT = SCREEN_HEIGHT - insets.top - STATUS_H - bottomReserved;
 
-  const KB_HEIGHT_RATIO = isTablet ? 0.55 : 0.72;
-  // Total vertical padding/gaps inside the keyboard container itself
-  const KB_VPAD = 3; // 2 top, 1 bottom
+  const KB_HEIGHT_RATIO = 0.72;
+  const KB_VPAD = 6; // All top padding
   const KEYBOARD_INTERNAL_PAD_V = KB_VPAD + GAP * (ROWS - 1);
 
-  // Height for the buttons themselves
   const BTN_H = Math.floor((AVAILABLE_HEIGHT * KB_HEIGHT_RATIO - KEYBOARD_INTERNAL_PAD_V) / ROWS);
   const BTN_W = Math.floor((SCREEN_WIDTH - PAD * 2 - GAP * (COLS - 1)) / COLS);
-
-  // Display height is the remaining space after keyboard is accounted for
   const DISPLAY_H = AVAILABLE_HEIGHT - (BTN_H * ROWS + KEYBOARD_INTERNAL_PAD_V);
 
   const [display, setDisplay] = useState('');
@@ -447,7 +440,7 @@ if (action === 'delete') {
   const Row = ({ children }) => <View style={[styles.row, { gap: GAP }]}>{children}</View>;
 
   return (
-    <SafeAreaView style={styles.safe} edges={['top']}>
+    <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
       {/* Status Bar */}
       <View style={styles.stat}>
         <Text style={styles.st}>{isRadian ? 'RAD' : 'DEG'}  {shift ? '🟢' : '⚫'} Shift</Text>
@@ -503,9 +496,9 @@ if (action === 'delete') {
 
       {/* Keyboard */}
       <View style={[styles.kb, {
-        paddingTop: 2,
+        paddingTop: KB_VPAD,
         paddingHorizontal: PAD,
-        paddingBottom: 1,
+        paddingBottom: 0,
         gap: GAP
       }]}>
         {sciRows.map((row, rowIndex) => (
@@ -613,6 +606,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   disp: {
+    flex: 1,
     backgroundColor: '#060618',
     borderBottomWidth: 1,
     borderBottomColor: '#00ffcc',
@@ -626,7 +620,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
   },
   historyItem: {
-    paddingVertical: 8,
+    paddingVertical: 12,
     flexDirection: 'column',
     alignItems: 'stretch',
   },
@@ -673,10 +667,10 @@ const styles = StyleSheet.create({
     borderStyle: 'dashed',
   },
   currentSection: {
-    paddingBottom: 10,
+    paddingBottom: 16,
     flexDirection: 'column',
     alignItems: 'flex-start',
-    minHeight: 80,
+    minHeight: 120,
     justifyContent: 'flex-start',
   },
   resultContainer: {
