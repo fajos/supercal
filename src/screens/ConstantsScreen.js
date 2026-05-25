@@ -85,6 +85,12 @@ export default function ConstantsScreen() {
         >
           <Text style={[styles.tabText, activeTab === 'units' && styles.activeTabText]}>Units</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'about' && styles.activeTab]}
+          onPress={() => setActiveTab('about')}
+        >
+          <Text style={[styles.tabText, activeTab === 'about' && styles.activeTabText]}>About</Text>
+        </TouchableOpacity>
       </View>
 
       {activeTab === 'constants' && (
@@ -119,7 +125,7 @@ export default function ConstantsScreen() {
               </TouchableOpacity>
             ))}
           </View>
-        ) : (
+        ) : activeTab === 'units' ? (
           <View style={styles.unitsContainer}>
             <InputCard>
               <Text style={styles.categoryLabel}>Category</Text>
@@ -203,6 +209,38 @@ export default function ConstantsScreen() {
               ))}
             </View>
           </View>
+        ) : (
+          <View style={styles.aboutContainer}>
+            <View style={styles.aboutHeader}>
+              <View style={styles.logoContainer}>
+                <Text style={styles.logoEmoji}>🚀</Text>
+              </View>
+              <Text style={styles.appName}>SuperCalc</Text>
+              <Text style={styles.appVersion}>Version 1.0.0</Text>
+            </View>
+
+            <View style={styles.aboutCard}>
+              <Text style={styles.aboutTitle}>Developer</Text>
+              <View style={styles.devRow}>
+                <Ionicons name="code-slash" size={20} color={colors.accent} />
+                <Text style={styles.devName}>Fajostech</Text>
+              </View>
+              <Text style={styles.devTagline}>Building tools for the future of math and science.</Text>
+            </View>
+
+            <View style={styles.aboutCard}>
+              <Text style={styles.aboutTitle}>Mission</Text>
+              <Text style={styles.missionText}>
+                SuperCalc aims to be the most tactile and powerful calculation engine on Android.
+                Combining advanced solver logic with a 3D-inspired responsive interface.
+              </Text>
+            </View>
+
+            <View style={styles.footerInfo}>
+              <Text style={styles.copyrightText}>© 2026 Fajostech. All rights reserved.</Text>
+              <Text style={styles.madeWithText}>Made with ⚛️ React Native & Expo</Text>
+            </View>
+          </View>
         )}
       </ScrollView>
     </SafeAreaView>
@@ -270,4 +308,19 @@ const styles = StyleSheet.create({
   infoCard: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.accentBg, padding: 12, borderRadius: 12, gap: 12 },
   infoText: { color: colors.white, fontSize: 12, flex: 1 },
   categoriesOverview: { marginTop: 8 },
+  aboutContainer: { gap: 20, alignItems: 'center', paddingTop: 20 },
+  aboutHeader: { alignItems: 'center', marginBottom: 10 },
+  logoContainer: { width: 80, height: 80, borderRadius: 24, backgroundColor: colors.accentBg, justifyContent: 'center', alignItems: 'center', marginBottom: 16, borderWidth: 2, borderColor: colors.accent },
+  logoEmoji: { fontSize: 40 },
+  appName: { color: colors.white, fontSize: 28, fontWeight: '800', letterSpacing: -0.5 },
+  appVersion: { color: colors.textSecondary, fontSize: 14, marginTop: 4 },
+  aboutCard: { backgroundColor: colors.bgCard, width: '100%', padding: 20, borderRadius: 20, borderWidth: 1, borderColor: colors.border },
+  aboutTitle: { color: colors.accent, fontSize: 12, fontWeight: '700', textTransform: 'uppercase', marginBottom: 12, letterSpacing: 1 },
+  devRow: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 8 },
+  devName: { color: colors.white, fontSize: 18, fontWeight: '700' },
+  devTagline: { color: colors.textSecondary, fontSize: 14, lineHeight: 20 },
+  missionText: { color: colors.textSecondary, fontSize: 14, lineHeight: 22 },
+  footerInfo: { alignItems: 'center', marginTop: 20, gap: 8 },
+  copyrightText: { color: colors.textSecondary, fontSize: 12 },
+  madeWithText: { color: colors.textSecondary, fontSize: 12, opacity: 0.7 },
 });

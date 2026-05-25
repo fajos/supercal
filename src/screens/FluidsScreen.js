@@ -22,6 +22,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { solveFluids } from '../solvers/fluidsSolver';
 import { BackHeader } from '../components/BackHeader';
 import { useHistory } from '../utils/history';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -40,7 +41,6 @@ export default function FluidsScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
     setTimeout(() => {
@@ -65,7 +65,7 @@ export default function FluidsScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
         setResult(null);
@@ -97,19 +97,17 @@ export default function FluidsScreen() {
                 { id: 'pressure_solid', label: 'Solid Pressure' },
                 { id: 'pressure_liquid', label: 'Liquid Pressure' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
+                  label={m.label}
+                  active={mode === m.id}
                   onPress={() => {
                     Haptics.selectionAsync();
                     setMode(m.id);
                     setResult(null);
                   }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -171,18 +169,16 @@ const styles = StyleSheet.create({
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
   modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center', width: '100%' },
   modeBtn: {
-    flex: 1,
-    minWidth: '40%',
     paddingVertical: 10,
+    paddingHorizontal: 8,
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 12,
     alignItems: 'center',
+    minWidth: '40%',
+    flex: 1,
   },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },

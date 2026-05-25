@@ -39,7 +39,6 @@ export default function PolynomialScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
@@ -133,14 +132,16 @@ export default function PolynomialScreen() {
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>Degree:</Text>
             </View>
-            <TextInput
-              style={styles.degreeInput}
-              value={degree}
-              onChangeText={setDegree}
-              keyboardType="number-pad"
-              placeholder="3"
-              placeholderTextColor={colors.textSecondary}
-            />
+            <View style={styles.degreeContainer}>
+              <TextInput
+                style={styles.degreeInput}
+                value={degree}
+                onChangeText={setDegree}
+                keyboardType="number-pad"
+                placeholder="3"
+                placeholderTextColor={colors.textSecondary}
+              />
+            </View>
 
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>
@@ -268,6 +269,10 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: colors.textSecondary,
     letterSpacing: 0.3,
+  },
+  degreeContainer: {
+    alignItems: 'center',
+    marginBottom: 8,
   },
   degreeInput: {
     backgroundColor: colors.bgInput,

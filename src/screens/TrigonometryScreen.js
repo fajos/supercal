@@ -21,6 +21,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { solveTrig } from '../solvers/trigSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -41,7 +42,6 @@ export default function TrigonometryScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
@@ -59,7 +59,9 @@ export default function TrigonometryScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 300);
       } catch (err) {
         setError(err.message);
         setSolution(null);
@@ -114,28 +116,18 @@ export default function TrigonometryScreen() {
 
           <InputCard style={isTablet && styles.tabletInputCard}>
             <Text style={styles.inputLabel}>Select function:</Text>
-            <View style={styles.funcRow}>
+            <View style={styles.modeGrid}>
               {TRIG_FUNCTIONS.map((func) => (
-                <TouchableOpacity
+                <ModeChip
                   key={func.value}
-                  style={[
-                    styles.funcBtn,
-                    selectedFunc === func.value && styles.funcBtnActive,
-                  ]}
+                  label={func.label}
+                  active={selectedFunc === func.value}
                   onPress={() => {
                     Haptics.selectionAsync();
                     setSelectedFunc(func.value);
                   }}
-                >
-                  <Text
-                    style={[
-                      styles.funcBtnText,
-                      selectedFunc === func.value && styles.funcBtnTextActive,
-                    ]}
-                  >
-                    {func.label}
-                  </Text>
-                </TouchableOpacity>
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -258,31 +250,14 @@ const styles = StyleSheet.create({
     marginTop: 16,
     marginBottom: 8,
   },
-  funcRow: {
+  modeGrid: {
     flexDirection: 'row',
     gap: 8,
+    justifyContent: 'center',
   },
-  funcBtn: {
+  modeBtn: {
     flex: 1,
-    paddingVertical: 12,
-    backgroundColor: colors.bgInput,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 14,
-    alignItems: 'center',
-  },
-  funcBtnActive: {
-    backgroundColor: colors.accentBg,
-    borderColor: colors.accent,
-  },
-  funcBtnText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  },
-  funcBtnTextActive: {
-    color: colors.accentGlow,
-    fontWeight: '600',
+    minWidth: 80,
   },
   valueInput: {
     backgroundColor: colors.bgInput,

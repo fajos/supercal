@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Platform,
@@ -18,6 +17,7 @@ import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { ModeChip } from '../components/ModeChip';
 import { solveFinance } from '../solvers/financeSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
@@ -40,7 +40,6 @@ export default function FinanceScreen() {
 
   const handleSolve = async () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
     // Artificial delay for UI consistency
@@ -101,23 +100,25 @@ export default function FinanceScreen() {
             <BackHeader title="💰 Financial Math" subtitle="Interest, Loans & Investments" />
           </View>
 
-          <InputCard>
+          <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.modeGrid}>
               {[
-                { id: 'compound', label: 'Compound\nInterest' },
-                { id: 'simple', label: 'Simple\nInterest' },
-                { id: 'loan', label: 'Loan\nPayment' },
-                { id: 'savings', label: 'Savings\nGoal' },
+                { id: 'compound', label: 'Compound Interest' },
+                { id: 'simple', label: 'Simple Interest' },
+                { id: 'loan', label: 'Loan Payment' },
+                { id: 'savings', label: 'Savings Goal' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -218,17 +219,25 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
   headerContainer: { width: '100%', maxWidth: 800 },
+  tabletInputCard: { width: '100%', maxWidth: 600 },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
   modeBtn: {
-    flex: 1,
-    minWidth: '22%',
     paddingVertical: 10,
+    paddingHorizontal: 8,
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 12,
     alignItems: 'center',
+    minWidth: '45%',
+    flex: 1,
   },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },

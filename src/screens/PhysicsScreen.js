@@ -337,7 +337,6 @@ const THEORIES = [
 
 export default function PhysicsScreen({ navigation }) {
   const handleSolverPress = (solver) => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     navigation.navigate(solver.screen);
   };
 

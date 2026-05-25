@@ -13,6 +13,7 @@ import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { useHistory } from '../utils/history';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -32,7 +33,6 @@ export default function EnergyScreen() {
 
   const handleSolve = () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
     setTimeout(() => {
@@ -94,22 +94,24 @@ export default function EnergyScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeRow}>
+            <View style={styles.modeGrid}>
               {[
-                { id: 'kinetic', label: 'Kinetic\nEnergy' },
-                { id: 'potential', label: 'Potential\nEnergy' },
-                { id: 'spring', label: 'Spring\nEnergy' },
-                { id: 'conservation', label: 'Conservation\nof Energy' },
+                { id: 'kinetic', label: 'Kinetic' },
+                { id: 'potential', label: 'Potential' },
+                { id: 'spring', label: 'Spring' },
+                { id: 'conservation', label: 'Conservation' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -174,11 +176,25 @@ const styles = StyleSheet.create({
   headerContainer: { width: '100%', maxWidth: 800 },
   tabletInputCard: { maxWidth: 600, width: '100%' },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  modeRow: { flexDirection: 'row', gap: 6, marginBottom: 16, flexWrap: 'wrap' },
-  modeBtn: { flex: 1, minWidth: 100, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+    width: '100%',
+  },
+  modeBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: '22%',
+    flex: 1,
+  },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },

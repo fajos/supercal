@@ -1,10 +1,8 @@
-// src/screens/InductionScreen.js
 import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Platform,
@@ -19,6 +17,7 @@ import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { ModeChip } from '../components/ModeChip';
 import { solveInduction } from '../solvers/inductionSolver';
 import { BackHeader } from '../components/BackHeader';
 import { useHistory } from '../utils/history';
@@ -41,7 +40,6 @@ export default function InductionScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
@@ -73,7 +71,7 @@ export default function InductionScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
         setResult(null);
@@ -95,20 +93,22 @@ export default function InductionScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeRow}>
+            <View style={styles.modeGrid}>
               {[
                 { id: 'transformer_v', label: 'Transformer' },
                 { id: 'flux', label: 'Magnetic Flux' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -185,8 +185,24 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, width: '100%' },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  modeBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: '40%',
+    flex: 1,
+  },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },

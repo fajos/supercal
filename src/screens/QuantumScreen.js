@@ -1,10 +1,8 @@
-// src/screens/QuantumScreen.js
 import React, { useState, useRef } from 'react';
 import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Platform,
@@ -19,6 +17,7 @@ import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { ModeChip } from '../components/ModeChip';
 import { solveQuantum } from '../solvers/quantumSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
@@ -39,7 +38,6 @@ export default function QuantumScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
@@ -64,7 +62,7 @@ export default function QuantumScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
         setResult(null);
@@ -91,15 +89,17 @@ export default function QuantumScreen() {
                 { id: 'photon_e', label: 'Photon Energy' },
                 { id: 'de_broglie', label: 'de Broglie λ' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -162,16 +162,23 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
   modeBtn: {
-    flex: 1,
-    minWidth: '40%',
     paddingVertical: 10,
+    paddingHorizontal: 8,
     backgroundColor: colors.bgInput,
     borderWidth: 1.5,
     borderColor: colors.border,
     borderRadius: 12,
     alignItems: 'center',
+    minWidth: '40%',
+    flex: 1,
   },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },

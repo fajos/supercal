@@ -4,10 +4,10 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Platform,
+  Dimensions,
   KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -18,9 +18,13 @@ import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { ErrorCard } from '../components/ErrorCard';
 import { SolveButton } from '../components/SolveButton';
+import { ModeChip } from '../components/ModeChip';
 import { solveEquilibrium } from '../solvers/equilibriumSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
+
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+const isTablet = SCREEN_WIDTH >= 600;
 
 export default function EquilibriumScreen() {
   const [mode, setMode] = useState('moment');
@@ -41,7 +45,6 @@ export default function EquilibriumScreen() {
 
   const handleSolve = () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
     setTimeout(() => {
@@ -97,21 +100,23 @@ export default function EquilibriumScreen() {
             <BackHeader title="⚖️ Equilibrium" subtitle="Moments & Levers" />
           </View>
 
-          <InputCard>
+          <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.modeGrid}>
               {[
                 { id: 'moment', label: 'Moment' },
                 { id: 'lever', label: 'Lever' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -174,6 +179,7 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
   headerContainer: { width: '100%', maxWidth: 800 },
+  tabletInputCard: { width: '100%', maxWidth: 600 },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
   modeGrid: {
     flexDirection: 'row',

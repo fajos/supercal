@@ -22,6 +22,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { useHistory } from '../utils/history';
 import { solveDerivative, solveIntegral, evaluateExpression } from '../solvers/calculusSolver';
 import { BackHeader } from '../components/BackHeader';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -38,7 +39,6 @@ export default function CalculusScreen() {
   const { addToHistory } = useHistory();
 
   const handleCalculate = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
@@ -133,22 +133,18 @@ export default function CalculusScreen() {
           <InputCard style={isTablet && styles.tabletInputCard}>
             {/* Mode Toggle */}
             <View style={styles.modeRow}>
-              <TouchableOpacity
-                style={[styles.modeBtn, mode === 'derivative' && styles.modeBtnActive]}
+              <ModeChip
+                label="d/dx Derivative"
+                active={mode === 'derivative'}
                 onPress={() => { Haptics.selectionAsync(); setMode('derivative'); setResult(null); }}
-              >
-                <Text style={[styles.modeText, mode === 'derivative' && styles.modeTextActive]}>
-                  d/dx Derivative
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modeBtn, mode === 'integral' && styles.modeBtnActive]}
+                style={styles.modeBtn}
+              />
+              <ModeChip
+                label="∫ Integral"
+                active={mode === 'integral'}
                 onPress={() => { Haptics.selectionAsync(); setMode('integral'); setResult(null); }}
-              >
-                <Text style={[styles.modeText, mode === 'integral' && styles.modeTextActive]}>
-                  ∫ Integral
-                </Text>
-              </TouchableOpacity>
+                style={styles.modeBtn}
+              />
             </View>
 
             <Text style={styles.inputLabel}>
@@ -261,16 +257,7 @@ const styles = StyleSheet.create({
   modeBtn: {
     flex: 1,
     minWidth: 140,
-    paddingVertical: 12,
-    backgroundColor: colors.bgInput,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 14,
-    alignItems: 'center',
   },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, alignSelf: 'flex-start' },
   exprInput: {
     backgroundColor: colors.bgInput,

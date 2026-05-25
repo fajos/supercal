@@ -1,8 +1,16 @@
 import React from 'react';
 import { TouchableOpacity, Text, ActivityIndicator, StyleSheet, Platform } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 
 export function SolveButton({ onPress, label, loading, disabled, style }) {
+  const handlePress = () => {
+    if (!loading && !disabled) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      onPress();
+    }
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -10,7 +18,7 @@ export function SolveButton({ onPress, label, loading, disabled, style }) {
         (loading || disabled) && styles.buttonDisabled,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       disabled={loading || disabled}
       activeOpacity={0.8}
     >
@@ -35,6 +43,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
+    borderBottomWidth: 4,
+    borderBottomColor: '#008a6e',
+    transform: [{ translateY: 0 }],
   },
   buttonDisabled: {
     opacity: 0.6,

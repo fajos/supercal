@@ -3,7 +3,6 @@ import {
   View,
   Text,
   TextInput,
-  TouchableOpacity,
   ScrollView,
   StyleSheet,
   Platform,
@@ -18,6 +17,7 @@ import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { ModeChip } from '../components/ModeChip';
 import { solveProbability } from '../solvers/probabilitySolver';
 import { BackHeader } from '../components/BackHeader';
 
@@ -35,7 +35,6 @@ export default function ProbabilityScreen() {
   const scrollRef = useRef();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
     try {
@@ -71,16 +70,22 @@ export default function ProbabilityScreen() {
 
           <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.modeGrid}>
-              {['permutation', 'combination', 'binomial'].map(m => (
-                <TouchableOpacity
-                  key={m}
-                  style={[styles.modeBtn, mode === m && styles.modeBtnActive]}
-                  onPress={() => { setMode(m); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m && styles.modeTextActive]}>
-                    {m === 'permutation' ? 'P(n,r)' : m === 'combination' ? 'C(n,r)' : 'Binom'}
-                  </Text>
-                </TouchableOpacity>
+              {[
+                { id: 'permutation', label: 'P(n,r)' },
+                { id: 'combination', label: 'C(n,r)' },
+                { id: 'binomial', label: 'Binom' },
+              ].map(m => (
+                <ModeChip
+                  key={m.id}
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -148,8 +153,24 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  modeBtn: { flex: 1, minWidth: '30%', paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 16,
+  },
+  modeBtn: {
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    alignItems: 'center',
+    minWidth: '30%',
+    flex: 1,
+  },
   modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
   modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
   modeTextActive: { color: colors.accentGlow, fontWeight: '600' },

@@ -40,42 +40,40 @@ export default function LinearScreen() {
 
   const handleSolve = async () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
-    // Artificial delay for UI consistency
-    await new Promise(resolve => setTimeout(resolve, 600));
+    setTimeout(() => {
+      try {
+        const result = solveLinearSystem(
+          parseFloat(a1) || 0,
+          parseFloat(b1) || 0,
+          parseFloat(c1) || 0,
+          parseFloat(a2) || 0,
+          parseFloat(b2) || 0,
+          parseFloat(c2) || 0
+        );
 
-    try {
-      const result = solveLinearSystem(
-        parseFloat(a1) || 0,
-        parseFloat(b1) || 0,
-        parseFloat(c1) || 0,
-        parseFloat(a2) || 0,
-        parseFloat(b2) || 0,
-        parseFloat(c2) || 0
-      );
+        const shareText = `Linear System Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}\n\nSolved with SuperCalc`;
 
-      const shareText = `Linear System Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}\n\nSolved with SuperCalc`;
+        setSolution({ ...result, shareText });
 
-      setSolution({ ...result, shareText });
+        addToHistory({
+          type: 'linear',
+          input: { a1, b1, c1, a2, b2, c2 },
+          result: { x: result.x, y: result.y },
+          timestamp: new Date().toISOString(),
+        });
 
-      addToHistory({
-        type: 'linear',
-        input: { a1, b1, c1, a2, b2, c2 },
-        result: { x: result.x, y: result.y },
-        timestamp: new Date().toISOString(),
-      });
-
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 300);
-    } catch (err) {
-      setError(err.message);
-      setSolution(null);
-    } finally {
-      setLoading(false);
-    }
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 300);
+      } catch (err) {
+        setError(err.message);
+        setSolution(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const renderContent = (content) => {

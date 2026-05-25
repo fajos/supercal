@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const HistoryContext = createContext(null);
@@ -28,6 +28,10 @@ export function HistoryProvider({ children }) {
       // Silently fail - history will be empty
     }
   }, []);
+
+  useEffect(() => {
+    loadHistory();
+  }, [loadHistory]);
 
   return (
     <HistoryContext.Provider value={{ history, addToHistory, clearHistory, loadHistory }}>

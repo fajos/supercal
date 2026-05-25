@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -14,6 +14,9 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path, Line, Circle, Text as SvgText, Rect, G, Polygon, Defs, LinearGradient, Stop } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { InputCard } from '../components/InputCard';
+import { SolveButton } from '../components/SolveButton';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -43,6 +46,8 @@ export default function GraphScreen() {
   const [points2, setPoints2] = useState([]);
   const [points3, setPoints3] = useState([]);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const scrollRef = useRef(null);
   const [showGrid, setShowGrid] = useState(true);
   const [showLabels, setShowLabels] = useState(true);
   const [showRoots, setShowRoots] = useState(true);
@@ -110,52 +115,60 @@ export default function GraphScreen() {
   }, [xMin, xMax, evaluateFunction]);
 
   const plotGraph = useCallback(() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    setLoading(true);
     setError(null);
 
-    try {
-      const xMinVal = parseFloat(xMin);
-      const xMaxVal = parseFloat(xMax);
-      const yMinVal = parseFloat(yMin);
-      const yMaxVal = parseFloat(yMax);
+    setTimeout(() => {
+      try {
+        const xMinVal = parseFloat(xMin);
+        const xMaxVal = parseFloat(xMax);
+        const yMinVal = parseFloat(yMin);
+        const yMaxVal = parseFloat(yMax);
 
-      if (xMinVal >= xMaxVal || yMinVal >= yMaxVal) {
-        throw new Error('Min must be less than Max values');
-      }
-
-      setPoints(generatePoints(equation));
-      
-      if (equation2.trim()) {
-        setPoints2(generatePoints(equation2));
-      } else {
-        setPoints2([]);
-      }
-      
-      if (equation3.trim()) {
-        setPoints3(generatePoints(equation3));
-      } else {
-        setPoints3([]);
-      }
-
-      if (showDerivative) {
-        const derivPoints = [];
-        const xMinV = parseFloat(xMin);
-        const xMaxV = parseFloat(xMax);
-        const step = (xMaxV - xMinV) / 200;
-        
-        for (let i = 0; i <= 200; i++) {
-          const x = xMinV + i * step;
-          const dy = evaluateDerivative(equation, x);
-          if (dy !== null && isFinite(dy)) {
-            derivPoints.push({ x, y: dy });
-          }
+        if (xMinVal >= xMaxVal || yMinVal >= yMaxVal) {
+          throw new Error('Min must be less than Max values');
         }
-        setDerivativePoints(derivPoints);
+
+        setPoints(generatePoints(equation));
+        
+        if (equation2.trim()) {
+          setPoints2(generatePoints(equation2));
+        } else {
+          setPoints2([]);
+        }
+
+        if (equation3.trim()) {
+          setPoints3(generatePoints(equation3));
+        } else {
+          setPoints3([]);
+        }
+
+        if (showDerivative) {
+          const derivPoints = [];
+          const xMinV = parseFloat(xMin);
+          const xMaxV = parseFloat(xMax);
+          const step = (xMaxV - xMinV) / 200;
+
+          for (let i = 0; i <= 200; i++) {
+            const x = xMinV + i * step;
+            const dy = evaluateDerivative(equation, x);
+            if (dy !== null && isFinite(dy)) {
+              derivPoints.push({ x, y: dy });
+            }
+          }
+          setDerivativePoints(derivPoints);
+        }
+
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 400, animated: true });
+        }, 300);
+      } catch (err) {
+        setError(err.message);
+        setPoints([]);
+      } finally {
+        setLoading(false);
       }
-    } catch (err) {
-      setError(err.message);
-      setPoints([]);
-    }
+    }, 600);
   }, [equation, equation2, equation3, xMin, xMax, yMin, yMax, generatePoints, showDerivative, evaluateDerivative]);
 
   // Convert math coords to SVG coords
@@ -345,7 +358,6 @@ export default function GraphScreen() {
 
   // Apply preset function
   const applyPreset = (preset) => {
-    Haptics.selectionAsync();
     setEquation(preset.fn);
     setXMin(String(preset.range.xMin));
     setXMax(String(preset.range.xMax));
@@ -354,9 +366,6 @@ export default function GraphScreen() {
     setEquation2('');
     setEquation3('');
     setShowDerivative(false);
-    setTimeout(() => {
-      // Auto-plot after state updates
-    }, 100);
   };
 
   // Statistics about the graph
@@ -388,6 +397,7 @@ export default function GraphScreen() {
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <ScrollView
+        ref={scrollRef}
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -401,22 +411,21 @@ export default function GraphScreen() {
 
         {/* Preset Functions */}
         <View style={styles.headerContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.presetScroll}>
+          <View style={styles.modeGrid}>
             {PRESET_FUNCTIONS.map((preset, idx) => (
-              <TouchableOpacity
+              <ModeChip
                 key={idx}
-                style={styles.presetBtn}
+                label={preset.label}
+                active={equation === preset.fn}
                 onPress={() => applyPreset(preset)}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.presetText}>{preset.label}</Text>
-              </TouchableOpacity>
+                style={styles.modeBtn}
+              />
             ))}
-          </ScrollView>
+          </View>
         </View>
 
         {/* Input Card */}
-        <View style={[styles.inputCard, isTablet && styles.tabletInputCard]}>
+        <InputCard style={isTablet && styles.tabletInputCard}>
           <Text style={styles.inputLabel}>Function f(x) =</Text>
           <TextInput
             style={styles.eqInput}
@@ -503,10 +512,12 @@ export default function GraphScreen() {
             </View>
           </View>
 
-          <TouchableOpacity style={styles.solveBtn} onPress={plotGraph} activeOpacity={0.8}>
-            <Text style={styles.solveBtnText}>📈 PLOT GRAPH</Text>
-          </TouchableOpacity>
-        </View>
+          <SolveButton
+            onPress={plotGraph}
+            label="📈 PLOT GRAPH"
+            loading={loading}
+          />
+        </InputCard>
 
         {/* Error */}
         {error && (
@@ -807,6 +818,18 @@ const additionalStyles = {
     height: 3,
     borderRadius: 2,
   },
+  modeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 20,
+  },
+  modeBtn: {
+    flex: 1,
+    minWidth: '22%',
+    paddingVertical: 10,
+    paddingHorizontal: 8,
+  },
 };
 
 const styles = StyleSheet.create({
@@ -845,15 +868,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     marginTop: 4,
     letterSpacing: 0.3,
-  },
-  inputCard: {
-    backgroundColor: colors.bgCard,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 20,
-    padding: 20,
-    marginBottom: 16,
-    width: '100%',
   },
   inputLabel: {
     fontSize: 13,
@@ -896,19 +910,6 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     padding: 10,
     textAlign: 'center',
-  },
-  solveBtn: {
-    backgroundColor: colors.accent,
-    paddingVertical: 16,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginTop: 16,
-  },
-  solveBtnText: {
-    color: colors.black,
-    fontSize: 16,
-    fontWeight: '700',
-    letterSpacing: 0.5,
   },
   errorCard: {
     backgroundColor: 'rgba(255,71,87,0.1)',

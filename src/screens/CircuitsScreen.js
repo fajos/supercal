@@ -21,6 +21,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { solveCircuits } from '../solvers/circuitsSolver';
 import { BackHeader } from '../components/BackHeader';
 import { useHistory } from '../utils/history';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -39,7 +40,6 @@ export default function CircuitsScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
@@ -66,7 +66,7 @@ export default function CircuitsScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
         setResult(null);
@@ -108,24 +108,22 @@ export default function CircuitsScreen() {
           <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.modeGrid}>
               {[
-                { id: 'ohmsLaw', label: "Ohm's\nLaw" },
-                { id: 'series', label: 'Series\nCircuit' },
-                { id: 'parallel', label: 'Parallel\nCircuit' },
-                { id: 'power', label: 'Power\nCalc' },
+                { id: 'ohmsLaw', label: "Ohm's Law" },
+                { id: 'series', label: 'Series' },
+                { id: 'parallel', label: 'Parallel' },
+                { id: 'power', label: 'Power' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
+                  label={m.label}
+                  active={mode === m.id}
                   onPress={() => {
                     Haptics.selectionAsync();
                     setMode(m.id);
                     setResult(null);
                   }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -188,19 +186,9 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   modeBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    backgroundColor: colors.bgInput,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    alignItems: 'center',
     minWidth: '22%',
     flex: 1,
   },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 10, fontWeight: '500', textAlign: 'center' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },

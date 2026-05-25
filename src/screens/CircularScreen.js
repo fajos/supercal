@@ -22,6 +22,7 @@ import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { BackHeader } from '../components/BackHeader';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -41,44 +42,42 @@ export default function CircularScreen() {
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
-  const handleSolve = async () => {
+  const handleSolve = () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
-    // Artificial delay for UI consistency
-    await new Promise(resolve => setTimeout(resolve, 600));
+    setTimeout(() => {
+      try {
+        const params = {
+          mass: parseFloat(mass) || 0,
+          radius: parseFloat(radius) || 1,
+          velocity: parseFloat(velocity) || 0,
+          omega: parseFloat(omega) || 0,
+          period: parseFloat(period) || 0,
+          frequency: parseFloat(frequency) || 0,
+        };
+        const solverResult = solveCircular(mode, params);
+        const opLabel = mode === 'centripetal' ? 'Centripetal Force' : 'Angular Motion';
+        const shareText = `Circular Motion Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
 
-    try {
-      const params = {
-        mass: parseFloat(mass) || 0,
-        radius: parseFloat(radius) || 1,
-        velocity: parseFloat(velocity) || 0,
-        omega: parseFloat(omega) || 0,
-        period: parseFloat(period) || 0,
-        frequency: parseFloat(frequency) || 0,
-      };
-      const solverResult = solveCircular(mode, params);
-      const opLabel = mode === 'centripetal' ? 'Centripetal Force' : 'Angular Motion';
-      const shareText = `Circular Motion Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+        setResult({ ...solverResult, shareText });
 
-      setResult({ ...solverResult, shareText });
+        addToHistory({
+          type: 'circular',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
 
-      addToHistory({
-        type: 'circular',
-        mode,
-        input: params,
-        result: solverResult.result,
-        timestamp: new Date().toISOString(),
-      });
-
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   return (
@@ -93,20 +92,22 @@ export default function CircularScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeRow}>
+            <View style={styles.modeGrid}>
               {[
-                { id: 'centripetal', label: 'Force' },
-                { id: 'angular', label: 'Angular' },
+                { id: 'centripetal', label: 'Centripetal Force' },
+                { id: 'angular', label: 'Angular Motion' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m.label}
+                  active={mode === m.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -186,11 +187,11 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
+  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
+  modeBtn: {
+    minWidth: '45%',
+    flex: 1,
+  },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },

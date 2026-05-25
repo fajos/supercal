@@ -22,6 +22,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { solveOptics } from '../solvers/opticsSolver';
 import { BackHeader } from '../components/BackHeader';
 import { useHistory } from '../utils/history';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -43,7 +44,6 @@ export default function OpticsScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
     setTimeout(() => {
@@ -70,7 +70,7 @@ export default function OpticsScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
         setResult(null);
@@ -97,24 +97,22 @@ export default function OpticsScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeRow}>
+            <View style={styles.modeGrid}>
               {[
                 { id: 'lens', label: 'Lens Formula' },
                 { id: 'refraction', label: 'Refraction' },
               ].map(m => (
-                <TouchableOpacity
+                <ModeChip
                   key={m.id}
-                  style={[styles.modeBtn, mode === m.id && styles.modeBtnActive]}
+                  label={m.label}
+                  active={mode === m.id}
                   onPress={() => {
                     Haptics.selectionAsync();
                     setMode(m.id);
                     setResult(null);
                   }}
-                >
-                  <Text style={[styles.modeText, mode === m.id && styles.modeTextActive]}>
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -180,11 +178,11 @@ const styles = StyleSheet.create({
   headerContainer: { width: '100%', maxWidth: 800 },
   tabletInputCard: { maxWidth: 600, width: '100%' },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', width: '100%' },
-  modeBtn: { flex: 1, minWidth: 120, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
+  modeGrid: { flexDirection: 'row', gap: 8, marginBottom: 16, flexWrap: 'wrap', width: '100%', justifyContent: 'center' },
+  modeBtn: {
+    minWidth: '40%',
+    flex: 1,
+  },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },

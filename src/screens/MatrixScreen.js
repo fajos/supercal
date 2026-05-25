@@ -21,6 +21,7 @@ import { solveDeterminant, solveInverse, solveEigenvalues, solveTranspose } from
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -53,7 +54,6 @@ export default function MatrixScreen() {
   };
 
   const handleOperation = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setResult(null);
     setLoading(true);
@@ -118,7 +118,7 @@ export default function MatrixScreen() {
           timestamp: new Date().toISOString(),
         });
 
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
+        setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -206,21 +206,20 @@ export default function MatrixScreen() {
 
           {/* Operation Selector */}
           <Text style={[styles.inputLabel, { marginTop: 16 }]}>Operation:</Text>
-          <View style={styles.opRow}>
+          <View style={styles.opGrid}>
             {OPS.map((op) => (
-              <TouchableOpacity
+              <ModeChip
                 key={op.value}
-                style={[styles.opBtn, operation === op.value && styles.opBtnActive]}
+                label={op.label}
+                icon={op.icon}
+                active={operation === op.value}
                 onPress={() => {
                   Haptics.selectionAsync();
                   setOperation(op.value);
+                  setResult(null);
                 }}
-              >
-                <Text style={styles.opIcon}>{op.icon}</Text>
-                <Text style={[styles.opText, operation === op.value && styles.opTextActive]}>
-                  {op.label}
-                </Text>
-              </TouchableOpacity>
+                style={styles.opBtn}
+              />
             ))}
           </View>
 
@@ -328,22 +327,11 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'center',
   },
-  opRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  opGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, justifyContent: 'center' },
   opBtn: {
-    flex: 1,
     minWidth: '45%',
-    paddingVertical: 14,
-    backgroundColor: colors.bgInput,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 14,
-    alignItems: 'center',
-    gap: 4,
+    flex: 1,
   },
-  opBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  opIcon: { fontSize: 18 },
-  opText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
-  opTextActive: { color: colors.accentGlow, fontWeight: '600' },
   stepText: {
     color: colors.textPrimary,
     fontSize: 14,

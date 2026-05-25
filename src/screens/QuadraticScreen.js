@@ -36,36 +36,37 @@ export default function QuadraticScreen() {
   const { addToHistory } = useHistory();
 
   const handleSolve = async () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
 
-    try {
-      const aNum = parseFloat(a) || 0;
-      const bNum = parseFloat(b) || 0;
-      const cNum = parseFloat(c) || 0;
-      const result = solveQuadratic(aNum, bNum, cNum);
+    setTimeout(() => {
+      try {
+        const aNum = parseFloat(a) || 0;
+        const bNum = parseFloat(b) || 0;
+        const cNum = parseFloat(c) || 0;
+        const result = solveQuadratic(aNum, bNum, cNum);
 
-      const shareText = `Quadratic Equation Result:\nEquation: ${a}x² + ${b}x + ${c} = 0\nRoots: x1=${result.roots[0]}, x2=${result.roots[1]}\n\nSolved with SuperCalc`;
+        const shareText = `Quadratic Equation Result:\nEquation: ${a}x² + ${b}x + ${c} = 0\nRoots: x1=${result.roots[0]}, x2=${result.roots[1]}\n\nSolved with SuperCalc`;
 
-      setSolution({ ...result, shareText });
+        setSolution({ ...result, shareText });
 
-      addToHistory({
-        type: 'quadratic',
-        input: { a: aNum, b: bNum, c: cNum },
-        result: result.rawRoots,
-        timestamp: new Date().toISOString(),
-      });
+        addToHistory({
+          type: 'quadratic',
+          input: { a: aNum, b: bNum, c: cNum },
+          result: result.rawRoots,
+          timestamp: new Date().toISOString(),
+        });
 
-      setTimeout(() => {
-        scrollRef.current?.scrollTo({ y: 0, animated: true });
-      }, 300);
-    } catch (err) {
-      setError(err.message);
-      setSolution(null);
-    } finally {
-      setLoading(false);
-    }
+        setTimeout(() => {
+          scrollRef.current?.scrollTo({ y: 0, animated: true });
+        }, 300);
+      } catch (err) {
+        setError(err.message);
+        setSolution(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const renderContent = (content) => {
