@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { StyleSheet, Platform } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './src/theme/colors';
 import { HistoryProvider } from './src/utils/history';
@@ -117,50 +117,69 @@ function PhysicsStackScreen() {
   );
 }
 
+function AppTabs() {
+  const insets = useSafeAreaInsets();
+
+  return (
+    <Tab.Navigator
+      screenOptions={({ route }) => ({
+        headerShown: false,
+        tabBarHideOnKeyboard: true,
+        tabBarStyle: {
+          ...styles.tabBar,
+          // Dynamic height: Base content (60) + safe area inset
+          // This ensures the tab bar "shifts" up to accommodate 3-button nav vs gesture nav
+          height: Platform.OS === 'ios'
+            ? 64 + insets.bottom
+            : 68 + (insets.bottom > 0 ? insets.bottom : 10),
+          paddingBottom: Platform.OS === 'ios'
+            ? insets.bottom
+            : (insets.bottom > 0 ? insets.bottom : 10),
+        },
+        tabBarActiveTintColor: colors.accent,
+        tabBarInactiveTintColor: colors.textSecondary,
+        tabBarLabelStyle: styles.tabLabel,
+        tabBarIcon: ({ focused, color, size }) => {
+          let iconName;
+          switch (route.name) {
+            case 'Calculator':
+              iconName = focused ? 'calculator' : 'calculator-outline';
+              break;
+            case 'Solve':
+              iconName = focused ? 'school' : 'school-outline';
+              break;
+            case 'Physics':
+              iconName = focused ? 'flash' : 'flash-outline';
+              break;
+            case 'Graph':
+              iconName = focused ? 'trending-up' : 'trending-up-outline';
+              break;
+            case 'Constants':
+              iconName = focused ? 'information-circle' : 'information-circle-outline';
+              break;
+            default:
+              iconName = 'help-circle-outline';
+          }
+          return <Ionicons name={iconName} size={size} color={color} />;
+        },
+      })}
+    >
+      <Tab.Screen name="Calculator" component={CalculatorScreen} options={{ tabBarLabel: 'Calc' }} />
+      <Tab.Screen name="Solve" component={SolveStackScreen} options={{ tabBarLabel: 'Solve' }} />
+      <Tab.Screen name="Physics" component={PhysicsStackScreen} options={{ tabBarLabel: 'Physics' }} />
+      <Tab.Screen name="Graph" component={GraphScreen} options={{ tabBarLabel: 'Graph' }} />
+      <Tab.Screen name="Constants" component={ConstantsScreen} options={{ tabBarLabel: 'Constants' }} />
+    </Tab.Navigator>
+  );
+}
+
 export default function App() {
   return (
     <SafeAreaProvider>
       <HistoryProvider>
         <NavigationContainer>
-          <StatusBar style="light" backgroundColor={colors.bgPrimary} />
-          <Tab.Navigator
-            screenOptions={({ route }) => ({
-              headerShown: false,
-              tabBarStyle: styles.tabBar,
-              tabBarActiveTintColor: colors.accent,
-              tabBarInactiveTintColor: colors.textSecondary,
-              tabBarLabelStyle: styles.tabLabel,
-              tabBarIcon: ({ focused, color, size }) => {
-                let iconName;
-                switch (route.name) {
-                  case 'Calculator':
-                    iconName = focused ? 'calculator' : 'calculator-outline';
-                    break;
-                  case 'Solve':
-                    iconName = focused ? 'school' : 'school-outline';
-                    break;
-                  case 'Physics':
-                    iconName = focused ? 'flash' : 'flash-outline';
-                    break;
-                  case 'Graph':
-                    iconName = focused ? 'trending-up' : 'trending-up-outline';
-                    break;
-                  case 'Constants':
-                    iconName = focused ? 'information-circle' : 'information-circle-outline';
-                    break;
-                  default:
-                    iconName = 'help-circle-outline';
-                }
-                return <Ionicons name={iconName} size={size} color={color} />;
-              },
-            })}
-          >
-            <Tab.Screen name="Calculator" component={CalculatorScreen} options={{ tabBarLabel: 'Calc' }} />
-            <Tab.Screen name="Solve" component={SolveStackScreen} options={{ tabBarLabel: 'Solve' }} />
-            <Tab.Screen name="Physics" component={PhysicsStackScreen} options={{ tabBarLabel: 'Physics' }} />
-            <Tab.Screen name="Graph" component={GraphScreen} options={{ tabBarLabel: 'Graph' }} />
-            <Tab.Screen name="Constants" component={ConstantsScreen} options={{ tabBarLabel: 'Constants' }} />
-          </Tab.Navigator>
+          <StatusBar style="light" backgroundColor="transparent" translucent />
+          <AppTabs />
         </NavigationContainer>
       </HistoryProvider>
     </SafeAreaProvider>
@@ -172,8 +191,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgCard,
     borderTopColor: colors.border,
     borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 70,
-    paddingBottom: Platform.OS === 'ios' ? 30 : 14,
     paddingTop: 8,
   },
   tabLabel: {

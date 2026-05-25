@@ -14,14 +14,11 @@ import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context'
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 
-
-import { useHistory } from '../utils/history';
-
 const COLS = 6;
 const STATUS_H = 28;
 const ROWS = 8;
 
-const BlinkCursor = () => {
+const BlinkCursor = React.memo(() => {
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -46,7 +43,133 @@ const BlinkCursor = () => {
   return (
     <Animated.Text style={[styles.promptCursor, { opacity }]}>|</Animated.Text>
   );
-};
+});
+
+const CalculatorButton = React.memo(({ label, secondaryLabel, action, value, type, w, onPress, BTN_H, BTN_W, GAP, shift }) => {
+  const isShifted = type === 'shift' && shift;
+  
+  const bg = useMemo(() => {
+    if (type === 'number') return '#252540';
+    if (type === 'operator') return '#2a2a50';
+    if (type === 'function') return '#1e2a40';
+    if (type === 'shift') return shift ? '#0a2a1a' : '#1e1e35';
+    if (type === 'clear') return '#401515';
+    if (type === 'delete') return '#402a15';
+    if (type === 'equals') return '#005535';
+    if (type === 'memory') return '#1d1d35';
+    if (type === 'constant') return '#1e2a40';
+    return '#252540';
+  }, [type, shift]);
+  
+  const fg = useMemo(() => {
+    if (type === 'equals') return '#00ffaa';
+    if (type === 'clear') return '#ff6666';
+    if (type === 'delete') return '#ffaa00';
+    if (type === 'shift') return shift ? '#00ffaa' : '#88aa88';
+    if (type === 'function') return '#88bbee';
+    if (type === 'operator') return '#eecc88';
+    if (type === 'memory') return '#aaaacc';
+    if (type === 'constant') return '#77ccdd';
+    return '#e0e0f0';
+  }, [type, shift]);
+  
+  const fs = useMemo(() => {
+    if (type === 'number') return Math.min(BTN_H * 0.58, Math.max(28, BTN_W * 0.52));
+    if (type === 'operator' || type === 'equals') return Math.min(BTN_H * 0.65, Math.max(32, BTN_W * 0.58));
+    return Math.min(BTN_H * 0.42, Math.max(16, BTN_W * 0.35));
+  }, [type, BTN_H, BTN_W]);
+
+  const shadowStyle = useMemo(() => {
+    if (type === 'equals') {
+      return {
+        shadowColor: '#00ffaa',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.4,
+        shadowRadius: 1,
+        elevation: 1,
+        borderBottomWidth: 0,
+      };
+    }
+    if (type === 'clear') {
+      return {
+        shadowColor: '#ff5555',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 6,
+        borderBottomWidth: 4,
+        borderBottomColor: '#1a0a0a',
+      };
+    }
+    if (type === 'delete') {
+      return {
+        shadowColor: '#ffaa00',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 6,
+        elevation: 6,
+        borderBottomWidth: 4,
+        borderBottomColor: '#1a1a00',
+      };
+    }
+    return {
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.5,
+      shadowRadius: 4,
+      elevation: 5,
+      borderBottomWidth: 3,
+      borderBottomColor: 'rgba(0,0,0,0.4)',
+      borderLeftWidth: 1,
+      borderLeftColor: 'rgba(255,255,255,0.05)',
+      borderRightWidth: 1,
+      borderRightColor: 'rgba(0,0,0,0.2)',
+      borderTopWidth: 1,
+      borderTopColor: 'rgba(255,255,255,0.1)',
+    };
+  }, [type]);
+
+  return (
+    <TouchableOpacity
+      style={[styles.btn, {
+        width: (w || 1) * BTN_W + (w ? (w - 1) * GAP : 0),
+        height: BTN_H,
+        backgroundColor: bg,
+        ...shadowStyle,
+      }, (isShifted || type === 'equals') && styles.highlightedBtn]}
+      onPress={() => onPress(action, value)}
+      activeOpacity={0.7}
+    >
+      {secondaryLabel && (
+        <Text
+          style={styles.secondaryLabel}
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.7}
+        >
+          {secondaryLabel}
+        </Text>
+      )}
+      <Text
+        style={[styles.bt, {
+          color: fg,
+          fontSize: fs,
+          textShadowColor: 'rgba(0,0,0,0.8)',
+          textShadowOffset: { width: 0, height: 2 },
+          textShadowRadius: 4,
+          letterSpacing: -0.6,
+        }]}
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.7}
+      >{label}</Text>
+    </TouchableOpacity>
+  );
+});
+
+const Row = React.memo(({ children }) => (
+  <View style={[styles.row, { gap: 2 }]}>{children}</View>
+));
 
 export default function CalculatorScreen() {
   const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = useWindowDimensions();
@@ -56,19 +179,17 @@ export default function CalculatorScreen() {
   try {
     tabBarHeight = useBottomTabBarHeight();
   } catch (e) {
-    // If we're not inside a tab navigator, default to 0 and rely on safe area insets
     tabBarHeight = 0;
   }
 
   const GAP = 2;
   const PAD = 8;
 
-  // Total vertical space excluding system-reserved areas for proportionality
   const bottomReserved = tabBarHeight > 0 ? tabBarHeight : insets.bottom;
   const AVAILABLE_HEIGHT = SCREEN_HEIGHT - insets.top - STATUS_H - bottomReserved;
 
   const KB_HEIGHT_RATIO = 0.72;
-  const KB_VPAD = 6; // All top padding
+  const KB_VPAD = 6;
   const KEYBOARD_INTERNAL_PAD_V = KB_VPAD + GAP * (ROWS - 1);
 
   const BTN_H = Math.floor((AVAILABLE_HEIGHT * KB_HEIGHT_RATIO - KEYBOARD_INTERNAL_PAD_V) / ROWS);
@@ -80,11 +201,13 @@ export default function CalculatorScreen() {
   const [memory, setMemory] = useState(0);
   const [shift, setShift] = useState(false);
   const [isRadian, setIsRadian] = useState(true);
-  const { addToHistory, clearHistory: clearGlobalHistory } = useHistory();
+  const [history, setHistory] = useState([]);
   const [isFinished, setIsFinished] = useState(false);
-  const displayScrollRef = useRef(null);
-
   const [isPrompt, setIsPrompt] = useState(true);
+  
+  const displayScrollRef = useRef(null);
+  const currentInputRef = useRef(null);
+  const lastScrollTime = useRef(0);
 
   const sciRows = useMemo(() => [
     [
@@ -105,9 +228,8 @@ export default function CalculatorScreen() {
     ],
   ], []);
 
-  const evaluate = (expr) => {
+  const evaluate = useCallback((expr) => {
     try {
-      // Helper functions for nCr and nPr
       const fact = (n) => {
         if (n < 0) return NaN;
         if (n === 0) return 1;
@@ -128,10 +250,8 @@ export default function CalculatorScreen() {
         .replace(/π/g, `(${Math.PI})`)
         .replace(/\be\b/g, `(${Math.E})`);
 
-      // Handle scientific powers
       p = p.replace(/10\^/g, '10**').replace(/e\^/g, 'Math.E**');
 
-      // Handle trig functions based on Radian/Degree mode
       if (isRadian) {
         p = p
           .replace(/sin⁻¹/g, 'Math.asin')
@@ -171,15 +291,48 @@ export default function CalculatorScreen() {
     } catch { 
       return 'Error'; 
     }
-  };
+  }, [history, isRadian]);
 
-  const scrollToBottom = () => {
-    setTimeout(() => {
-      displayScrollRef.current?.scrollToEnd({ animated: true });
-    }, 50);
-  };
+  // Ensure current input area is always visible
+  const ensureCurrentInputVisible = useCallback(() => {
+    const now = Date.now();
+    if (now - lastScrollTime.current < 16) {
+      return;
+    }
+    lastScrollTime.current = now;
+    
+    requestAnimationFrame(() => {
+      if (currentInputRef.current) {
+        currentInputRef.current.measureLayout(
+          displayScrollRef.current,
+          (x, y, width, height) => {
+            // Scroll to show the current input with some padding at the bottom
+            displayScrollRef.current?.scrollTo({
+              y: y + height - DISPLAY_H + 60, // 60px padding to ensure visibility
+              animated: false
+            });
+          },
+          (error) => {
+            // Fallback if measureLayout fails
+            displayScrollRef.current?.scrollToEnd({ animated: false });
+          }
+        );
+      }
+    });
+  }, [DISPLAY_H]);
 
-  const clearHistory = () => {
+  // Auto-scroll when display or history changes
+  useEffect(() => {
+    if (display || history.length > 0 || isPrompt) {
+      // Small delay to allow layout to complete
+      const timer = setTimeout(() => {
+        ensureCurrentInputVisible();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [display, history, isPrompt, ensureCurrentInputVisible]);
+
+  const clearHistory = useCallback(() => {
     Alert.alert(
       'Clear History',
       'Delete all calculation history?',
@@ -188,31 +341,36 @@ export default function CalculatorScreen() {
         { 
           text: 'Clear', 
           style: 'destructive',
-          onPress: () => clearGlobalHistory()
+          onPress: () => setHistory([])
         },
       ]
     );
-  };
+  }, []);
 
-  const press = (action, val) => {
+  const press = useCallback((action, val) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
     if (isPrompt) {
-    setIsPrompt(false);
-    setDisplay('');
-    setExpression('');
-  }
+      setIsPrompt(false);
+      setDisplay('');
+      setExpression('');
+    }
     
-    if (action === 'shift') { setShift(p => !p); return; }
-    if (action === 'raddeg') { setIsRadian(p => !p); return; }
+    if (action === 'shift') { 
+      setShift(p => !p); 
+      return; 
+    }
+    if (action === 'raddeg') { 
+      setIsRadian(p => !p); 
+      return; 
+    }
     if (action === 'clear') {
       setDisplay('');
       setExpression('');
       setIsFinished(false);
-      setIsPrompt(true);   // reset to cursor mode
+      setIsPrompt(true);
       return;
     }
-
 
     if (isFinished) {
       if (action === 'equals') return;
@@ -231,9 +389,12 @@ export default function CalculatorScreen() {
       } else if (action === 'memory') {
         if (val === 'MC') setMemory(0);
         else if (val === 'M+' || val === 'M-') {
-          const r = parseFloat(display);
-          if (!isNaN(r)) setMemory(p => val === 'M+' ? p + r : p - r);
-          setIsFinished(true); // Keep result visible
+          setMemory(p => {
+            const r = parseFloat(display);
+            if (!isNaN(r)) return val === 'M+' ? p + r : p - r;
+            return p;
+          });
+          setIsFinished(true);
         } else if (val === 'MR') {
           const memStr = String(memory);
           setDisplay(memStr);
@@ -244,41 +405,30 @@ export default function CalculatorScreen() {
         setDisplay(val);
         setExpression(val);
       }
-      scrollToBottom();
       return;
     }
 
-if (action === 'delete') {
-  // If already in prompt mode, do nothing
-  if (isPrompt) {
-    return; // keep the blinking cursor visible
-  }
+    if (action === 'delete') {
+      if (isPrompt) return;
+      
+      setDisplay(prev => {
+        if (!prev || prev === 'Error' || prev.length <= 1) {
+          if (!isPrompt) setIsPrompt(true);
+          return '';
+        }
+        return prev.slice(0, -1);
+      });
 
-  setDisplay(prev => {
-    if (!prev || prev === 'Error' || prev.length <= 1) {
-      // Switch to prompt mode once, and stay there
-      if (!isPrompt) setIsPrompt(true);
-      return '';
+      setExpression(prev => prev.length > 0 ? prev.slice(0, -1) : '');
+      return;
     }
-    return prev.slice(0, -1);
-  });
 
-  setExpression(prev => prev.length > 0 ? prev.slice(0, -1) : '');
-  return;
-}
-
-
-    else if (action === 'equals') {
+    if (action === 'equals') {
       const expr = expression || display;
       if (expr === '' || expr === 'Error') return;
       const result = evaluate(expr);
       if (result !== 'Error') {
-        addToHistory({
-          type: 'calculator',
-          expr,
-          result,
-          timestamp: new Date().toISOString(),
-        });
+        setHistory(prev => [...prev, { expr, result, id: Date.now() }]);
         setDisplay('');
         setExpression('');
         setIsFinished(false);
@@ -288,8 +438,7 @@ if (action === 'delete') {
         setExpression('');
         setIsFinished(true);
       }
-    }
-    else if (action === 'memory') {
+    } else if (action === 'memory') {
       if (val === 'MC') setMemory(0);
       else if (val === 'MR') { 
         const memStr = String(memory);
@@ -304,8 +453,7 @@ if (action === 'delete') {
         const r = evaluate(expression || display); 
         if (r !== 'Error') setMemory(p => p - parseFloat(r)); 
       }
-    }
-    else {
+    } else {
       const char = val;
       if (action === 'operator') {
         setDisplay(p => {
@@ -324,165 +472,70 @@ if (action === 'delete') {
         setExpression(p => p + char);
       }
     }
-    scrollToBottom();
-  };
+  }, [isPrompt, isFinished, display, expression, memory, evaluate]);
 
-  const getButtonShadow = (type, isShifted) => {
-    // Enhanced 3D shadow effect with more depth and neon glow
-    if (type === 'equals') {
-      return {
-        shadowColor: '#00ffaa',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.6,
-        shadowRadius: 8,
-        elevation: 8,
-        borderBottomWidth: 4,
-        borderBottomColor: '#003322',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.3)',
-      };
-    }
-    if (type === 'clear') {
-      return {
-        shadowColor: '#ff5555',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-        elevation: 6,
-        borderBottomWidth: 4,
-        borderBottomColor: '#2a0a0a',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
-      };
-    }
-    if (type === 'delete') {
-      return {
-        shadowColor: '#ffaa00',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.4,
-        shadowRadius: 6,
-        elevation: 6,
-        borderBottomWidth: 4,
-        borderBottomColor: '#2a1a00',
-        borderTopWidth: 1,
-        borderTopColor: 'rgba(255,255,255,0.1)',
-      };
-    }
-    // Default 3D effect for all buttons
-    return {
-      shadowColor: '#000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.6,
-      shadowRadius: 5,
-      elevation: 6,
-      borderBottomWidth: 4,
-      borderBottomColor: 'rgba(0,0,0,0.5)',
-      borderLeftWidth: 1,
-      borderLeftColor: 'rgba(255,255,255,0.05)',
-      borderRightWidth: 1,
-      borderRightColor: 'rgba(0,0,0,0.3)',
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.15)',
-    };
-  };
-
-  const B = ({ label, secondaryLabel, action, value, type, w }) => {
-    const isShifted = type === 'shift' && shift;
-    const bg = type === 'number' ? '#252540' :
-               type === 'operator' ? '#2a2a50' :
-               type === 'function' ? '#1e2a40' :
-               type === 'shift' ? (shift ? '#0a2a1a' : '#1e1e35') :
-               type === 'clear' ? '#401515' :
-               type === 'delete' ? '#402a15' :
-               type === 'equals' ? '#005535' :
-               type === 'memory' ? '#1d1d35' :
-               type === 'constant' ? '#1e2a40' : '#252540';
-    
-    const fg = type === 'equals' ? '#00ffaa' :
-               type === 'clear' ? '#ff6666' :
-               type === 'delete' ? '#ffaa00' :
-               type === 'shift' ? (shift ? '#00ffaa' : '#88aa88') :
-               type === 'function' ? '#88bbee' :
-               type === 'operator' ? '#eecc88' :
-               type === 'memory' ? '#aaaacc' :
-               type === 'constant' ? '#77ccdd' : '#e0e0f0';
-    
-    const fs = type === 'number' ? Math.min(BTN_H * 0.58, Math.max(28, BTN_W * 0.52)) :
-               type === 'operator' || type === 'equals' ? Math.min(BTN_H * 0.65, Math.max(32, BTN_W * 0.58)) :
-               Math.min(BTN_H * 0.42, Math.max(16, BTN_W * 0.35));
-
-    const shadowStyle = getButtonShadow(type, isShifted);
-
-    return (
-      <TouchableOpacity
-        style={[styles.btn, {
-          width: (w || 1) * BTN_W + (w ? (w - 1) * GAP : 0),
-          height: BTN_H,
-          backgroundColor: bg,
-          ...shadowStyle,
-        }, (isShifted || type === 'equals') && styles.highlightedBtn]}
-        onPress={() => press(action, value)}
-        activeOpacity={0.7}
-      >
-        {secondaryLabel && (
-          <Text
-            style={styles.secondaryLabel}
-            numberOfLines={1}
-            adjustsFontSizeToFit
-            minimumFontScale={0.7}
+  const scrollViewContent = useMemo(() => (
+    <>
+      {history.map((h) => (
+        <View key={h.id}>
+          <TouchableOpacity
+            style={styles.historyItem}
+            onPress={() => {
+              setDisplay(h.result);
+              setExpression(h.expr);
+              setIsFinished(true);
+            }}
+            activeOpacity={0.7}
           >
-            {secondaryLabel}
-          </Text>
-        )}
-        <Text
-          style={[styles.bt, {
-            color: fg,
-            fontSize: fs,
-            textShadowColor: 'rgba(0,0,0,0.8)',
-            textShadowOffset: { width: 0, height: 2 },
-            textShadowRadius: 4,
-            letterSpacing: -0.6,
-          }]}
-          numberOfLines={1}
-          adjustsFontSizeToFit
-          minimumFontScale={0.7}
-        >{label}</Text>
-      </TouchableOpacity>
-    );
-  };
+            <Text style={styles.historyExpr} numberOfLines={1} adjustsFontSizeToFit>{h.expr}</Text>
+            <View style={styles.historyResultContainer}>
+              <Text style={styles.historyEqual}>=</Text>
+              <Text style={styles.historyResult} numberOfLines={1} adjustsFontSizeToFit>{h.result}</Text>
+            </View>
+          </TouchableOpacity>
+          <View style={styles.divider} />
+        </View>
+      ))}
 
-  const Row = ({ children }) => <View style={[styles.row, { gap: GAP }]}>{children}</View>;
+      <View 
+        ref={currentInputRef}
+        style={styles.currentSection}
+      >
+        <Text style={styles.currentExpr} numberOfLines={2} adjustsFontSizeToFit>
+          {display}
+          {isPrompt && <BlinkCursor />}
+        </Text>
+      </View>
+    </>
+  ), [history, display, isPrompt]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
-      {/* Status Bar */}
       <View style={styles.stat}>
         <Text style={styles.st}>{isRadian ? 'RAD' : 'DEG'}  {shift ? '🟢' : '⚫'} Shift</Text>
         <View style={styles.statRight}>
+          {history.length > 0 && (
+            <TouchableOpacity onPress={clearHistory} activeOpacity={0.6} style={styles.clearBtn}>
+              <Text style={styles.clearBtnText}>Clear</Text>
+            </TouchableOpacity>
+          )}
           <Text style={styles.st}>M={memory}</Text>
         </View>
       </View>
 
-      {/* Display Area */}
       <View style={[styles.disp, { height: DISPLAY_H }]}>
         <ScrollView
           ref={displayScrollRef}
           style={styles.displayScroll}
           showsVerticalScrollIndicator={false}
-          onContentSizeChange={() => displayScrollRef.current?.scrollToEnd({ animated: false })}
           bounces={true}
           keyboardShouldPersistTaps="handled"
+          scrollEventThrottle={16}
         >
-          <View style={styles.currentSection}>
-            <Text style={styles.currentExpr} numberOfLines={2} adjustsFontSizeToFit>
-              {display}
-              {isPrompt && <BlinkCursor />}
-            </Text>
-          </View>
+          {scrollViewContent}
         </ScrollView>
       </View>
 
-      {/* Keyboard */}
       <View style={[styles.kb, {
         paddingTop: KB_VPAD,
         paddingHorizontal: PAD,
@@ -492,66 +545,71 @@ if (action === 'delete') {
         {sciRows.map((row, rowIndex) => (
           <Row key={`sci-row-${rowIndex}`}>
             {row.map((btn, i) => (
-              <B
+              <CalculatorButton
                 key={`sci-${rowIndex}-${i}`}
                 label={shift ? btn.s : btn.p}
                 secondaryLabel={!shift ? btn.s : null}
                 action={shift ? (btn.st || btn.t) : btn.t}
                 value={shift ? btn.sv : btn.v}
                 type={shift ? (btn.st || btn.t) : btn.t}
+                BTN_H={BTN_H}
+                BTN_W={BTN_W}
+                GAP={GAP}
+                shift={shift}
+                onPress={press}
               />
             ))}
           </Row>
         ))}
 
         <Row>
-          <B label="Shift" action="shift" value="" type="shift" />
-          <B label="R/D" action="raddeg" value="" type="shift" />
-          <B label="(" action="function" value="(" type="function" />
-          <B label=")" action="function" value=")" type="function" />
-          <B label="%" action="operator" value="%" type="operator" />
-          <B label="⌫" action="delete" value="" type="delete" />
+          <CalculatorButton label="Shift" action="shift" value="" type="shift" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="R/D" action="raddeg" value="" type="shift" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="(" action="function" value="(" type="function" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label=")" action="function" value=")" type="function" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="%" action="operator" value="%" type="operator" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="⌫" action="delete" value="" type="delete" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
         </Row>
 
         <Row>
-          <B label="MC" action="memory" value="MC" type="memory" />
-          <B label="MR" action="memory" value="MR" type="memory" />
-          <B label="M+" action="memory" value="M+" type="memory" />
-          <B label="M-" action="memory" value="M-" type="memory" />
-          <B label="AC" action="clear" value="" type="clear" w={2} />
+          <CalculatorButton label="MC" action="memory" value="MC" type="memory" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="MR" action="memory" value="MR" type="memory" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="M+" action="memory" value="M+" type="memory" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="M-" action="memory" value="M-" type="memory" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="AC" action="clear" value="" type="clear" w={2} BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
         </Row>
 
         <Row>
-          <B label="7" action="number" value="7" type="number" />
-          <B label="8" action="number" value="8" type="number" />
-          <B label="9" action="number" value="9" type="number" />
-          <B label="÷" action="operator" value="÷" type="operator" />
-          <B label="×" action="operator" value="×" type="operator" />
-          <B label="n!" action="function" value="!" type="function" />
+          <CalculatorButton label="7" action="number" value="7" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="8" action="number" value="8" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="9" action="number" value="9" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="÷" action="operator" value="÷" type="operator" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="×" action="operator" value="×" type="operator" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="n!" action="function" value="!" type="function" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
         </Row>
 
         <Row>
-          <B label="4" action="number" value="4" type="number" />
-          <B label="5" action="number" value="5" type="number" />
-          <B label="6" action="number" value="6" type="number" />
-          <B label="+" action="operator" value="+" type="operator" />
-          <B label="−" action="operator" value="−" type="operator" />
-          <B label="Ans" action="function" value="Ans" type="function" />
+          <CalculatorButton label="4" action="number" value="4" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="5" action="number" value="5" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="6" action="number" value="6" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="+" action="operator" value="+" type="operator" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="−" action="operator" value="−" type="operator" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="Ans" action="function" value="Ans" type="function" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
         </Row>
 
         <Row>
-          <B label="1" action="number" value="1" type="number" />
-          <B label="2" action="number" value="2" type="number" />
-          <B label="3" action="number" value="3" type="number" />
-          <B label="Rand" action="function" value="Rand" type="function" />
-          <B label="." action="number" value="." type="number" w={2} />
+          <CalculatorButton label="1" action="number" value="1" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="2" action="number" value="2" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="3" action="number" value="3" type="number" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="Rand" action="function" value="Rand" type="function" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="." action="number" value="." type="number" w={2} BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
         </Row>
 
         <Row>
-          <B label="0" action="number" value="0" type="number" w={2} />
-          <B label="π" action="constant" value="π" type="constant" />
-          <B label="°" action="constant" value="°" type="constant" />
-          <B label="=" action="equals" value="" type="equals" w={2} />
+          <CalculatorButton label="0" action="number" value="0" type="number" w={2} BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="π" action="constant" value="π" type="constant" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="°" action="constant" value="°" type="constant" BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
+          <CalculatorButton label="=" action="equals" value="" type="equals" w={2} BTN_H={BTN_H} BTN_W={BTN_W} GAP={GAP} shift={shift} onPress={press} />
         </Row>
       </View>
     </SafeAreaView>
@@ -656,27 +714,11 @@ const styles = StyleSheet.create({
   },
   currentSection: {
     paddingBottom: 16,
+    paddingTop: 8,
     flexDirection: 'column',
     alignItems: 'flex-start',
-    minHeight: 120,
+    minHeight: 80,
     justifyContent: 'flex-start',
-  },
-  resultContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-end',
-    marginTop: 16,
-  },
-  resultEqual: {
-    color: '#00ffcc',
-    fontSize: 32,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    fontWeight: '700',
-    marginRight: 12,
-    opacity: 0.7,
-    textShadowColor: 'rgba(0, 255, 204, 0.5)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
   },
   currentExpr: {
     color: '#00ffcc',
@@ -687,17 +729,6 @@ const styles = StyleSheet.create({
     textShadowColor: 'rgba(0, 255, 204, 0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
-  },
-  currentDisplay: {
-    color: '#00ffcc',
-    fontSize: 38,
-    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    textAlign: 'right',
-    fontWeight: '700',
-    textShadowColor: 'rgba(0, 255, 204, 0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 12,
-    flexShrink: 1,
   },
   kb: {
     paddingBottom: 0,
@@ -714,7 +745,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    // 3D base styling
     transform: [{ perspective: 1000 }],
   },
   highlightedBtn: {
@@ -738,14 +768,13 @@ const styles = StyleSheet.create({
     textShadowOffset: { width: 0, height: 1 },
     textShadowRadius: 1,
   },
-promptCursor: {
-  color: '#00ffcc',
-  fontSize: 28,
-  fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-  fontWeight: '900',
-  textShadowColor: 'rgba(0, 255, 204, 0.6)',
-  textShadowOffset: { width: 0, height: 0 },
-  textShadowRadius: 12,
-},
-
+  promptCursor: {
+    color: '#00ffcc',
+    fontSize: 28,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontWeight: '900',
+    textShadowColor: 'rgba(0, 255, 204, 0.6)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 12,
+  },
 });

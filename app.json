@@ -28,7 +28,16 @@
       },
       "package": "com.fajostech.supercalc",
       "versionCode": 1,
-      "softwareKeyboardLayoutMode": "pan"
+      "softwareKeyboardLayoutMode": "adjustResize",
+      "statusBar": {
+        "translucent": true,
+        "backgroundColor": "#00000000",
+        "barStyle": "light-content"
+      },
+      "navigationBar": {
+        "barStyle": "light-content",
+        "backgroundColor": "#00000000"
+      }
     },
     "extra": {
       "eas": {
