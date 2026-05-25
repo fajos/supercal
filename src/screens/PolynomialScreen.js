@@ -56,7 +56,9 @@ export default function PolynomialScreen() {
         if (deg >= 5) coeffs.push(parseFloat(e) || 0);
 
         const result = solvePolynomial(coeffs);
-        setSolution(result);
+        const shareText = `Polynomial Result:\nDegree: ${deg}\nCoefficients: ${coeffs.join(', ')}\nRoots: ${result.roots.map((r, i) => `x${i+1}=${typeof r === 'string' ? r : r.toFixed(6)}`).join(', ')}\n\nSolved with SuperCalc`;
+
+        setSolution({ ...result, shareText });
 
         addToHistory({
           type: 'polynomial',
@@ -212,7 +214,7 @@ export default function PolynomialScreen() {
                 </StepCard>
               ))}
 
-              <FinalAnswer label="🎯 Roots Found">
+              <FinalAnswer label="🎯 Roots Found" shareText={solution.shareText}>
                 {solution.roots.map((root, idx) => (
                   <View key={idx}>
                     <Text style={styles.finalText}>

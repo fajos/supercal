@@ -41,7 +41,9 @@ export default function StatisticsScreen() {
     setTimeout(() => {
       try {
         const result = solveStatistics(dataInput);
-        setSolution(result);
+        const shareText = `Statistics Analysis Result:\nDataset: ${dataInput}\nMean: ${result.summary.mean.toFixed(4)}\nMedian: ${result.summary.median.toFixed(4)}\nStd Dev: ${result.summary.stdDev.toFixed(4)}\nRange: ${result.summary.range.toFixed(4)}\n\nSolved with SuperCalc`;
+
+        setSolution({ ...result, shareText });
 
         addToHistory({
           type: 'statistics',
@@ -141,7 +143,10 @@ export default function StatisticsScreen() {
                 </StepCard>
               ))}
 
-              <FinalAnswer label="📊 Statistical Summary">
+              <FinalAnswer
+                label="📊 Statistical Summary"
+                shareText={solution.shareText}
+              >
                 <View style={styles.summaryRow}>
                   <View style={styles.summaryItem}>
                     <Text style={styles.summaryLabel}>Mean</Text>

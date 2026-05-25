@@ -20,6 +20,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveThermal } from '../solvers/thermalSolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -43,6 +44,7 @@ export default function ThermalScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -62,7 +64,19 @@ export default function ThermalScreen() {
           finalTemp: parseFloat(t2) || 1,
         };
         const solverResult = solveThermal(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'specificHeat' ? 'Specific Heat' : mode === 'latentHeat' ? 'Latent Heat' : 'Ideal Gas Law';
+        const shareText = `Thermal Physics Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'thermal',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         scrollRef.current?.scrollTo({ y: 0, animated: true });
       } catch (err) {
         setError(err.message);
@@ -162,7 +176,10 @@ export default function ThermalScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🌡️ Result">
+              <FinalAnswer
+                label="🌡️ Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

@@ -18,6 +18,7 @@ import { StepCard } from '../components/StepCard';
 import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveProjectile } from '../solvers/projectileSolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
@@ -34,6 +35,7 @@ export default function ProjectileScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -48,7 +50,19 @@ export default function ProjectileScreen() {
           height: parseFloat(height) || 0,
         };
         const solverResult = solveProjectile(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'groundLaunch' ? 'Ground Launch' : 'Horizontal Launch';
+        const shareText = `Projectile Motion Result (${opLabel}):\nVelocity: ${params.velocity}m/s, Angle: ${params.angle}°, Height: ${params.height}m\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'projectile',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -125,7 +139,10 @@ export default function ProjectileScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🎯 Result">
+              <FinalAnswer
+                label="🎯 Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

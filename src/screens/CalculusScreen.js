@@ -9,6 +9,7 @@ import {
   Platform,
   Dimensions,
   KeyboardAvoidingView,
+  Share,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -57,11 +58,14 @@ export default function CalculusScreen() {
             );
           }
 
+          const shareText = `Derivative Result:\nFunction: f(${variable}) = ${expression}\nDerivative: f'(${variable}) = ${derivResult.derivative}${pointValue !== null ? `\nf'(${point}) = ${pointValue.toFixed(6)}` : ''}\n\nSolved with SuperCalc`;
+
           setResult({
             type: 'derivative',
             expression: derivResult.derivative,
             pointValue,
             steps: derivResult.steps,
+            shareText,
           });
 
           addToHistory({
@@ -78,6 +82,7 @@ export default function CalculusScreen() {
           const upper = 5;
 
           const intResult = solveIntegral(expression, variable, lower, upper);
+          const shareText = `Integral Result:\nIntegrand: f(${variable}) = ${expression}\nBounds: [${lower}, ${upper}]\nValue: ${intResult.value.toFixed(6)}\n\nSolved with SuperCalc`;
 
           setResult({
             type: 'integral',
@@ -86,6 +91,7 @@ export default function CalculusScreen() {
             lower,
             upper,
             steps: intResult.steps,
+            shareText,
           });
 
           addToHistory({
@@ -203,6 +209,7 @@ export default function CalculusScreen() {
 
               <FinalAnswer
                 label={result.type === 'derivative' ? '📐 Derivative' : '📐 Definite Integral'}
+                shareText={result.shareText}
               >
                 {result.type === 'derivative' && (
                   <View style={styles.finalContainer}>

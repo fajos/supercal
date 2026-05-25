@@ -12,6 +12,7 @@ import { solveEnergy } from '../solvers/energySolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { useHistory } from '../utils/history';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -27,6 +28,7 @@ export default function EnergyScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setLoading(true);
@@ -44,7 +46,19 @@ export default function EnergyScreen() {
           gravity: 9.81,
         };
         const solverResult = solveEnergy(mode, params);
-        setResult(solverResult);
+
+        const shareText = `Energy & Work Result (${mode}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'energy',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -142,7 +156,7 @@ export default function EnergyScreen() {
                   {renderContent(step.content)}
                 </StepCard>
               ))}
-              <FinalAnswer label="⚡ Result">
+              <FinalAnswer label="⚡ Result" shareText={result.shareText}>
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

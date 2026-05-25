@@ -21,6 +21,7 @@ import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveInduction } from '../solvers/inductionSolver';
 import { BackHeader } from '../components/BackHeader';
+import { useHistory } from '../utils/history';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -37,28 +38,49 @@ export default function InductionScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
     setLoading(true);
-    try {
-      const params = {
-        Vp: parseFloat(Vp),
-        Np: parseFloat(Np),
-        Ns: parseFloat(Ns),
-        B: parseFloat(B),
-        A: parseFloat(A),
-      };
-      const solverResult = solveInduction(mode, params);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    } finally {
-      setLoading(false);
-    }
+
+    setTimeout(() => {
+      try {
+        const params = {
+          Vp: parseFloat(Vp),
+          Np: parseFloat(Np),
+          Ns: parseFloat(Ns),
+          B: parseFloat(B),
+          A: parseFloat(A),
+        };
+        const solverResult = solveInduction(mode, params);
+
+        let shareText = '';
+        if (mode === 'transformer_v') {
+          shareText = `Transformer Calculation Result:\nPrimary Voltage: ${Vp}V\nPrimary Turns: ${Np}\nSecondary Turns: ${Ns}\nSecondary Voltage: ${solverResult.result}\n\nSolved with SuperCalc`;
+        } else if (mode === 'flux') {
+          shareText = `Magnetic Flux Result:\nMagnetic Field: ${B}T\nArea: ${A}m²\nFlux: ${solverResult.result}\n\nSolved with SuperCalc`;
+        }
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'induction',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   return (
@@ -131,7 +153,7 @@ export default function InductionScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🔌 Result">
+              <FinalAnswer label="🔌 Result" shareText={result.shareText}>
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

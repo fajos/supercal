@@ -19,6 +19,7 @@ import { ErrorCard } from '../components/ErrorCard';
 import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveRadioactivity } from '../solvers/radioactivitySolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 export default function RadioactivityScreen() {
@@ -31,6 +32,7 @@ export default function RadioactivityScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setLoading(true);
@@ -45,7 +47,19 @@ export default function RadioactivityScreen() {
           halfLife: parseFloat(halfLife) || 1,
         };
         const solverResult = solveRadioactivity(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'halfLife' ? 'Radioactive Decay' : 'Decay Constant';
+        const shareText = `Radioactivity Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'radioactivity',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -123,7 +137,10 @@ export default function RadioactivityScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="⚛️ Result">
+              <FinalAnswer
+                label="⚛️ Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

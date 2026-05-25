@@ -21,8 +21,6 @@ import { ErrorCard } from '../components/ErrorCard';
 import { solveQuadratic } from '../solvers/quadraticSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
-import { storeValue, getMemory } from '../utils/memory';
-import { Ionicons } from '@expo/vector-icons';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -37,23 +35,6 @@ export default function QuadraticScreen() {
   const scrollRef = useRef();
   const { addToHistory } = useHistory();
 
-  const handleSaveToMemory = async (val) => {
-    const success = await storeValue('last_calculus_result', val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
-  const handleRecallMemory = async (field) => {
-    const memory = await getMemory();
-    if (memory.last_calculus_result) {
-      if (field === 'a') setA(memory.last_calculus_result);
-      if (field === 'b') setB(memory.last_calculus_result);
-      if (field === 'c') setC(memory.last_calculus_result);
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    }
-  };
-
   const handleSolve = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
@@ -64,7 +45,10 @@ export default function QuadraticScreen() {
       const bNum = parseFloat(b) || 0;
       const cNum = parseFloat(c) || 0;
       const result = solveQuadratic(aNum, bNum, cNum);
-      setSolution(result);
+
+      const shareText = `Quadratic Equation Result:\nEquation: ${a}x² + ${b}x + ${c} = 0\nRoots: x1=${result.roots[0]}, x2=${result.roots[1]}\n\nSolved with SuperCalc`;
+
+      setSolution({ ...result, shareText });
 
       addToHistory({
         type: 'quadratic',
@@ -132,19 +116,8 @@ export default function QuadraticScreen() {
             <BackHeader title="📐 Quadratic Solver" subtitle="ax² + bx + c = 0" />
           </View>
 
-          {/* 🆕 Using InputCard component */}
+          {/* Standardized Input Card */}
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.inputHeader}>
-              <TouchableOpacity onPress={() => handleRecallMemory('a')}>
-                <Text style={styles.recallBtnMini}>Recall MR a</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleRecallMemory('b')}>
-                <Text style={styles.recallBtnMini}>Recall MR b</Text>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={() => handleRecallMemory('c')}>
-                <Text style={styles.recallBtnMini}>Recall MR c</Text>
-              </TouchableOpacity>
-            </View>
             <View style={styles.coeffRow}>
               <TextInput style={styles.input} value={a} onChangeText={setA}
                 keyboardType="decimal-pad" placeholder="a" placeholderTextColor={colors.textSecondary} />
@@ -176,26 +149,12 @@ export default function QuadraticScreen() {
                   {renderContent(step.content)}
                 </StepCard>
               ))}
-              <FinalAnswer label="🎯 Solution">
+              <FinalAnswer label="🎯 Solution" shareText={solution.shareText}>
                 <View style={styles.finalResultRow}>
                   <Text style={styles.finalRootText}>x₁ = {solution.roots[0]}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(solution.roots[0])}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M1</Text>
-                  </TouchableOpacity>
                 </View>
                 <View style={styles.finalResultRow}>
                   <Text style={styles.finalRootText}>x₂ = {solution.roots[1]}</Text>
-                  <TouchableOpacity
-                    style={styles.memoryBtn}
-                    onPress={() => handleSaveToMemory(solution.roots[1])}
-                  >
-                    <Ionicons name="save-outline" size={18} color={colors.accent} />
-                    <Text style={styles.memoryBtnText}>M2</Text>
-                  </TouchableOpacity>
                 </View>
               </FinalAnswer>
             </View>

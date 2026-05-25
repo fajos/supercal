@@ -20,6 +20,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveQuantum } from '../solvers/quantumSolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -35,6 +36,7 @@ export default function QuantumScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -49,7 +51,19 @@ export default function QuantumScreen() {
           v: parseFloat(v),
         };
         const solverResult = solveQuantum(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'photon_e' ? 'Photon Energy' : 'de Broglie Wavelength';
+        const shareText = `Quantum Physics Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'quantum',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         scrollRef.current?.scrollTo({ y: 0, animated: true });
       } catch (err) {
         setError(err.message);
@@ -124,7 +138,10 @@ export default function QuantumScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🔮 Result">
+              <FinalAnswer
+                label="🔮 Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

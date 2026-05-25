@@ -13,7 +13,6 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useHistory } from '../utils/history';
-import { storeValue } from '../utils/memory';
 import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -43,35 +42,65 @@ export default function HistoryScreen() {
 
   const getModeIcon = (type) => {
     switch (type) {
-      case 'quadratic':
-        return '📐';
-      case 'statistics':
-        return '📊';
-      case 'linear':
-        return '📏';
-      case 'polynomial':
-        return '📈';
-      case 'trigonometry':
-        return '🔺';
-      default:
-        return '🧮';
+      case 'quadratic': return '📐';
+      case 'statistics': return '📊';
+      case 'linear': return '📏';
+      case 'polynomial': return '📈';
+      case 'trigonometry': return '🔺';
+      case 'complex': return '🔄';
+      case 'matrix': return '🧮';
+      case 'kinematics': return '🏃';
+      case 'circuits': return '⚡';
+      case 'energy': return '🔋';
+      case 'fluids': return '💧';
+      case 'waves': return '🌊';
+      case 'induction': return '🧲';
+      case 'simultaneous': return '🔢';
+      case 'calculator': return '📱';
+      case 'thermal': return '🌡️';
+      case 'quantum': return '⚛️';
+      case 'magnetic': return '🧭';
+      case 'projectile': return '🏹';
+      case 'circular': return '🎡';
+      case 'equilibrium': return '⚖️';
+      case 'radioactivity': return '☢️';
+      case 'electrostatics': return '⚡';
+      case 'finance': return '💰';
+      case 'calculus': return '∫';
+      case 'radicals': return '√';
+      default: return '➕';
     }
   };
 
   const getModeName = (type) => {
     switch (type) {
-      case 'quadratic':
-        return 'Quadratic';
-      case 'statistics':
-        return 'Statistics';
-      case 'linear':
-        return 'Linear System';
-      case 'polynomial':
-        return 'Polynomial';
-      case 'trigonometry':
-        return 'Trigonometry';
-      default:
-        return 'Unknown';
+      case 'quadratic': return 'Quadratic';
+      case 'statistics': return 'Statistics';
+      case 'linear': return 'Linear System';
+      case 'polynomial': return 'Polynomial';
+      case 'trigonometry': return 'Trigonometry';
+      case 'complex': return 'Complex Numbers';
+      case 'matrix': return 'Matrix Ops';
+      case 'kinematics': return 'Kinematics';
+      case 'circuits': return 'Electric Circuits';
+      case 'energy': return 'Energy & Work';
+      case 'fluids': return 'Fluids & Pressure';
+      case 'waves': return 'Waves & Sound';
+      case 'induction': return 'Induction';
+      case 'simultaneous': return 'Simultaneous Eq';
+      case 'calculator': return 'Calculator';
+      case 'thermal': return 'Thermal Physics';
+      case 'quantum': return 'Quantum Physics';
+      case 'magnetic': return 'Magnetism';
+      case 'projectile': return 'Projectile Motion';
+      case 'circular': return 'Circular Motion';
+      case 'equilibrium': return 'Equilibrium';
+      case 'radioactivity': return 'Radioactivity';
+      case 'electrostatics': return 'Electrostatics';
+      case 'finance': return 'Finance';
+      case 'calculus': return 'Calculus';
+      case 'radicals': return 'Radicals';
+      default: return type.charAt(0).toUpperCase() + type.slice(1);
     }
   };
 
@@ -90,103 +119,30 @@ export default function HistoryScreen() {
     return date.toLocaleDateString();
   };
 
-  const handleSaveToMemory = async (val, type) => {
-    const key = type === 'statistics' || type === 'trigonometry' || type === 'polynomial' || type === 'quadratic' || type === 'linear'
-      ? 'last_calculus_result'
-      : 'last_physics_result';
-
-    const success = await storeValue(key, val.toString());
-    if (success) {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }
-  };
-
   const renderResultPreview = (entry) => {
-    switch (entry.type) {
-      case 'quadratic':
-        return (
-          <View style={styles.resultContainer}>
-            <View style={styles.resultTextCol}>
-              <Text style={styles.resultPreview}>
-                x₁ = {typeof entry.result.root1 === 'string'
-                  ? entry.result.root1
-                  : entry.result.root1?.toFixed(4)}
-                {'\n'}
-                x₂ = {typeof entry.result.root2 === 'string'
-                  ? entry.result.root2
-                  : entry.result.root2?.toFixed(4)}
-              </Text>
-            </View>
-            <View style={styles.actionCol}>
-              <TouchableOpacity
-                style={styles.historyMemoryBtn}
-                onPress={() => handleSaveToMemory(entry.result.root1, entry.type)}
-              >
-                <Ionicons name="save-outline" size={16} color={colors.accent} />
-                <Text style={styles.historyMemoryBtnText}>Mx₁</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.historyMemoryBtn}
-                onPress={() => handleSaveToMemory(entry.result.root2, entry.type)}
-              >
-                <Ionicons name="save-outline" size={16} color={colors.accent} />
-                <Text style={styles.historyMemoryBtnText}>Mx₂</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-      case 'statistics':
-        return (
-          <View style={styles.resultContainer}>
-            <View style={styles.resultTextCol}>
-              <Text style={styles.resultPreview}>
-                Mean: {entry.result.mean?.toFixed(2)}{'\n'}StdDev: {entry.result.stdDev?.toFixed(2)}
-              </Text>
-            </View>
-            <View style={styles.actionCol}>
-              <TouchableOpacity
-                style={styles.historyMemoryBtn}
-                onPress={() => handleSaveToMemory(entry.result.mean, entry.type)}
-              >
-                <Ionicons name="save-outline" size={16} color={colors.accent} />
-                <Text style={styles.historyMemoryBtnText}>Mμ</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-      case 'linear':
-        return (
-          <View style={styles.resultContainer}>
-            <View style={styles.resultTextCol}>
-              <Text style={styles.resultPreview}>
-                x = {entry.result.x?.toFixed(4)}, y = {entry.result.y?.toFixed(4)}
-              </Text>
-            </View>
-            <View style={styles.actionCol}>
-              <TouchableOpacity
-                style={styles.historyMemoryBtn}
-                onPress={() => handleSaveToMemory(entry.result.x, entry.type)}
-              >
-                <Ionicons name="save-outline" size={16} color={colors.accent} />
-                <Text style={styles.historyMemoryBtnText}>Mx</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.historyMemoryBtn}
-                onPress={() => handleSaveToMemory(entry.result.y, entry.type)}
-              >
-                <Ionicons name="save-outline" size={16} color={colors.accent} />
-                <Text style={styles.historyMemoryBtnText}>My</Text>
-              </TouchableOpacity>
-            </View>
-          </View>
-        );
-      default:
-        return (
-          <Text style={styles.resultPreview}>
-            {JSON.stringify(entry.result).slice(0, 60)}...
-          </Text>
-        );
+    let previewText = '';
+
+    if (entry.type === 'calculator') {
+      previewText = `${entry.expr} = ${entry.result}`;
+    } else if (typeof entry.result === 'string') {
+      previewText = entry.result;
+    } else if (typeof entry.result === 'number') {
+      previewText = entry.result.toString();
+    } else if (entry.type === 'linear' && entry.result.x !== undefined) {
+      previewText = `x = ${entry.result.x.toFixed(4)}, y = ${entry.result.y.toFixed(4)}`;
+    } else if (entry.type === 'complex' && entry.result.real !== undefined) {
+      previewText = `${entry.result.real} ${entry.result.imag >= 0 ? '+' : '-'} ${Math.abs(entry.result.imag)}i`;
+    } else {
+      previewText = JSON.stringify(entry.result).slice(0, 100);
     }
+
+    return (
+      <View style={styles.resultContainer}>
+        <Text style={styles.resultPreview} numberOfLines={3}>
+          {previewText}
+        </Text>
+      </View>
+    );
   };
 
   return (
@@ -320,31 +276,7 @@ const styles = StyleSheet.create({
   },
   resultContainer: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
     alignItems: 'center',
-  },
-  resultTextCol: {
-    flex: 1,
-  },
-  actionCol: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  historyMemoryBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.bgCard,
-    paddingHorizontal: 8,
-    paddingVertical: 6,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: colors.accent + '30',
-  },
-  historyMemoryBtnText: {
-    color: colors.accent,
-    fontSize: 11,
-    fontWeight: '700',
-    marginLeft: 4,
   },
   emptyState: {
     flex: 1,

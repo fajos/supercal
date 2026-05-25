@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -61,45 +62,54 @@ export default function MatrixScreen() {
       try {
         const matrix = getMatrix();
         let solverResult;
+        let resData = {};
 
         switch (operation) {
           case 'determinant':
             solverResult = solveDeterminant(matrix);
-            setResult({
+            resData = {
               type: 'determinant',
               value: solverResult.value,
               displayValue: solverResult.value.toFixed(6),
               steps: solverResult.steps,
-            });
+              resStr: solverResult.value.toFixed(6)
+            };
             break;
 
           case 'inverse':
             solverResult = solveInverse(matrix);
-            setResult({
+            resData = {
               type: 'inverse',
               matrix: solverResult.matrix,
               steps: solverResult.steps,
-            });
+              resStr: 'Matrix Inverse calculated'
+            };
             break;
 
           case 'eigenvalues':
             solverResult = solveEigenvalues(matrix);
-            setResult({
+            resData = {
               type: 'eigenvalues',
               eigenvalues: solverResult.eigenvalues,
               steps: solverResult.steps,
-            });
+              resStr: solverResult.eigenvalues.join(', ')
+            };
             break;
 
           case 'transpose':
             solverResult = solveTranspose(matrix);
-            setResult({
+            resData = {
               type: 'transpose',
               matrix: solverResult.matrix,
               steps: solverResult.steps,
-            });
+              resStr: 'Matrix Transpose calculated'
+            };
             break;
         }
+
+        const shareText = `Matrix Operation (${operation}):\nInput: ${matrixSize}x${matrixSize} Matrix\nResult: ${resData.resStr}\n\nSolved with SuperCalc`;
+
+        setResult({ ...resData, shareText });
 
         addToHistory({
           type: 'matrix',
@@ -148,12 +158,16 @@ export default function MatrixScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView
-        ref={scrollRef}
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
       >
+        <ScrollView
+          ref={scrollRef}
+          style={styles.scrollView}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
         <View style={styles.headerContainer}>
           <BackHeader title="🧮 Matrix Operations" subtitle="Determinant, Inverse, Eigenvalues" />
         </View>
@@ -234,6 +248,7 @@ export default function MatrixScreen() {
             ))}
 
             <FinalAnswer
+              shareText={result.shareText}
               label={
                 result.type === 'determinant' ? '🔢 Determinant' :
                 result.type === 'inverse' ? '🔄 Inverse Matrix' :
@@ -260,8 +275,9 @@ export default function MatrixScreen() {
           </View>
         )}
       </ScrollView>
-    </SafeAreaView>
-  );
+    </KeyboardAvoidingView>
+  </SafeAreaView>
+);
 }
 
 const styles = StyleSheet.create({

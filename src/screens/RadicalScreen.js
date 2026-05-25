@@ -11,6 +11,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveRadicalWithValues } from '../solvers/radicalSolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -25,6 +26,7 @@ export default function RadicalScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -39,7 +41,19 @@ export default function RadicalScreen() {
           parseFloat(coeffB) || 0,
           parseFloat(coeffC) || 0
         );
-        setResult(solverResult);
+        const opLabel = mode === 'simple' ? '√(ax+b) = c' : mode === 'quadratic' ? '√(ax+b) = cx+d' : 'Domain';
+        const shareText = `Radical Equation Result (${opLabel}):\na=${coeffA}, b=${coeffB}, c=${coeffC}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'radical',
+          mode,
+          input: { coeffA, coeffB, coeffC },
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -113,7 +127,10 @@ export default function RadicalScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="√ Result">
+              <FinalAnswer
+                label="√ Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{String(result.result)}</Text>
               </FinalAnswer>
             </View>

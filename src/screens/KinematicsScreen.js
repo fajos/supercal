@@ -21,6 +21,7 @@ import { solveKinematics } from '../solvers/kinematicsSolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { useHistory } from '../utils/history';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -36,6 +37,7 @@ export default function KinematicsScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -52,7 +54,20 @@ export default function KinematicsScreen() {
           displacement: parseFloat(displacement) || 0,
         };
         const solverResult = solveKinematics(mode, params);
-        setResult(solverResult);
+
+        let opLabel = mode.charAt(0).toUpperCase() + mode.slice(1);
+        const shareText = `Kinematics Result (Find ${opLabel}):\nInitial Vel: ${initialVelocity}m/s\nFinal Vel: ${finalVelocity}m/s\nAccel: ${acceleration}m/s²\nTime: ${time}s\nDisplacement: ${displacement}m\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'kinematics',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -128,7 +143,7 @@ export default function KinematicsScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🏃 Result">
+              <FinalAnswer label="🏃 Result" shareText={result.shareText}>
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

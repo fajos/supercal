@@ -19,6 +19,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { ErrorCard } from '../components/ErrorCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveElasticity } from '../solvers/elasticitySolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 export default function ElasticityScreen() {
@@ -32,6 +33,7 @@ export default function ElasticityScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setLoading(true);
@@ -47,7 +49,19 @@ export default function ElasticityScreen() {
           area: parseFloat(area) || 1,
         };
         const solverResult = solveElasticity(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'hookesLaw' ? "Hooke's Law" : mode === 'youngsModulus' ? "Young's Modulus" : 'Elastic Potential Energy';
+        const shareText = `Elasticity Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'elasticity',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -128,7 +142,10 @@ export default function ElasticityScreen() {
                   {renderContent(step.content)}
                 </StepCard>
               ))}
-              <FinalAnswer label="📏 Result">
+              <FinalAnswer
+                label="📏 Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

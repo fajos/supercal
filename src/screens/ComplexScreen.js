@@ -8,6 +8,7 @@ import {
   StyleSheet,
   Platform,
   Dimensions,
+  KeyboardAvoidingView,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
@@ -17,6 +18,7 @@ import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveComplexOperation } from '../solvers/complexSolver';
 import { BackHeader } from '../components/BackHeader';
+import { useHistory } from '../utils/history';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 
@@ -31,21 +33,49 @@ export default function ComplexScreen() {
   const [imag2, setImag2] = useState('-2');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
+    setLoading(true);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
-    try {
-      const z1 = { real: parseFloat(real1) || 0, imag: parseFloat(imag1) || 0 };
-      const z2 = { real: parseFloat(real2) || 0, imag: parseFloat(imag2) || 0 };
-      const solverResult = solveComplexOperation(operation, z1, z2);
-      setResult(solverResult);
-      setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
-    } catch (err) {
-      setError(err.message);
-      setResult(null);
-    }
+
+    setTimeout(() => {
+      try {
+        const z1 = { real: parseFloat(real1) || 0, imag: parseFloat(imag1) || 0 };
+        const z2 = { real: parseFloat(real2) || 0, imag: parseFloat(imag2) || 0 };
+        const solverResult = solveComplexOperation(operation, z1, z2);
+
+        const z1Str = `${z1.real}${z1.imag >= 0 ? '+' : '-'}${Math.abs(z1.imag)}i`;
+        const z2Str = `${z2.real}${z2.imag >= 0 ? '+' : '-'}${Math.abs(z2.imag)}i`;
+
+        let opLabel = operation.charAt(0).toUpperCase() + operation.slice(1);
+        let resStr = typeof solverResult.result === 'object'
+          ? `${solverResult.result.real} ${solverResult.result.imag >= 0 ? '+' : '-'} ${Math.abs(solverResult.result.imag)}i`
+          : solverResult.result;
+
+        const shareText = `Complex Number Result (${opLabel}):\nZ1: ${z1Str}${showSecondInput ? `\nZ2: ${z2Str}` : ''}\nResult: ${resStr}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'complex',
+          operation,
+          input: { z1, z2 },
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
+        scrollRef.current?.scrollTo({ y: 0, animated: true });
+      } catch (err) {
+        setError(err.message);
+        setResult(null);
+      } finally {
+        setLoading(false);
+      }
+    }, 600);
   };
 
   const renderContent = (content) => {
@@ -59,71 +89,77 @@ export default function ComplexScreen() {
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
-      <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
-        <View style={styles.headerContainer}>
-          <BackHeader title="🔄 Complex Numbers" subtitle="a + bi Operations" />
-        </View>
-
-        <InputCard style={isTablet && styles.tabletInputCard}>
-          <View style={styles.modeRow}>
-            {[
-              { id: 'add', label: 'Add' },
-              { id: 'multiply', label: 'Multiply' },
-              { id: 'conjugate', label: 'Conjugate' },
-              { id: 'magnitude', label: 'Magnitude' },
-            ].map(op => (
-              <TouchableOpacity
-                key={op.id}
-                style={[styles.modeBtn, operation === op.id && styles.modeBtnActive]}
-                onPress={() => { setOperation(op.id); setResult(null); }}
-              >
-                <Text style={[styles.modeText, operation === op.id && styles.modeTextActive]}>{op.label}</Text>
-              </TouchableOpacity>
-            ))}
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={{ flex: 1 }}
+      >
+        <ScrollView ref={scrollRef} style={styles.scrollView} contentContainerStyle={styles.scrollContent}>
+          <View style={styles.headerContainer}>
+            <BackHeader title="🔄 Complex Numbers" subtitle="a + bi Operations" />
           </View>
 
-          <Text style={styles.inputLabel}>Real part (a):</Text>
-          <TextInput style={styles.input} value={real1} onChangeText={setReal1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-          
-          <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (b):</Text>
-          <TextInput style={styles.input} value={imag1} onChangeText={setImag1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+          <InputCard style={isTablet && styles.tabletInputCard}>
+            <View style={styles.modeRow}>
+              {[
+                { id: 'add', label: 'Add' },
+                { id: 'multiply', label: 'Multiply' },
+                { id: 'conjugate', label: 'Conjugate' },
+                { id: 'magnitude', label: 'Magnitude' },
+              ].map(op => (
+                <TouchableOpacity
+                  key={op.id}
+                  style={[styles.modeBtn, operation === op.id && styles.modeBtnActive]}
+                  onPress={() => { setOperation(op.id); setResult(null); }}
+                >
+                  <Text style={[styles.modeText, operation === op.id && styles.modeTextActive]}>{op.label}</Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-          {showSecondInput && (
-            <>
-              <Text style={[styles.inputLabel, { marginTop: 12, marginBottom: 4, fontWeight: '600' }]}>Second Number:</Text>
-              <Text style={styles.inputLabel}>Real part (c):</Text>
-              <TextInput style={styles.input} value={real2} onChangeText={setReal2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+            <Text style={styles.inputLabel}>Real part (a):</Text>
+            <TextInput style={styles.input} value={real1} onChangeText={setReal1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-              <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (d):</Text>
-              <TextInput style={styles.input} value={imag2} onChangeText={setImag2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-            </>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (b):</Text>
+            <TextInput style={styles.input} value={imag1} onChangeText={setImag1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+
+            {showSecondInput && (
+              <>
+                <Text style={[styles.inputLabel, { marginTop: 12, marginBottom: 4, fontWeight: '600' }]}>Second Number:</Text>
+                <Text style={styles.inputLabel}>Real part (c):</Text>
+                <TextInput style={styles.input} value={real2} onChangeText={setReal2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (d):</Text>
+                <TextInput style={styles.input} value={imag2} onChangeText={setImag2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+              </>
+            )}
+
+            <SolveButton
+              onPress={handleSolve}
+              label="🔄 CALCULATE"
+              loading={loading}
+            />
+          </InputCard>
+
+          <ErrorCard message={error} />
+
+          {result && (
+            <View style={styles.solutionArea}>
+              {result.steps.map((step, idx) => (
+                <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
+                  {renderContent(step.content)}
+                </StepCard>
+              ))}
+              <FinalAnswer label="🎯 Result" shareText={result.shareText}>
+                <Text style={styles.finalText}>
+                  {typeof result.result === 'object'
+                    ? `${result.result.real} ${result.result.imag >= 0 ? '+' : '-'} ${Math.abs(result.result.imag)}i`
+                    : result.result}
+                </Text>
+              </FinalAnswer>
+            </View>
           )}
-
-          <SolveButton
-            onPress={handleSolve}
-            label="🔄 CALCULATE"
-          />
-        </InputCard>
-
-        <ErrorCard message={error} />
-
-        {result && (
-          <View style={styles.solutionArea}>
-            {result.steps.map((step, idx) => (
-              <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
-                {renderContent(step.content)}
-              </StepCard>
-            ))}
-            <FinalAnswer label="🎯 Result">
-              <Text style={styles.finalText}>
-                {typeof result.result === 'object'
-                  ? `${result.result.real} ${result.result.imag >= 0 ? '+' : '-'} ${Math.abs(result.result.imag)}i`
-                  : result.result}
-              </Text>
-            </FinalAnswer>
-          </View>
-        )}
-      </ScrollView>
+        </ScrollView>
+      </KeyboardAvoidingView>
     </SafeAreaView>
   );
 }

@@ -20,6 +20,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveMagnetic } from '../solvers/magneticSolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -39,6 +40,7 @@ export default function MagneticScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -56,7 +58,19 @@ export default function MagneticScreen() {
           length: parseFloat(length) || 0,
         };
         const solverResult = solveMagnetic(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'chargeForce' ? 'Force on Charge' : 'Force on Wire';
+        const shareText = `Magnetic Field Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'magnetic',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         scrollRef.current?.scrollTo({ y: 0, animated: true });
       } catch (err) {
         setError(err.message);
@@ -149,7 +163,10 @@ export default function MagneticScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🧲 Result">
+              <FinalAnswer
+                label="🧲 Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

@@ -17,6 +17,7 @@ import { colors } from '../theme/colors';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveCircular } from '../solvers/circularSolver';
+import { useHistory } from '../utils/history';
 import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
@@ -38,6 +39,7 @@ export default function CircularScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = async () => {
     setLoading(true);
@@ -57,7 +59,19 @@ export default function CircularScreen() {
         frequency: parseFloat(frequency) || 0,
       };
       const solverResult = solveCircular(mode, params);
-      setResult(solverResult);
+      const opLabel = mode === 'centripetal' ? 'Centripetal Force' : 'Angular Motion';
+      const shareText = `Circular Motion Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+      setResult({ ...solverResult, shareText });
+
+      addToHistory({
+        type: 'circular',
+        mode,
+        input: params,
+        result: solverResult.result,
+        timestamp: new Date().toISOString(),
+      });
+
       setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
     } catch (err) {
       setError(err.message);
@@ -137,7 +151,10 @@ export default function CircularScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🎡 Result">
+              <FinalAnswer
+                label="🎡 Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

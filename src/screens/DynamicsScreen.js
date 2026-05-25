@@ -12,6 +12,7 @@ import { solveDynamics } from '../solvers/dynamicsSolver';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
+import { useHistory } from '../utils/history';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -29,6 +30,7 @@ export default function DynamicsScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -48,7 +50,19 @@ export default function DynamicsScreen() {
           distance: parseFloat(distance) || 0,
         };
         const solverResult = solveDynamics(mode, params);
-        setResult(solverResult);
+
+        const shareText = `Dynamics Result (${mode}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'dynamics',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -147,7 +161,7 @@ export default function DynamicsScreen() {
                   {renderContent(step.content)}
                 </StepCard>
               ))}
-              <FinalAnswer label="💪 Result">
+              <FinalAnswer label="💪 Result" shareText={result.shareText}>
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

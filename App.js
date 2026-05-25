@@ -3,7 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { StyleSheet } from 'react-native';
+import { StyleSheet, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from './src/theme/colors';
@@ -80,6 +80,7 @@ function SolveStackScreen() {
       <SolveStack.Screen name="FinanceScreen" component={FinanceScreen} />
       <SolveStack.Screen name="RadicalScreen" component={RadicalScreen} />
       <SolveStack.Screen name="ExponentialScreen" component={ExponentialScreen} />
+      <SolveStack.Screen name="ConstantsScreen" component={ConstantsScreen} />
     </SolveStack.Navigator>
   );
 }
@@ -171,9 +172,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bgCard,
     borderTopColor: colors.border,
     borderTopWidth: 1,
-    paddingBottom: 8,
+    height: Platform.OS === 'ios' ? 88 : 70,
+    paddingBottom: Platform.OS === 'ios' ? 30 : 14,
     paddingTop: 8,
-    height: 60,
   },
   tabLabel: {
     fontSize: 11,

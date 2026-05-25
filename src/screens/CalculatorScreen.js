@@ -15,6 +15,8 @@ import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
 
 
+import { useHistory } from '../utils/history';
+
 const COLS = 6;
 const STATUS_H = 28;
 const ROWS = 8;
@@ -78,7 +80,7 @@ export default function CalculatorScreen() {
   const [memory, setMemory] = useState(0);
   const [shift, setShift] = useState(false);
   const [isRadian, setIsRadian] = useState(true);
-  const [history, setHistory] = useState([]);
+  const { addToHistory, clearHistory: clearGlobalHistory } = useHistory();
   const [isFinished, setIsFinished] = useState(false);
   const displayScrollRef = useRef(null);
 
@@ -186,7 +188,7 @@ export default function CalculatorScreen() {
         { 
           text: 'Clear', 
           style: 'destructive',
-          onPress: () => setHistory([])
+          onPress: () => clearGlobalHistory()
         },
       ]
     );
@@ -271,7 +273,12 @@ if (action === 'delete') {
       if (expr === '' || expr === 'Error') return;
       const result = evaluate(expr);
       if (result !== 'Error') {
-        setHistory(prev => [...prev, { expr, result, id: Date.now() }]);
+        addToHistory({
+          type: 'calculator',
+          expr,
+          result,
+          timestamp: new Date().toISOString(),
+        });
         setDisplay('');
         setExpression('');
         setIsFinished(false);
@@ -321,54 +328,61 @@ if (action === 'delete') {
   };
 
   const getButtonShadow = (type, isShifted) => {
-    // 3D shadow effect that creates depth
+    // Enhanced 3D shadow effect with more depth and neon glow
     if (type === 'equals') {
       return {
         shadowColor: '#00ffaa',
         shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.4,
-        shadowRadius: 1,
-        elevation: 1,
-        borderBottomWidth: 0,
+        shadowOpacity: 0.6,
+        shadowRadius: 8,
+        elevation: 8,
+        borderBottomWidth: 4,
+        borderBottomColor: '#003322',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.3)',
       };
     }
     if (type === 'clear') {
       return {
         shadowColor: '#ff5555',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.4,
         shadowRadius: 6,
         elevation: 6,
         borderBottomWidth: 4,
-        borderBottomColor: '#1a0a0a',
+        borderBottomColor: '#2a0a0a',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.1)',
       };
     }
     if (type === 'delete') {
       return {
         shadowColor: '#ffaa00',
         shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
+        shadowOpacity: 0.4,
         shadowRadius: 6,
         elevation: 6,
         borderBottomWidth: 4,
-        borderBottomColor: '#1a1a00',
+        borderBottomColor: '#2a1a00',
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(255,255,255,0.1)',
       };
     }
     // Default 3D effect for all buttons
     return {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.5,
-      shadowRadius: 4,
-      elevation: 5,
-      borderBottomWidth: 3,
-      borderBottomColor: 'rgba(0,0,0,0.4)',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.6,
+      shadowRadius: 5,
+      elevation: 6,
+      borderBottomWidth: 4,
+      borderBottomColor: 'rgba(0,0,0,0.5)',
       borderLeftWidth: 1,
       borderLeftColor: 'rgba(255,255,255,0.05)',
       borderRightWidth: 1,
-      borderRightColor: 'rgba(0,0,0,0.2)',
+      borderRightColor: 'rgba(0,0,0,0.3)',
       borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.1)',
+      borderTopColor: 'rgba(255,255,255,0.15)',
     };
   };
 
@@ -445,11 +459,6 @@ if (action === 'delete') {
       <View style={styles.stat}>
         <Text style={styles.st}>{isRadian ? 'RAD' : 'DEG'}  {shift ? '🟢' : '⚫'} Shift</Text>
         <View style={styles.statRight}>
-          {history.length > 0 && (
-            <TouchableOpacity onPress={clearHistory} activeOpacity={0.6} style={styles.clearBtn}>
-              <Text style={styles.clearBtnText}>Clear</Text>
-            </TouchableOpacity>
-          )}
           <Text style={styles.st}>M={memory}</Text>
         </View>
       </View>
@@ -464,27 +473,6 @@ if (action === 'delete') {
           bounces={true}
           keyboardShouldPersistTaps="handled"
         >
-          {history.map((h, idx) => (
-            <View key={h.id}>
-              <TouchableOpacity
-                style={styles.historyItem}
-                onPress={() => {
-                  setDisplay(h.result);
-                  setExpression(h.expr);
-                  setIsFinished(true);
-                }}
-                activeOpacity={0.7}
-              >
-                <Text style={styles.historyExpr} numberOfLines={1} adjustsFontSizeToFit>{h.expr}</Text>
-                <View style={styles.historyResultContainer}>
-                  <Text style={styles.historyEqual}>=</Text>
-                  <Text style={styles.historyResult} numberOfLines={1} adjustsFontSizeToFit>{h.result}</Text>
-                </View>
-              </TouchableOpacity>
-              <View style={styles.divider} />
-            </View>
-          ))}
-
           <View style={styles.currentSection}>
             <Text style={styles.currentExpr} numberOfLines={2} adjustsFontSizeToFit>
               {display}

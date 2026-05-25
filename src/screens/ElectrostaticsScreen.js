@@ -20,6 +20,7 @@ import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { solveElectrostatics } from '../solvers/electrostaticsSolver';
+import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
@@ -37,6 +38,7 @@ export default function ElectrostaticsScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setLoading(true);
@@ -53,7 +55,19 @@ export default function ElectrostaticsScreen() {
           q: parseFloat(q),
         };
         const solverResult = solveElectrostatics(mode, params);
-        setResult(solverResult);
+        const opLabel = mode === 'coulomb' ? "Coulomb's Law" : 'Electric Field Strength';
+        const shareText = `Electrostatics Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'electrostatics',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -134,7 +148,10 @@ export default function ElectrostaticsScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="⚡ Result">
+              <FinalAnswer
+                label="⚡ Result"
+                shareText={result.shareText}
+              >
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>

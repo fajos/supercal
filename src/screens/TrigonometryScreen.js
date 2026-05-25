@@ -48,7 +48,9 @@ export default function TrigonometryScreen() {
     setTimeout(() => {
       try {
         const result = solveTrig(selectedFunc, parseFloat(value));
-        setSolution(result);
+        const shareText = `Trigonometry Result:\nEquation: ${selectedFunc}(x) = ${value}\nPrincipal Sol: ${result.solutions.principal.toFixed(6)} rad (${result.solutions.principalDeg.toFixed(4)}°)\nGeneral: ${result.solutions.general}\n\nSolved with SuperCalc`;
+
+        setSolution({ ...result, shareText });
 
         addToHistory({
           type: 'trigonometry',
@@ -174,7 +176,10 @@ export default function TrigonometryScreen() {
                 </StepCard>
               ))}
 
-              <FinalAnswer label="🎯 Solutions">
+              <FinalAnswer
+                label="🎯 Solutions"
+                shareText={solution.shareText}
+              >
                 <Text style={styles.finalLabel}>Principal Value:</Text>
                 <View>
                   <Text style={styles.finalText}>

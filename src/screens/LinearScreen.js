@@ -55,7 +55,10 @@ export default function LinearScreen() {
         parseFloat(b2) || 0,
         parseFloat(c2) || 0
       );
-      setSolution(result);
+
+      const shareText = `Linear System Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}\n\nSolved with SuperCalc`;
+
+      setSolution({ ...result, shareText });
 
       addToHistory({
         type: 'linear',
@@ -209,7 +212,7 @@ export default function LinearScreen() {
                 </StepCard>
               ))}
 
-              <FinalAnswer label="🎯 Solution">
+              <FinalAnswer label="🎯 Solution" shareText={solution.shareText}>
                 <View>
                   <Text style={styles.finalText}>
                     x = {solution.x.toFixed(4)}
