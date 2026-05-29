@@ -17,6 +17,7 @@ import { InputCard } from '../components/InputCard';
 import { StepCard } from '../components/StepCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { solveLinearSystem } from '../solvers/linearSolver';
+import { solveSimultaneous3x3 } from '../solvers/simultaneousSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
 import { SolveButton } from '../components/SolveButton';
@@ -26,12 +27,21 @@ const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
 
 export default function LinearScreen() {
+  const [mode, setMode] = useState('2x2'); // '2x2' or '3x3'
+
+  // 2x2 State
   const [a1, setA1] = useState('2');
   const [b1, setB1] = useState('1');
   const [c1, setC1] = useState('10');
   const [a2, setA2] = useState('1');
   const [b2, setB2] = useState('-1');
   const [c2, setC2] = useState('2');
+
+  // 3x3 State
+  const [a1_3, setA1_3] = useState('2'); const [b1_3, setB1_3] = useState('1'); const [c1_3, setC1_3] = useState('-1'); const [d1_3, setD1_3] = useState('8');
+  const [a2_3, setA2_3] = useState('-3'); const [b2_3, setB2_3] = useState('-1'); const [c2_3, setC2_3] = useState('2'); const [d2_3, setD2_3] = useState('-11');
+  const [a3_3, setA3_3] = useState('-2'); const [b3_3, setB3_3] = useState('1'); const [c3_3, setC3_3] = useState('2'); const [d3_3, setD3_3] = useState('-3');
+
   const [solution, setSolution] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -44,25 +54,51 @@ export default function LinearScreen() {
 
     setTimeout(() => {
       try {
-        const result = solveLinearSystem(
-          parseFloat(a1) || 0,
-          parseFloat(b1) || 0,
-          parseFloat(c1) || 0,
-          parseFloat(a2) || 0,
-          parseFloat(b2) || 0,
-          parseFloat(c2) || 0
-        );
+        let result;
+        let shareText;
+        let historyData;
 
-        const shareText = `Linear System Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}\n\nSolved with SuperCalc`;
+        if (mode === '2x2') {
+          result = solveLinearSystem(
+            parseFloat(a1) || 0,
+            parseFloat(b1) || 0,
+            parseFloat(c1) || 0,
+            parseFloat(a2) || 0,
+            parseFloat(b2) || 0,
+            parseFloat(c2) || 0
+          );
+
+          shareText = `Linear System (2x2) Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}\n\nSolved with SuperCalc`;
+
+          historyData = {
+            type: 'linear_2x2',
+            input: { a1, b1, c1, a2, b2, c2 },
+            result: { x: result.x, y: result.y },
+            timestamp: new Date().toISOString(),
+          };
+        } else {
+          result = solveSimultaneous3x3(
+            parseFloat(a1_3) || 0, parseFloat(b1_3) || 0, parseFloat(c1_3) || 0, parseFloat(d1_3) || 0,
+            parseFloat(a2_3) || 0, parseFloat(b2_3) || 0, parseFloat(c2_3) || 0, parseFloat(d2_3) || 0,
+            parseFloat(a3_3) || 0, parseFloat(b3_3) || 0, parseFloat(c3_3) || 0, parseFloat(d3_3) || 0
+          );
+
+          shareText = `Linear System (3x3) Result:\nEq1: ${a1_3}x + ${b1_3}y + ${c1_3}z = ${d1_3}\nEq2: ${a2_3}x + ${b2_3}y + ${c2_3}z = ${d2_3}\nEq3: ${a3_3}x + ${b3_3}y + ${c3_3}z = ${d3_3}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}, z=${result.z.toFixed(4)}\n\nSolved with SuperCalc`;
+
+          historyData = {
+            type: 'linear_3x3',
+            input: {
+              eq1: [a1_3, b1_3, c1_3, d1_3],
+              eq2: [a2_3, b2_3, c2_3, d2_3],
+              eq3: [a3_3, b3_3, c3_3, d3_3]
+            },
+            result: { x: result.x, y: result.y, z: result.z },
+            timestamp: new Date().toISOString(),
+          };
+        }
 
         setSolution({ ...result, shareText });
-
-        addToHistory({
-          type: 'linear',
-          input: { a1, b1, c1, a2, b2, c2 },
-          result: { x: result.x, y: result.y },
-          timestamp: new Date().toISOString(),
-        });
+        addToHistory(historyData);
 
         setTimeout(() => {
           scrollRef.current?.scrollTo({ y: 0, animated: true });
@@ -116,80 +152,153 @@ export default function LinearScreen() {
         >
           {/* Header */}
           <View style={styles.headerContainer}>
-            <BackHeader title="📏 Linear System" subtitle="2×2 Cramer's Rule" />
+            <BackHeader title="📏 Linear System" subtitle={mode === '2x2' ? "2×2 Cramer's Rule" : "3×3 Cramer's Rule"} />
+          </View>
+
+          {/* Mode Selector */}
+          <View style={styles.modeSelector}>
+            <TouchableOpacity
+              style={[styles.modeButton, mode === '2x2' && styles.modeButtonActive]}
+              onPress={() => {
+                setMode('2x2');
+                setSolution(null);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Text style={[styles.modeText, mode === '2x2' && styles.modeTextActive]}>2 × 2</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={[styles.modeButton, mode === '3x3' && styles.modeButtonActive]}
+              onPress={() => {
+                setMode('3x3');
+                setSolution(null);
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              }}
+            >
+              <Text style={[styles.modeText, mode === '3x3' && styles.modeTextActive]}>3 × 3</Text>
+            </TouchableOpacity>
           </View>
 
           {/* Input Card */}
           <InputCard>
-            <View style={styles.inputLabel}>
-              <Text style={styles.inputLabel}>Equation 1:</Text>
-            </View>
-            <View style={styles.eqRow}>
-              <TextInput
-                style={styles.eqInput}
-                value={a1}
-                onChangeText={setA1}
-                keyboardType="decimal-pad"
-                placeholder="a₁"
-                placeholderTextColor={colors.textSecondary}
-              />
-              <Text style={styles.eqSep}>x +</Text>
-              <TextInput
-                style={styles.eqInput}
-                value={b1}
-                onChangeText={setB1}
-                keyboardType="decimal-pad"
-                placeholder="b₁"
-                placeholderTextColor={colors.textSecondary}
-              />
-              <Text style={styles.eqSep}>y =</Text>
-              <TextInput
-                style={styles.eqInput}
-                value={c1}
-                onChangeText={setC1}
-                keyboardType="decimal-pad"
-                placeholder="c₁"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
+            {mode === '2x2' ? (
+              <>
+                <View style={styles.inputLabel}>
+                  <Text style={styles.inputLabel}>Equation 1:</Text>
+                </View>
+                <View style={styles.eqRow}>
+                  <TextInput
+                    style={styles.eqInput}
+                    value={a1}
+                    onChangeText={setA1}
+                    keyboardType="decimal-pad"
+                    placeholder="a₁"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                  <Text style={styles.eqSep}>x +</Text>
+                  <TextInput
+                    style={styles.eqInput}
+                    value={b1}
+                    onChangeText={setB1}
+                    keyboardType="decimal-pad"
+                    placeholder="b₁"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                  <Text style={styles.eqSep}>y =</Text>
+                  <TextInput
+                    style={styles.eqInput}
+                    value={c1}
+                    onChangeText={setC1}
+                    keyboardType="decimal-pad"
+                    placeholder="c₁"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                </View>
 
-            <View style={styles.divider} />
+                <View style={styles.divider} />
 
-            <View style={styles.inputLabel}>
-              <Text style={styles.inputLabel}>Equation 2:</Text>
-            </View>
-            <View style={styles.eqRow}>
-              <TextInput
-                style={styles.eqInput}
-                value={a2}
-                onChangeText={setA2}
-                keyboardType="decimal-pad"
-                placeholder="a₂"
-                placeholderTextColor={colors.textSecondary}
-              />
-              <Text style={styles.eqSep}>x +</Text>
-              <TextInput
-                style={styles.eqInput}
-                value={b2}
-                onChangeText={setB2}
-                keyboardType="decimal-pad"
-                placeholder="b₂"
-                placeholderTextColor={colors.textSecondary}
-              />
-              <Text style={styles.eqSep}>y =</Text>
-              <TextInput
-                style={styles.eqInput}
-                value={c2}
-                onChangeText={setC2}
-                keyboardType="decimal-pad"
-                placeholder="c₂"
-                placeholderTextColor={colors.textSecondary}
-              />
-            </View>
+                <View style={styles.inputLabel}>
+                  <Text style={styles.inputLabel}>Equation 2:</Text>
+                </View>
+                <View style={styles.eqRow}>
+                  <TextInput
+                    style={styles.eqInput}
+                    value={a2}
+                    onChangeText={setA2}
+                    keyboardType="decimal-pad"
+                    placeholder="a₂"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                  <Text style={styles.eqSep}>x +</Text>
+                  <TextInput
+                    style={styles.eqInput}
+                    value={b2}
+                    onChangeText={setB2}
+                    keyboardType="decimal-pad"
+                    placeholder="b₂"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                  <Text style={styles.eqSep}>y =</Text>
+                  <TextInput
+                    style={styles.eqInput}
+                    value={c2}
+                    onChangeText={setC2}
+                    keyboardType="decimal-pad"
+                    placeholder="c₂"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                </View>
+              </>
+            ) : (
+              <>
+                <View style={styles.inputLabel}>
+                  <Text style={styles.inputLabel}>Equation 1: a₁x + b₁y + c₁z = d₁</Text>
+                </View>
+                <View style={styles.eqRow}>
+                  <TextInput style={styles.eqInput} value={a1_3} onChangeText={setA1_3} keyboardType="decimal-pad" placeholder="a₁" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>x +</Text>
+                  <TextInput style={styles.eqInput} value={b1_3} onChangeText={setB1_3} keyboardType="decimal-pad" placeholder="b₁" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>y +</Text>
+                  <TextInput style={styles.eqInput} value={c1_3} onChangeText={setC1_3} keyboardType="decimal-pad" placeholder="c₁" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>z =</Text>
+                  <TextInput style={styles.eqInput} value={d1_3} onChangeText={setD1_3} keyboardType="decimal-pad" placeholder="d₁" placeholderTextColor={colors.textSecondary} />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.inputLabel}>
+                  <Text style={styles.inputLabel}>Equation 2: a₂x + b₂y + c₂z = d₂</Text>
+                </View>
+                <View style={styles.eqRow}>
+                  <TextInput style={styles.eqInput} value={a2_3} onChangeText={setA2_3} keyboardType="decimal-pad" placeholder="a₂" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>x +</Text>
+                  <TextInput style={styles.eqInput} value={b2_3} onChangeText={setB2_3} keyboardType="decimal-pad" placeholder="b₂" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>y +</Text>
+                  <TextInput style={styles.eqInput} value={c2_3} onChangeText={setC2_3} keyboardType="decimal-pad" placeholder="c₂" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>z =</Text>
+                  <TextInput style={styles.eqInput} value={d2_3} onChangeText={setD2_3} keyboardType="decimal-pad" placeholder="d₂" placeholderTextColor={colors.textSecondary} />
+                </View>
+
+                <View style={styles.divider} />
+
+                <View style={styles.inputLabel}>
+                  <Text style={styles.inputLabel}>Equation 3: a₃x + b₃y + c₃z = d₃</Text>
+                </View>
+                <View style={styles.eqRow}>
+                  <TextInput style={styles.eqInput} value={a3_3} onChangeText={setA3_3} keyboardType="decimal-pad" placeholder="a₃" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>x +</Text>
+                  <TextInput style={styles.eqInput} value={b3_3} onChangeText={setB3_3} keyboardType="decimal-pad" placeholder="b₃" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>y +</Text>
+                  <TextInput style={styles.eqInput} value={c3_3} onChangeText={setC3_3} keyboardType="decimal-pad" placeholder="c₃" placeholderTextColor={colors.textSecondary} />
+                  <Text style={styles.eqSep}>z =</Text>
+                  <TextInput style={styles.eqInput} value={d3_3} onChangeText={setD3_3} keyboardType="decimal-pad" placeholder="d₃" placeholderTextColor={colors.textSecondary} />
+                </View>
+              </>
+            )}
 
             <SolveButton
               onPress={handleSolve}
-              label="📏 SOLVE SYSTEM"
+              label={mode === '2x2' ? "📏 SOLVE 2×2 SYSTEM" : "⚡ SOLVE 3×3 SYSTEM"}
               loading={loading}
             />
           </InputCard>
@@ -213,11 +322,16 @@ export default function LinearScreen() {
               <FinalAnswer label="🎯 Solution" shareText={solution.shareText}>
                 <View>
                   <Text style={styles.finalText}>
-                    x = {solution.x.toFixed(4)}
+                    x = {solution.x.toFixed(mode === '3x3' ? 6 : 4)}
                   </Text>
                   <Text style={styles.finalText}>
-                    y = {solution.y.toFixed(4)}
+                    y = {solution.y.toFixed(mode === '3x3' ? 6 : 4)}
                   </Text>
+                  {mode === '3x3' && (
+                    <Text style={styles.finalText}>
+                      z = {solution.z.toFixed(6)}
+                    </Text>
+                  )}
                 </View>
               </FinalAnswer>
             </View>
@@ -283,6 +397,36 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     fontSize: 13,
     fontStyle: 'italic',
+  },
+  modeSelector: {
+    flexDirection: 'row',
+    backgroundColor: colors.bgCard,
+    borderRadius: 12,
+    padding: 4,
+    marginBottom: 16,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modeButton: {
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 8,
+  },
+  modeButtonActive: {
+    backgroundColor: colors.bgInput,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modeText: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  modeTextActive: {
+    color: colors.accent,
   },
   divider: {
     height: 1,

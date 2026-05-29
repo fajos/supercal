@@ -27,11 +27,7 @@ const isTablet = SCREEN_WIDTH >= 600;
 
 export default function PolynomialScreen() {
   const [degree, setDegree] = useState('3');
-  const [a, setA] = useState('1');
-  const [b, setB] = useState('-6');
-  const [c, setC] = useState('11');
-  const [d, setD] = useState('-6');
-  const [e, setE] = useState('0');
+  const [coeffs, setCoeffs] = useState(['1', '-6', '11', '-6', '0', '0']);
   const [solution, setSolution] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -44,24 +40,25 @@ export default function PolynomialScreen() {
 
     setTimeout(() => {
       try {
-        const deg = parseInt(degree) || 3;
-        const coeffs = [];
+        const deg = parseInt(degree);
+        if (isNaN(deg) || deg < 1 || deg > 5) {
+          throw new Error('Please enter a degree between 1 and 5');
+        }
 
-        // Collect coefficients based on degree
-        coeffs.push(parseFloat(a) || 0);
-        if (deg >= 2) coeffs.push(parseFloat(b) || 0);
-        if (deg >= 3) coeffs.push(parseFloat(c) || 0);
-        if (deg >= 4) coeffs.push(parseFloat(d) || 0);
-        if (deg >= 5) coeffs.push(parseFloat(e) || 0);
+        // Collect exactly deg + 1 coefficients
+        const coefficients = [];
+        for (let i = 0; i <= deg; i++) {
+          coefficients.push(parseFloat(coeffs[i]) || 0);
+        }
 
-        const result = solvePolynomial(coeffs);
-        const shareText = `Polynomial Result:\nDegree: ${deg}\nCoefficients: ${coeffs.join(', ')}\nRoots: ${result.roots.map((r, i) => `x${i+1}=${typeof r === 'string' ? r : r.toFixed(6)}`).join(', ')}\n\nSolved with SuperCalc`;
+        const result = solvePolynomial(coefficients);
+        const shareText = `Polynomial Result:\nDegree: ${deg}\nCoefficients: ${coefficients.join(', ')}\nRoots: ${result.roots.map((r, i) => `x${i+1}=${typeof r === 'string' ? r : r.toFixed(6)}`).join(', ')}\n\nSolved with SuperCalc`;
 
         setSolution({ ...result, shareText });
 
         addToHistory({
           type: 'polynomial',
-          input: { degree: deg, coefficients: coeffs },
+          input: { degree: deg, coefficients: coefficients },
           result: result.roots,
           timestamp: new Date().toISOString(),
         });
@@ -76,6 +73,19 @@ export default function PolynomialScreen() {
         setLoading(false);
       }
     }, 600);
+  };
+
+  const updateCoeff = (index, value) => {
+    const newCoeffs = [...coeffs];
+    newCoeffs[index] = value;
+    setCoeffs(newCoeffs);
+  };
+
+  const getCoeffLabel = (index, deg) => {
+    const power = deg - index;
+    if (power === 0) return 'constant term';
+    if (power === 1) return 'x term';
+    return `x^${power} term`;
   };
 
   const renderContent = (content) => {
@@ -109,6 +119,8 @@ export default function PolynomialScreen() {
     });
   };
 
+  const degVal = parseInt(degree) || 0;
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -130,66 +142,43 @@ export default function PolynomialScreen() {
           {/* Input Card */}
           <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.inputHeader}>
-              <Text style={styles.inputLabel}>Degree:</Text>
+              <Text style={styles.inputLabel}>Degree (1-5):</Text>
             </View>
             <View style={styles.degreeContainer}>
               <TextInput
                 style={styles.degreeInput}
                 value={degree}
-                onChangeText={setDegree}
+                onChangeText={(val) => {
+                  setDegree(val);
+                  setSolution(null);
+                }}
                 keyboardType="number-pad"
                 placeholder="3"
                 placeholderTextColor={colors.textSecondary}
+                maxLength={1}
               />
             </View>
 
             <View style={styles.inputHeader}>
               <Text style={styles.inputLabel}>
-                Coefficients (highest to lowest degree):
+                Coefficients:
               </Text>
             </View>
 
             <View style={styles.coeffGrid}>
-              <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>a (x{degree})</Text>
-                <TextInput
-                  style={styles.coeffInput}
-                  value={a}
-                  onChangeText={setA}
-                  keyboardType="decimal-pad"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>b (x{parseInt(degree) - 1})</Text>
-                <TextInput
-                  style={styles.coeffInput}
-                  value={b}
-                  onChangeText={setB}
-                  keyboardType="decimal-pad"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>c (x{parseInt(degree) - 2})</Text>
-                <TextInput
-                  style={styles.coeffInput}
-                  value={c}
-                  onChangeText={setC}
-                  keyboardType="decimal-pad"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
-              <View style={styles.coeffItem}>
-                <Text style={styles.coeffLabel}>d (x{parseInt(degree) - 3})</Text>
-                <TextInput
-                  style={styles.coeffInput}
-                  value={d}
-                  onChangeText={setD}
-                  keyboardType="decimal-pad"
-                  placeholderTextColor={colors.textSecondary}
-                />
-              </View>
+              {Array.from({ length: degVal + 1 }).map((_, i) => (
+                <View key={i} style={styles.coeffItem}>
+                  <Text style={styles.coeffLabel}>{getCoeffLabel(i, degVal)}</Text>
+                  <TextInput
+                    style={styles.coeffInput}
+                    value={coeffs[i]}
+                    onChangeText={(text) => updateCoeff(i, text)}
+                    keyboardType="decimal-pad"
+                    placeholder="0"
+                    placeholderTextColor={colors.textSecondary}
+                  />
+                </View>
+              ))}
             </View>
 
             <SolveButton

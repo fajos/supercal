@@ -113,6 +113,7 @@ export default function MatrixScreen() {
 
         addToHistory({
           type: 'matrix',
+          mode: operation,
           input: { size, matrix, operation },
           result: solverResult,
           timestamp: new Date().toISOString(),
@@ -214,7 +215,6 @@ export default function MatrixScreen() {
                 icon={op.icon}
                 active={operation === op.value}
                 onPress={() => {
-                  Haptics.selectionAsync();
                   setOperation(op.value);
                   setResult(null);
                 }}

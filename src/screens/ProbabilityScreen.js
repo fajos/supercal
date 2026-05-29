@@ -18,6 +18,7 @@ import { FinalAnswer } from '../components/FinalAnswer';
 import { SolveButton } from '../components/SolveButton';
 import { ErrorCard } from '../components/ErrorCard';
 import { ModeChip } from '../components/ModeChip';
+import { useHistory } from '../utils/history';
 import { solveProbability } from '../solvers/probabilitySolver';
 import { BackHeader } from '../components/BackHeader';
 
@@ -33,16 +34,30 @@ export default function ProbabilityScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setError(null);
     setLoading(true);
     try {
-      const params = mode === 'binomial' 
-        ? { n: parseInt(n), k: parseInt(r), p: parseFloat(p) }
-        : { n: parseInt(n), r: parseInt(r) };
+      const valN = parseInt(n);
+      const valK = parseInt(r);
+      const valP = parseFloat(p);
+
+      const params = mode === 'binomial'
+        ? { n: valN, k: valK, p: valP }
+        : { n: valN, r: valK };
       const solverResult = solveProbability(mode, params);
       setResult(solverResult);
+
+      addToHistory({
+        type: 'probability',
+        mode,
+        input: { n: valN, r: valK, p: mode === 'binomial' ? valP : undefined },
+        result: { value: solverResult.result },
+        timestamp: new Date().toISOString(),
+      });
+
       setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
     } catch (err) {
       setError(err.message);
@@ -80,7 +95,6 @@ export default function ProbabilityScreen() {
                   label={m.label}
                   active={mode === m.id}
                   onPress={() => {
-                    Haptics.selectionAsync();
                     setMode(m.id);
                     setResult(null);
                   }}
@@ -161,19 +175,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   modeBtn: {
-    paddingVertical: 10,
-    paddingHorizontal: 8,
-    backgroundColor: colors.bgInput,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    alignItems: 'center',
     minWidth: '30%',
     flex: 1,
   },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
   stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },

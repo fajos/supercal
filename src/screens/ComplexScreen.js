@@ -111,7 +111,6 @@ export default function ComplexScreen() {
                   label={op.label}
                   active={operation === op.id}
                   onPress={() => {
-                    Haptics.selectionAsync();
                     setOperation(op.id);
                     setResult(null);
                   }}

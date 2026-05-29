@@ -122,7 +122,7 @@ export default function KinematicsScreen() {
             <Text style={[styles.inputLabel, { marginTop: 12 }]}>Time (t) seconds:</Text>
             <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
-            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Displacement (Δx) meters:</Text>
+            <Text style={[styles.inputLabel, { marginTop: 12 }]}>Displacement (s) meters:</Text>
             <TextInput style={styles.input} value={displacement} onChangeText={setDisplacement} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
 
             <SolveButton

@@ -105,7 +105,6 @@ export default function ElasticityScreen() {
                   label={m.label}
                   active={mode === m.id}
                   onPress={() => {
-                    Haptics.selectionAsync();
                     setMode(m.id);
                     setResult(null);
                   }}

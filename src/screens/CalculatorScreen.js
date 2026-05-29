@@ -13,6 +13,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import * as Haptics from 'expo-haptics';
+import { useHistory } from '../utils/history';
+import { colors } from '../theme/colors';
 
 const COLS = 6;
 const STATUS_H = 28;
@@ -201,7 +203,21 @@ export default function CalculatorScreen() {
   const [memory, setMemory] = useState(0);
   const [shift, setShift] = useState(false);
   const [isRadian, setIsRadian] = useState(true);
-  const [history, setHistory] = useState([]);
+  const { history, addToHistory, clearHistory: clearAllHistory } = useHistory();
+
+  const calculatorHistory = useMemo(() =>
+    history
+      .filter(h => h && h.type === 'calculator')
+      .map(h => ({
+        ...h,
+        // Ensure we always have strings for rendering to avoid React child errors
+        expr: String(h.expr || ''),
+        result: typeof h.result === 'object' ? JSON.stringify(h.result) : String(h.result ?? ''),
+      }))
+      .reverse(),
+    [history]
+  );
+
   const [isFinished, setIsFinished] = useState(false);
   const [isPrompt, setIsPrompt] = useState(true);
   
@@ -240,7 +256,7 @@ export default function CalculatorScreen() {
       const nCr = (n, r) => fact(n) / (fact(r) * fact(n - r));
       const nPr = (n, r) => fact(n) / fact(n - r);
 
-      const lastResult = history.length > 0 ? history[history.length - 1].result : '0';
+      const lastResult = calculatorHistory.length > 0 ? calculatorHistory[calculatorHistory.length - 1].result : '0';
       let p = expr
         .replace(/Ans/g, `(${lastResult})`)
         .replace(/Rand/g, () => `(${Math.random()})`)
@@ -341,11 +357,11 @@ export default function CalculatorScreen() {
         { 
           text: 'Clear', 
           style: 'destructive',
-          onPress: () => setHistory([])
+          onPress: () => clearAllHistory()
         },
       ]
     );
-  }, []);
+  }, [clearAllHistory]);
 
   const press = useCallback((action, val) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -428,7 +444,13 @@ export default function CalculatorScreen() {
       if (expr === '' || expr === 'Error') return;
       const result = evaluate(expr);
       if (result !== 'Error') {
-        setHistory(prev => [...prev, { expr, result, id: Date.now() }]);
+        addToHistory({
+          type: 'calculator',
+          expr,
+          result,
+          id: Date.now(),
+          timestamp: new Date().toISOString(),
+        });
         setDisplay('');
         setExpression('');
         setIsFinished(false);
@@ -475,9 +497,9 @@ export default function CalculatorScreen() {
   }, [isPrompt, isFinished, display, expression, memory, evaluate]);
 
   const scrollViewContent = useMemo(() => (
-    <>
-      {history.map((h) => (
-        <View key={h.id}>
+    <React.Fragment>
+      {calculatorHistory.map((h, index) => (
+        <View key={h.id || h.timestamp || `calc-hist-${index}`}>
           <TouchableOpacity
             style={styles.historyItem}
             onPress={() => {
@@ -502,12 +524,12 @@ export default function CalculatorScreen() {
         style={styles.currentSection}
       >
         <Text style={styles.currentExpr} numberOfLines={2} adjustsFontSizeToFit>
-          {display}
+          {String(display)}
           {isPrompt && <BlinkCursor />}
         </Text>
       </View>
-    </>
-  ), [history, display, isPrompt]);
+    </React.Fragment>
+  ), [calculatorHistory, display, isPrompt]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -619,7 +641,7 @@ export default function CalculatorScreen() {
 const styles = StyleSheet.create({
   safe: {
     flex: 1,
-    backgroundColor: '#080812',
+    backgroundColor: colors.bgPrimary,
   },
   stat: {
     flexDirection: 'row',
@@ -628,7 +650,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 10,
     paddingVertical: 4,
     height: STATUS_H,
-    backgroundColor: '#0c0c1a',
+    backgroundColor: colors.bgSecondary,
   },
   statRight: {
     flexDirection: 'row',
@@ -641,21 +663,21 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
   },
   clearBtn: {
-    backgroundColor: '#2a1518',
+    backgroundColor: 'rgba(255, 71, 87, 0.1)',
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
   },
   clearBtnText: {
-    color: '#ff5555',
+    color: colors.danger,
     fontSize: 8,
     fontWeight: '600',
   },
   disp: {
     flex: 1,
-    backgroundColor: '#060618',
+    backgroundColor: colors.bgInput,
     borderBottomWidth: 1,
-    borderBottomColor: '#00ffcc',
+    borderBottomColor: colors.accent,
     width: '100%',
     maxWidth: 1000,
     alignSelf: 'center',
@@ -671,12 +693,12 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   historyExpr: {
-    color: '#00ffcc',
+    color: colors.accent,
     fontSize: 24,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'left',
     fontWeight: '700',
-    textShadowColor: 'rgba(0, 255, 204, 0.3)',
+    textShadowColor: 'rgba(0, 212, 170, 0.3)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
     opacity: 0.8,
@@ -688,7 +710,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   historyEqual: {
-    color: '#00ffcc',
+    color: colors.accent,
     fontSize: 20,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
@@ -696,18 +718,18 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   historyResult: {
-    color: '#00ffcc',
+    color: colors.accent,
     fontSize: 24,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     textAlign: 'right',
-    textShadowColor: 'rgba(0, 255, 204, 0.3)',
+    textShadowColor: 'rgba(0, 212, 170, 0.3)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 6,
   },
   divider: {
     height: 1,
-    backgroundColor: '#1a1a30',
+    backgroundColor: colors.border,
     marginVertical: 6,
     marginHorizontal: 4,
     borderStyle: 'dashed',
@@ -721,18 +743,18 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   currentExpr: {
-    color: '#00ffcc',
+    color: colors.accent,
     fontSize: 42,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'left',
     fontWeight: '900',
-    textShadowColor: 'rgba(0, 255, 204, 0.6)',
+    textShadowColor: 'rgba(0, 212, 170, 0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 15,
   },
   kb: {
     paddingBottom: 0,
-    backgroundColor: '#080812',
+    backgroundColor: colors.bgPrimary,
     width: '100%',
     maxWidth: 1000,
     alignSelf: 'center',
@@ -769,11 +791,11 @@ const styles = StyleSheet.create({
     textShadowRadius: 1,
   },
   promptCursor: {
-    color: '#00ffcc',
+    color: colors.accent,
     fontSize: 28,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '900',
-    textShadowColor: 'rgba(0, 255, 204, 0.6)',
+    textShadowColor: 'rgba(0, 212, 170, 0.6)',
     textShadowOffset: { width: 0, height: 0 },
     textShadowRadius: 12,
   },

@@ -31,7 +31,8 @@ export default function CalculusScreen() {
   const [mode, setMode] = useState('derivative');
   const [expression, setExpression] = useState('x^3 + 2x^2 - 5x + 1');
   const [variable, setVariable] = useState('x');
-  const [point, setPoint] = useState('2');
+  const [point, setPoint] = useState('0');
+  const [upperBound, setUpperBound] = useState('5');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -78,8 +79,7 @@ export default function CalculusScreen() {
 
         } else if (mode === 'integral') {
           const lower = parseFloat(point) || 0;
-          // Using 5 as a default upper bound for now
-          const upper = 5;
+          const upper = parseFloat(upperBound) || 0;
 
           const intResult = solveIntegral(expression, variable, lower, upper);
           const shareText = `Integral Result:\nIntegrand: f(${variable}) = ${expression}\nBounds: [${lower}, ${upper}]\nValue: ${intResult.value.toFixed(6)}\n\nSolved with SuperCalc`;
@@ -136,13 +136,13 @@ export default function CalculusScreen() {
               <ModeChip
                 label="d/dx Derivative"
                 active={mode === 'derivative'}
-                onPress={() => { Haptics.selectionAsync(); setMode('derivative'); setResult(null); }}
+                onPress={() => { setMode('derivative'); setResult(null); }}
                 style={styles.modeBtn}
               />
               <ModeChip
                 label="∫ Integral"
                 active={mode === 'integral'}
-                onPress={() => { Haptics.selectionAsync(); setMode('integral'); setResult(null); }}
+                onPress={() => { setMode('integral'); setResult(null); }}
                 style={styles.modeBtn}
               />
             </View>
@@ -159,7 +159,7 @@ export default function CalculusScreen() {
             />
 
             <View style={styles.varRow}>
-              <View style={styles.varItem}>
+              <View style={[styles.varItem, { flex: 0.8 }]}>
                 <Text style={styles.varLabel}>Variable</Text>
                 <TextInput
                   style={styles.varInput}
@@ -170,7 +170,7 @@ export default function CalculusScreen() {
               </View>
               <View style={styles.varItem}>
                 <Text style={styles.varLabel}>
-                  {mode === 'derivative' ? 'Evaluate at' : 'Lower bound'}
+                  {mode === 'derivative' ? 'Evaluate at' : 'Lower bound (a)'}
                 </Text>
                 <TextInput
                   style={styles.varInput}
@@ -179,6 +179,17 @@ export default function CalculusScreen() {
                   keyboardType="decimal-pad"
                 />
               </View>
+              {mode === 'integral' && (
+                <View style={styles.varItem}>
+                  <Text style={styles.varLabel}>Upper bound (b)</Text>
+                  <TextInput
+                    style={styles.varInput}
+                    value={upperBound}
+                    onChangeText={setUpperBound}
+                    keyboardType="decimal-pad"
+                  />
+                </View>
+              )}
             </View>
 
             <SolveButton
@@ -212,9 +223,14 @@ export default function CalculusScreen() {
                     <Text style={styles.finalExpr}>
                       f'({variable}) = {result.expression}
                     </Text>
-                    {result.pointValue !== null && (
+                    {result.pointValue !== null && !isNaN(result.pointValue) && (
                       <Text style={styles.finalPoint}>
                         f'({point}) = {result.pointValue.toFixed(6)}
+                      </Text>
+                    )}
+                    {result.pointValue !== null && isNaN(result.pointValue) && (
+                      <Text style={[styles.finalPoint, { color: colors.error }]}>
+                        f'({point}) = Calculation Error
                       </Text>
                     )}
                   </View>

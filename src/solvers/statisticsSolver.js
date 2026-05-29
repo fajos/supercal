@@ -344,8 +344,9 @@ steps.push({
           ]
     ),
     { type: 'text', text: '' },
-    { type: 'text', text: `Standard Deviation: ${stdDev.toFixed(4)}` },
-    { type: 'text', text: `Coefficient of Variation (CV): ${((stdDev / Math.abs(mean)) * 100).toFixed(1)}%` },
+    { type: 'text', text: `Standard Deviation (σ): ${stdDev.toFixed(4)}` },
+    { type: 'text', text: 'Coefficient of Variation (CV) = (σ / |μ|) × 100%' },
+    { type: 'highlight', text: `CV = (${stdDev.toFixed(4)} / ${Math.abs(mean).toFixed(4)}) × 100% = ${((stdDev / Math.abs(mean)) * 100).toFixed(2)}%` },
     { type: 'text', text: ((stdDev / Math.abs(mean)) * 100) < 25 
       ? 'Low variability relative to the mean' 
       : ((stdDev / Math.abs(mean)) * 100) < 50 

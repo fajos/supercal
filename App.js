@@ -22,7 +22,6 @@ import StatisticsScreen from './src/screens/StatisticsScreen';
 import LinearScreen from './src/screens/LinearScreen';
 import PolynomialScreen from './src/screens/PolynomialScreen';
 import TrigonometryScreen from './src/screens/TrigonometryScreen';
-import SimultaneousScreen from './src/screens/SimultaneousScreen';
 import ProbabilityScreen from './src/screens/ProbabilityScreen';
 import ComplexScreen from './src/screens/ComplexScreen';
 import SequenceScreen from './src/screens/SequenceScreen';
@@ -71,7 +70,6 @@ function SolveStackScreen() {
       <SolveStack.Screen name="LinearScreen" component={LinearScreen} />
       <SolveStack.Screen name="PolynomialScreen" component={PolynomialScreen} />
       <SolveStack.Screen name="TrigonometryScreen" component={TrigonometryScreen} />
-      <SolveStack.Screen name="SimultaneousScreen" component={SimultaneousScreen} />
       <SolveStack.Screen name="ProbabilityScreen" component={ProbabilityScreen} />
       <SolveStack.Screen name="ComplexScreen" component={ComplexScreen} />
       <SolveStack.Screen name="CalculusScreen" component={CalculusScreen} />

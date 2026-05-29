@@ -123,7 +123,6 @@ export default function TrigonometryScreen() {
                   label={func.label}
                   active={selectedFunc === func.value}
                   onPress={() => {
-                    Haptics.selectionAsync();
                     setSelectedFunc(func.value);
                   }}
                   style={styles.modeBtn}

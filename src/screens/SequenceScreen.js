@@ -18,6 +18,8 @@ import { InputCard } from '../components/InputCard';
 import { FinalAnswer } from '../components/FinalAnswer';
 import { ErrorCard } from '../components/ErrorCard';
 import { SolveButton } from '../components/SolveButton';
+import { ModeChip } from '../components/ModeChip';
+import { useHistory } from '../utils/history';
 import { solveSequence } from '../solvers/sequenceSolver';
 import { BackHeader } from '../components/BackHeader';
 
@@ -33,21 +35,34 @@ export default function SequenceScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
     setTimeout(() => {
       try {
+        const valA1 = parseFloat(a1) || 0;
+        const valDiff = parseFloat(difference) || 0;
+        const valN = parseInt(n) || 1;
+
         const solverResult = solveSequence(
           type,
-          parseFloat(a1) || 0,
-          parseFloat(difference) || 0,
-          parseInt(n) || 1
+          valA1,
+          valDiff,
+          valN
         );
         setResult(solverResult);
+
+        addToHistory({
+          type: 'sequence',
+          mode: type,
+          input: { a1: valA1, diff: valDiff, n: valN },
+          result: { nthTerm: solverResult.nthTerm, sum: solverResult.sum },
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -78,18 +93,18 @@ export default function SequenceScreen() {
 
           <InputCard>
             <View style={styles.modeGrid}>
-              <TouchableOpacity
-                style={[styles.modeBtn, type === 'arithmetic' && styles.modeBtnActive]}
+              <ModeChip
+                label="Arithmetic"
+                active={type === 'arithmetic'}
                 onPress={() => { setType('arithmetic'); setResult(null); }}
-              >
-                <Text style={[styles.modeText, type === 'arithmetic' && styles.modeTextActive]}>Arithmetic</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={[styles.modeBtn, type === 'geometric' && styles.modeBtnActive]}
+                style={styles.modeBtn}
+              />
+              <ModeChip
+                label="Geometric"
+                active={type === 'geometric'}
                 onPress={() => { setType('geometric'); setResult(null); }}
-              >
-                <Text style={[styles.modeText, type === 'geometric' && styles.modeTextActive]}>Geometric</Text>
-              </TouchableOpacity>
+                style={styles.modeBtn}
+              />
             </View>
 
             <Text style={[styles.inputLabel, { marginTop: 12 }]}>First term (a₁):</Text>
@@ -165,16 +180,7 @@ const styles = StyleSheet.create({
   modeBtn: {
     flex: 1,
     minWidth: '40%',
-    paddingVertical: 12,
-    backgroundColor: colors.bgInput,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 12,
-    alignItems: 'center',
   },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 14, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
   inputLabel: { fontSize: 13, color: colors.textSecondary, letterSpacing: 0.3, marginBottom: 8 },
   input: {
     backgroundColor: colors.bgInput,

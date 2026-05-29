@@ -53,15 +53,6 @@ const SOLVERS = [
     screen: 'PolynomialScreen',
     category: 'Algebra',
   },
-  {
-    id: 'simultaneous',
-    title: 'Simultaneous',
-    icon: '⚡',
-    description: '3 Equations, 3 Unknowns',
-    color: '#e056a0',
-    screen: 'SimultaneousScreen',
-    category: 'Algebra',
-  },
   
   // === ADVANCED ALGEBRA ===
 {

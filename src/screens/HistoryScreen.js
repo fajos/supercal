@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
-  ScrollView,
+  FlatList,
   TouchableOpacity,
   StyleSheet,
   Platform,
@@ -10,13 +10,10 @@ import {
   Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import { useHistory } from '../utils/history';
-import * as Haptics from 'expo-haptics';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
-const isTablet = SCREEN_WIDTH >= 600;
 
 export default function HistoryScreen() {
   const { history, clearHistory, loadHistory } = useHistory();
@@ -25,7 +22,7 @@ export default function HistoryScreen() {
     loadHistory();
   }, []);
 
-  const handleClear = () => {
+  const handleClear = useCallback(() => {
     Alert.alert(
       'Clear History',
       'Are you sure you want to delete all saved solutions?',
@@ -38,7 +35,7 @@ export default function HistoryScreen() {
         },
       ]
     );
-  };
+  }, [clearHistory]);
 
   const getModeIcon = (type) => {
     switch (type) {
@@ -67,7 +64,10 @@ export default function HistoryScreen() {
       case 'electrostatics': return '⚡';
       case 'finance': return '💰';
       case 'calculus': return '∫';
-      case 'radicals': return '√';
+      case 'sequence': return '🔢';
+      case 'probability': return '🎲';
+      case 'elasticity': return '📏';
+      case 'gravitation': return '🌍';
       default: return '➕';
     }
   };
@@ -99,7 +99,11 @@ export default function HistoryScreen() {
       case 'electrostatics': return 'Electrostatics';
       case 'finance': return 'Finance';
       case 'calculus': return 'Calculus';
+      case 'sequence': return 'Sequences';
+      case 'probability': return 'Probability';
       case 'radicals': return 'Radicals';
+      case 'elasticity': return 'Elasticity';
+      case 'gravitation': return 'Gravitation';
       default: return type.charAt(0).toUpperCase() + type.slice(1);
     }
   };
@@ -124,6 +128,9 @@ export default function HistoryScreen() {
 
     if (entry.type === 'calculator') {
       previewText = `${entry.expr} = ${entry.result}`;
+    } else if (entry.type === 'graph') {
+      const eqs = [entry.input.equation, entry.input.equation2, entry.input.equation3].filter(e => e && e.trim());
+      previewText = `Functions: ${eqs.join(', ')}\nDomain: ${entry.input.domain}`;
     } else if (typeof entry.result === 'string') {
       previewText = entry.result;
     } else if (typeof entry.result === 'number') {
@@ -132,6 +139,18 @@ export default function HistoryScreen() {
       previewText = `x = ${entry.result.x.toFixed(4)}, y = ${entry.result.y.toFixed(4)}`;
     } else if (entry.type === 'complex' && entry.result.real !== undefined) {
       previewText = `${entry.result.real} ${entry.result.imag >= 0 ? '+' : '-'} ${Math.abs(entry.result.imag)}i`;
+    } else if (entry.type === 'sequence') {
+      previewText = `a(n) = ${entry.result.nthTerm}\nS(n) = ${entry.result.sum}`;
+    } else if (entry.type === 'probability') {
+      previewText = `Result = ${entry.result.value}`;
+    } else if (entry.type === 'polynomial') {
+      previewText = Array.isArray(entry.result) ? entry.result.map((r, i) => `x${i+1}=${typeof r === 'number' ? r.toFixed(4) : r}`).join(', ') : JSON.stringify(entry.result);
+    } else if (entry.type === 'matrix') {
+      if (entry.mode === 'determinant') previewText = `det(A) = ${entry.result.value.toFixed(4)}`;
+      else if (entry.mode === 'eigenvalues') previewText = `λ = [${entry.result.eigenvalues.map(v => typeof v === 'number' ? v.toFixed(2) : v).join(', ')}]`;
+      else previewText = `${entry.mode.charAt(0).toUpperCase() + entry.mode.slice(1)} calculated`;
+    } else if (entry.type === 'statistics') {
+      previewText = `Mean: ${entry.result.mean.toFixed(2)}, Median: ${entry.result.median.toFixed(2)}, σ: ${entry.result.stdDev.toFixed(2)}`;
     } else {
       previewText = JSON.stringify(entry.result).slice(0, 100);
     }
@@ -144,6 +163,21 @@ export default function HistoryScreen() {
       </View>
     );
   };
+
+  const renderItem = ({ item, index }) => (
+    <View style={styles.historyCard}>
+      <View style={styles.cardHeader}>
+        <View style={styles.modeRow}>
+          <Text style={styles.modeIcon}>{getModeIcon(item.type)}</Text>
+          <Text style={styles.modeName}>{getModeName(item.type)}</Text>
+        </View>
+        <Text style={styles.timestamp}>{formatDate(item.timestamp)}</Text>
+      </View>
+      <View style={styles.cardBody}>
+        {renderResultPreview(item)}
+      </View>
+    </View>
+  );
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -167,26 +201,17 @@ export default function HistoryScreen() {
           </Text>
         </View>
       ) : (
-        <ScrollView
-          style={styles.scrollView}
+        <FlatList
+          data={history}
+          keyExtractor={(item, index) => item.id || item.timestamp || `hist-${index}`}
+          renderItem={renderItem}
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
-        >
-          {history.map((entry, index) => (
-            <View key={index} style={styles.historyCard}>
-              <View style={styles.cardHeader}>
-                <View style={styles.modeRow}>
-                  <Text style={styles.modeIcon}>{getModeIcon(entry.type)}</Text>
-                  <Text style={styles.modeName}>{getModeName(entry.type)}</Text>
-                </View>
-                <Text style={styles.timestamp}>{formatDate(entry.timestamp)}</Text>
-              </View>
-              <View style={styles.cardBody}>
-                {renderResultPreview(entry)}
-              </View>
-            </View>
-          ))}
-        </ScrollView>
+          initialNumToRender={10}
+          maxToRenderPerBatch={10}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
+        />
       )}
     </SafeAreaView>
   );

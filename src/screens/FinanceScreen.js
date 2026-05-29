@@ -113,7 +113,6 @@ export default function FinanceScreen() {
                   label={m.label}
                   active={mode === m.id}
                   onPress={() => {
-                    Haptics.selectionAsync();
                     setMode(m.id);
                     setResult(null);
                   }}

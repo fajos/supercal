@@ -17,6 +17,7 @@ import { colors } from '../theme/colors';
 import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { ModeChip } from '../components/ModeChip';
+import { useHistory } from '../utils/history';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -56,6 +57,7 @@ export default function GraphScreen() {
   const [derivativePoints, setDerivativePoints] = useState([]);
   const [selectedPoint, setSelectedPoint] = useState(null);
   const [traceMode, setTraceMode] = useState(false);
+  const { addToHistory } = useHistory();
 
   // Parse and evaluate equation
   const evaluateFunction = useCallback((expr, x) => {
@@ -158,6 +160,13 @@ export default function GraphScreen() {
           }
           setDerivativePoints(derivPoints);
         }
+
+        addToHistory({
+          type: 'graph',
+          input: { equation, equation2, equation3, domain: `from x=${xMin} to x=${xMax}` },
+          result: 'Plotted',
+          timestamp: new Date().toISOString(),
+        });
 
         setTimeout(() => {
           scrollRef.current?.scrollTo({ y: 400, animated: true });
@@ -493,21 +502,30 @@ export default function GraphScreen() {
             </View>
           </View>
 
+          <View style={[styles.inputHeader, { marginTop: 12 }]}>
+            <Text style={styles.inputLabel}>Domain (Horizontal Range):</Text>
+          </View>
           <View style={styles.rangeRow}>
             <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>X Min</Text>
+              <Text style={styles.rangeLabel}>From x =</Text>
               <TextInput style={styles.rangeInput} value={xMin} onChangeText={setXMin} keyboardType="decimal-pad" />
             </View>
             <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>X Max</Text>
+              <Text style={styles.rangeLabel}>To x =</Text>
               <TextInput style={styles.rangeInput} value={xMax} onChangeText={setXMax} keyboardType="decimal-pad" />
             </View>
+          </View>
+
+          <View style={[styles.inputHeader, { marginTop: 12 }]}>
+            <Text style={styles.inputLabel}>Y-Axis View Range:</Text>
+          </View>
+          <View style={styles.rangeRow}>
             <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>Y Min</Text>
+              <Text style={styles.rangeLabel}>Min y =</Text>
               <TextInput style={styles.rangeInput} value={yMin} onChangeText={setYMin} keyboardType="decimal-pad" />
             </View>
             <View style={styles.rangeItem}>
-              <Text style={styles.rangeLabel}>Y Max</Text>
+              <Text style={styles.rangeLabel}>Max y =</Text>
               <TextInput style={styles.rangeInput} value={yMax} onChangeText={setYMax} keyboardType="decimal-pad" />
             </View>
           </View>

@@ -13,7 +13,7 @@ export function solveKinematics(mode, params) {
       { type: 'text', text: `v = ${finalVelocity} m/s (final velocity)` },
       { type: 'text', text: `a = ${acceleration} m/s² (acceleration)` },
       { type: 'text', text: `t = ${time} s (time)` },
-      { type: 'text', text: `Δx = ${displacement} m (displacement)` },
+      { type: 'text', text: `s = ${displacement} m (displacement)` },
     ],
   });
 
@@ -23,9 +23,9 @@ export function solveKinematics(mode, params) {
     content: [
       { type: 'text', text: '📐 Kinematic Equations (SUVAT):' },
       { type: 'formula', text: '1. v = v₀ + at' },
-      { type: 'formula', text: '2. Δx = v₀t + ½at²' },
-      { type: 'formula', text: '3. v² = v₀² + 2aΔx' },
-      { type: 'formula', text: '4. Δx = ½(v₀ + v)t' },
+      { type: 'formula', text: '2. s = v₀t + ½at²' },
+      { type: 'formula', text: '3. v² = v₀² + 2as' },
+      { type: 'formula', text: '4. s = ½(v₀ + v)t' },
       { type: 'text', text: '' },
       { type: 'text', text: '💡 These equations apply when acceleration is constant!' },
     ],
@@ -58,7 +58,7 @@ export function solveKinematics(mode, params) {
       break;
 
     case 'displacement':
-      // Using Δx = v₀t + ½at²
+      // Using s = v₀t + ½at²
       const dx = initialVelocity * time + 0.5 * acceleration * time * time;
       const halfAT2 = 0.5 * acceleration * time * time;
       steps.push({
@@ -66,11 +66,11 @@ export function solveKinematics(mode, params) {
         badge: 'primary',
         content: [
           { type: 'text', text: '🎯 Finding Displacement' },
-          { type: 'text', text: 'Using equation: Δx = v₀t + ½at²' },
+          { type: 'text', text: 'Using equation: s = v₀t + ½at²' },
           { type: 'text', text: 'Step 1: v₀t = ' + initialVelocity + ' × ' + time + ' = ' + (initialVelocity * time) },
           { type: 'text', text: 'Step 2: ½at² = ½ × ' + acceleration + ' × ' + time + '² = ' + halfAT2.toFixed(2) },
-          { type: 'text', text: `Δx = ${(initialVelocity * time).toFixed(2)} + ${halfAT2.toFixed(2)}` },
-          { type: 'highlight', text: `Δx = ${dx.toFixed(2)} meters` },
+          { type: 'text', text: `s = ${(initialVelocity * time).toFixed(2)} + ${halfAT2.toFixed(2)}` },
+          { type: 'highlight', text: `s = ${dx.toFixed(2)} meters` },
           { type: 'text', text: '' },
           { type: 'text', text: `The object travels ${Math.abs(dx).toFixed(1)} meters ${dx >= 0 ? 'forward' : 'backward'}.` },
         ],
@@ -79,7 +79,7 @@ export function solveKinematics(mode, params) {
       break;
 
     case 'time':
-      // Using quadratic formula from Δx = v₀t + ½at²
+      // Using quadratic formula from s = v₀t + ½at²
       const a_coef = 0.5 * acceleration;
       const b_coef = initialVelocity;
       const c_coef = -displacement;

@@ -1,8 +1,14 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet } from 'react-native';
+import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
 
 export function ModeChip({ label, icon, active, onPress, style }) {
+  const handlePress = () => {
+    Haptics.selectionAsync();
+    onPress();
+  };
+
   return (
     <TouchableOpacity
       style={[
@@ -10,7 +16,7 @@ export function ModeChip({ label, icon, active, onPress, style }) {
         active && styles.chipActive,
         style,
       ]}
-      onPress={onPress}
+      onPress={handlePress}
       activeOpacity={0.7}
     >
       {icon && <Text style={styles.icon}>{icon}</Text>}

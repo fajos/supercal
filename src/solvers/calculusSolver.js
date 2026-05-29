@@ -527,17 +527,46 @@ function integrateTerm(term, variable) {
 
 export function evaluateExpression(expr, variable, value) {
   try {
-    let processed = expr
+    // 1. Initial cleanup: remove spaces and handle standard math notation
+    let processed = expr.replace(/\s+/g, '');
+
+    // 2. Replace variable with value in parentheses to handle negatives and powers safely
+    // We use a RegExp that doesn't use boundaries because variables are often attached to numbers (e.g., 2x)
+    processed = processed.replace(new RegExp(variable, 'g'), `(${value})`);
+
+    // 3. Handle implied multiplication (the most common cause of NaN/eval errors)
+    // Number followed by parenthesis: 2(3) -> 2*(3)
+    processed = processed.replace(/(\d)(\()/g, '$1*$2');
+    // Parenthesis followed by number: (2)3 -> (2)*3
+    processed = processed.replace(/(\))(\d)/g, '$1*$2');
+    // Parenthesis followed by parenthesis: (1)(2) -> (1)*(2)
+    processed = processed.replace(/(\))(\()/g, '$1*$2');
+
+    // 4. Mathematical translations to JavaScript Math object
+    processed = processed
       .replace(/\^/g, '**')
-      .replace(new RegExp(variable, 'g'), `(${value})`)
       .replace(/sin/g, 'Math.sin')
       .replace(/cos/g, 'Math.cos')
       .replace(/tan/g, 'Math.tan')
+      .replace(/asin|sin⁻¹/g, 'Math.asin')
+      .replace(/acos|cos⁻¹/g, 'Math.acos')
+      .replace(/atan|tan⁻¹/g, 'Math.atan')
       .replace(/ln/g, 'Math.log')
-      .replace(/log/g, 'Math.log10');
-    
-    return eval(processed);
-  } catch {
+      .replace(/log/g, 'Math.log10')
+      .replace(/exp/g, 'Math.exp')
+      .replace(/\be\b/g, 'Math.E')
+      .replace(/π/g, 'Math.PI');
+
+    // 5. Final pass for implied multiplication with Math functions
+    // e.g. 2Math.sin -> 2*Math.sin
+    processed = processed.replace(/(\d)(Math\.)/g, '$1*$2');
+    processed = processed.replace(/(\))(Math\.)/g, '$1*$2');
+
+    // eslint-disable-next-line no-eval
+    const result = eval(processed);
+    return typeof result === 'number' ? result : NaN;
+  } catch (err) {
+    console.warn('Evaluation failed for:', expr, 'Processed as:', processed, err);
     return NaN;
   }
 }   

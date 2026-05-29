@@ -20,6 +20,8 @@ import { InputCard } from '../components/InputCard';
 import { SolveButton } from '../components/SolveButton';
 import { solveGravitation } from '../solvers/gravitationSolver';
 import { BackHeader } from '../components/BackHeader';
+import { useHistory } from '../utils/history';
+import { ModeChip } from '../components/ModeChip';
 
 export default function GravitationScreen() {
   const [mode, setMode] = useState('force');
@@ -31,10 +33,10 @@ export default function GravitationScreen() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
   const scrollRef = useRef();
+  const { addToHistory } = useHistory();
 
   const handleSolve = () => {
     setLoading(true);
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setError(null);
 
     setTimeout(() => {
@@ -45,7 +47,20 @@ export default function GravitationScreen() {
           r: parseFloat(r),
         };
         const solverResult = solveGravitation(mode, params);
-        setResult(solverResult);
+
+        const opLabel = mode === 'force' ? 'Gravitational Force' : 'Field Strength';
+        const shareText = `Gravitation Result (${opLabel}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+
+        setResult({ ...solverResult, shareText });
+
+        addToHistory({
+          type: 'gravitation',
+          mode,
+          input: params,
+          result: solverResult.result,
+          timestamp: new Date().toISOString(),
+        });
+
         setTimeout(() => scrollRef.current?.scrollTo({ y: 0, animated: true }), 300);
       } catch (err) {
         setError(err.message);
@@ -68,20 +83,22 @@ export default function GravitationScreen() {
           </View>
 
           <InputCard>
-            <View style={styles.modeRow}>
+            <View style={styles.modeGrid}>
               {[
-                { id: 'force', label: 'Gravity Force' },
-                { id: 'field', label: 'Field Strength' },
+                { id: 'force', label: 'Force' },
+                { id: 'field', label: 'Field' },
               ].map(m_btn => (
-                <TouchableOpacity
+                <ModeChip
                   key={m_btn.id}
-                  style={[styles.modeBtn, mode === m_btn.id && styles.modeBtnActive]}
-                  onPress={() => { setMode(m_btn.id); setResult(null); }}
-                >
-                  <Text style={[styles.modeText, mode === m_btn.id && styles.modeTextActive]}>
-                    {m_btn.label}
-                  </Text>
-                </TouchableOpacity>
+                  label={m_btn.label}
+                  active={mode === m_btn.id}
+                  onPress={() => {
+                    Haptics.selectionAsync();
+                    setMode(m_btn.id);
+                    setResult(null);
+                  }}
+                  style={styles.modeBtn}
+                />
               ))}
             </View>
 
@@ -105,7 +122,7 @@ export default function GravitationScreen() {
             />
           </InputCard>
 
-          <ErrorCard error={error} />
+          <ErrorCard message={error} />
 
           {result && (
             <View style={styles.solutionArea}>
@@ -118,7 +135,7 @@ export default function GravitationScreen() {
                   })}
                 </StepCard>
               ))}
-              <FinalAnswer label="🌍 Result">
+              <FinalAnswer label="🌍 Result" shareText={result.shareText}>
                 <Text style={styles.finalText}>{result.result}</Text>
               </FinalAnswer>
             </View>
@@ -134,11 +151,15 @@ const styles = StyleSheet.create({
   scrollView: { flex: 1 },
   scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
   headerContainer: { width: '100%', maxWidth: 800, marginBottom: 16 },
-  modeRow: { flexDirection: 'row', gap: 8, marginBottom: 16 },
-  modeBtn: { flex: 1, paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 13, fontWeight: '500' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
+  modeGrid: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16,
+    width: '100%',
+  },
+  modeBtn: {
+    flex: 1,
+  },
   inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
   input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
   solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
