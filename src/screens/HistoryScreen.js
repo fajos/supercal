@@ -41,7 +41,9 @@ export default function HistoryScreen() {
     switch (type) {
       case 'quadratic': return '📐';
       case 'statistics': return '📊';
-      case 'linear': return '📏';
+      case 'linear':
+      case 'linear_2x2':
+      case 'linear_3x3': return '📏';
       case 'polynomial': return '📈';
       case 'trigonometry': return '🔺';
       case 'complex': return '🔄';
@@ -76,7 +78,9 @@ export default function HistoryScreen() {
     switch (type) {
       case 'quadratic': return 'Quadratic';
       case 'statistics': return 'Statistics';
-      case 'linear': return 'Linear System';
+      case 'linear':
+      case 'linear_2x2': return 'Linear System (2x2)';
+      case 'linear_3x3': return 'Linear System (3x3)';
       case 'polynomial': return 'Polynomial';
       case 'trigonometry': return 'Trigonometry';
       case 'complex': return 'Complex Numbers';
@@ -135,8 +139,10 @@ export default function HistoryScreen() {
       previewText = entry.result;
     } else if (typeof entry.result === 'number') {
       previewText = entry.result.toString();
-    } else if (entry.type === 'linear' && entry.result.x !== undefined) {
+    } else if ((entry.type === 'linear' || entry.type === 'linear_2x2') && entry.result.x !== undefined) {
       previewText = `x = ${entry.result.x.toFixed(4)}, y = ${entry.result.y.toFixed(4)}`;
+    } else if (entry.type === 'linear_3x3' && entry.result.x !== undefined) {
+      previewText = `x = ${entry.result.x.toFixed(4)}, y = ${entry.result.y.toFixed(4)}, z = ${entry.result.z.toFixed(4)}`;
     } else if (entry.type === 'complex' && entry.result.real !== undefined) {
       previewText = `${entry.result.real} ${entry.result.imag >= 0 ? '+' : '-'} ${Math.abs(entry.result.imag)}i`;
     } else if (entry.type === 'sequence') {

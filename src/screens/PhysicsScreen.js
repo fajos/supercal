@@ -11,6 +11,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Haptics from 'expo-haptics';
 import { colors } from '../theme/colors';
+import { MathRenderer } from '../components/MathRenderer';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -19,6 +20,8 @@ const getGridConfig = () => {
   if (SCREEN_WIDTH >= 600) return { cols: 3, gap: 14 }; // 7" tablet
   return { cols: 2, gap: 12 }; // Phone
 };
+
+import { TheoryCard } from '../components/TheoryCard';
 
 const { cols: COLUMN_COUNT, gap: GRID_GAP } = getGridConfig();
 const CARD_WIDTH = (SCREEN_WIDTH - 32 - (COLUMN_COUNT - 1) * GRID_GAP) / COLUMN_COUNT;
@@ -29,7 +32,7 @@ const PHYSICS_SOLVERS = [
     title: 'Kinematics',
     icon: '🏃',
     description: 'Motion, velocity, acceleration',
-    color: '#00d4aa',
+    color: colors.accent,
     screen: 'KinematicsScreen',
     category: 'Mechanics',
   },
@@ -146,7 +149,7 @@ const PHYSICS_SOLVERS = [
     title: 'Electrostatics',
     icon: '⚡',
     description: 'Coulomb\'s Law, Electric Fields',
-    color: '#00d4aa',
+    color: colors.accent,
     screen: 'ElectrostaticsScreen',
     category: 'Electricity',
   },
@@ -194,7 +197,7 @@ const THEORIES = [
     icon: '🍎',
     color: '#ff6b6b',
     description: 'The foundation of classical mechanics explaining how forces affect motion.',
-    formula: 'F = ma',
+    formula: 'F = m a',
     keyPoints: [
       'First Law: Inertia - objects maintain their state of motion unless acted upon by a force',
       'Second Law: F = ma - force equals mass times acceleration',
@@ -206,7 +209,7 @@ const THEORIES = [
     icon: '⚖️',
     color: '#feca57',
     description: 'Conditions for a body to be in equilibrium under the action of forces.',
-    formula: 'ΣM = 0',
+    formula: '\\sum M = 0',
     keyPoints: [
       'Clockwise moments must equal anticlockwise moments for equilibrium',
       'The resultant force on the body must be zero',
@@ -218,7 +221,7 @@ const THEORIES = [
     icon: '📏',
     color: '#48dbfb',
     description: 'The property of a material to return to its original shape after deformation.',
-    formula: 'F = ke',
+    formula: 'F = k e',
     keyPoints: [
       'Hooke\'s Law: Extension is proportional to force until the elastic limit',
       'Young\'s Modulus measures the stiffness of a solid material',
@@ -230,7 +233,7 @@ const THEORIES = [
     icon: '🔥',
     color: '#ff7f50',
     description: 'Study of heat, temperature, and their relation to energy and work.',
-    formula: 'Q = mcΔT',
+    formula: 'Q = mc\\Delta T',
     keyPoints: [
       'Specific Heat Capacity: heat required to raise 1kg of substance by 1°C',
       'Gas Laws: PV = nRT (Ideal Gas Equation)',
@@ -242,7 +245,7 @@ const THEORIES = [
     icon: '⚛️',
     color: '#ff6b6b',
     description: 'The spontaneous disintegration of unstable atomic nuclei.',
-    formula: 'N = N₀e^(-λt)',
+    formula: 'N = N_0 e^{-\\lambda t}',
     keyPoints: [
       'Half-life: Time taken for half the nuclei in a sample to decay',
       'Activity (A): Rate of decay, measured in Becquerels (Bq)',
@@ -254,7 +257,7 @@ const THEORIES = [
     icon: '🧲',
     color: '#1dd1a1',
     description: 'Forces acting on moving charges and current-carrying wires.',
-    formula: 'F = qvB sinθ',
+    formula: 'F = qvB \\sin\\theta',
     keyPoints: [
       'Lorentz Force: Force on a charge moving through a magnetic field',
       'Force on Wire: F = BIL sinθ',
@@ -266,7 +269,7 @@ const THEORIES = [
     icon: '💡',
     color: '#a29bfe',
     description: 'Behavior of light including reflection, refraction and lens properties.',
-    formula: '1/f = 1/u + 1/v',
+    formula: '\\frac{1}{f} = \\frac{1}{u} + \\frac{1}{v}',
     keyPoints: [
       'Snell\'s Law: n₁sinθ₁ = n₂sinθ₂ for refraction at boundaries',
       'Lens Formula: relates focal length, object distance, and image distance',
@@ -276,9 +279,9 @@ const THEORIES = [
   {
     title: 'Coulomb\'s Law',
     icon: '⚡',
-    color: '#00d4aa',
+    color: colors.accent,
     description: 'The electric force between two stationary charged particles.',
-    formula: 'F = k(q₁q₂/r²)',
+    formula: 'F = k \\frac{q_1 q_2}{r^2}',
     keyPoints: [
       'The force is attractive for opposite charges and repulsive for like charges',
       'k ≈ 8.99 × 10⁹ N·m²/C² (Coulomb constant)',
@@ -290,7 +293,7 @@ const THEORIES = [
     icon: '💧',
     color: '#48dbfb',
     description: 'Pressure exerted by fluids at rest due to gravity.',
-    formula: 'P = ρgh',
+    formula: 'P = \\rho g h',
     keyPoints: [
       'Pressure increases linearly with depth in a liquid',
       'Archimedes\' Principle: Upthrust equals weight of fluid displaced',
@@ -302,7 +305,7 @@ const THEORIES = [
     icon: '🌍',
     color: '#feca57',
     description: 'Every particle attracts every other particle with a gravitational force.',
-    formula: 'F = G(Mm/r²)',
+    formula: 'F = G \\frac{M m}{r^2}',
     keyPoints: [
       'G ≈ 6.674 × 10⁻¹¹ N·m²/kg² (Universal Gravitational Constant)',
       'Gravitational Field Strength (g) is the force per unit mass (g = F/m)',
@@ -314,7 +317,7 @@ const THEORIES = [
     icon: '🔌',
     color: '#ff9f43',
     description: 'Generation of an electromotive force (EMF) across an electrical conductor.',
-    formula: 'Vₚ/Vₛ = Nₚ/Nₛ',
+    formula: '\\frac{V_p}{V_s} = \\frac{N_p}{N_s}',
     keyPoints: [
       'Faraday\'s Law: Induced EMF is proportional to rate of change of flux',
       'Lenz\'s Law: Induced current opposes the change that produced it',
@@ -326,7 +329,7 @@ const THEORIES = [
     icon: '🔮',
     color: '#6c5ce7',
     description: 'Physics of the very small where energy is quantized.',
-    formula: 'E = hf',
+    formula: 'E = h f',
     keyPoints: [
       'Photons are discrete "packets" of electromagnetic energy',
       'Wave-Particle Duality: Matter exhibits both wave and particle properties',
@@ -337,6 +340,7 @@ const THEORIES = [
 
 export default function PhysicsScreen({ navigation }) {
   const handleSolverPress = (solver) => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.navigate(solver.screen);
   };
 
@@ -374,26 +378,7 @@ export default function PhysicsScreen({ navigation }) {
         {/* Theories Section */}
         <Text style={styles.sectionTitle}>📚 Key Theories</Text>
         {THEORIES.map((theory, idx) => (
-          <View key={idx} style={styles.theoryCard}>
-            <View style={styles.theoryHeader}>
-              <Text style={styles.theoryIcon}>{theory.icon}</Text>
-              <View style={styles.theoryTitleContainer}>
-                <Text style={[styles.theoryTitle, { color: theory.color }]}>{theory.title}</Text>
-                <View style={[styles.formulaBadge, { backgroundColor: theory.color + '20' }]}>
-                  <Text style={[styles.formulaText, { color: theory.color }]}>{theory.formula}</Text>
-                </View>
-              </View>
-            </View>
-            <Text style={styles.theoryDescription}>{theory.description}</Text>
-            <View style={styles.keyPointsContainer}>
-              {theory.keyPoints.map((point, kidx) => (
-                <View key={kidx} style={styles.keyPoint}>
-                  <Text style={styles.bullet}>•</Text>
-                  <Text style={styles.keyPointText}>{point}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
+          <TheoryCard key={idx} theory={theory} />
         ))}
 
         {/* Quick Reference */}
@@ -484,13 +469,12 @@ const styles = StyleSheet.create({
   theoryIcon: { fontSize: 32 },
   theoryTitleContainer: { flex: 1, gap: 6 },
   theoryTitle: { fontSize: 18, fontWeight: '700' },
-  formulaBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 8,
-    alignSelf: 'flex-start',
+  formulaContainer: {
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'flex-start',
+    marginTop: 4,
   },
-  formulaText: { fontSize: 16, fontFamily: 'monospace', fontWeight: '700' },
   theoryDescription: { fontSize: 13, color: colors.textSecondary, lineHeight: 20, marginBottom: 12 },
   keyPointsContainer: { gap: 8 },
   keyPoint: { flexDirection: 'row', gap: 8 },

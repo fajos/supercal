@@ -51,28 +51,28 @@ const CalculatorButton = React.memo(({ label, secondaryLabel, action, value, typ
   const isShifted = type === 'shift' && shift;
   
   const bg = useMemo(() => {
-    if (type === 'number') return '#252540';
+    if (type === 'number') return colors.bgSecondary;
     if (type === 'operator') return '#2a2a50';
-    if (type === 'function') return '#1e2a40';
-    if (type === 'shift') return shift ? '#0a2a1a' : '#1e1e35';
-    if (type === 'clear') return '#401515';
-    if (type === 'delete') return '#402a15';
-    if (type === 'equals') return '#005535';
+    if (type === 'function') return colors.bgCard;
+    if (type === 'shift') return shift ? 'rgba(0, 212, 170, 0.15)' : '#1e1e35';
+    if (type === 'clear') return 'rgba(255, 71, 87, 0.1)';
+    if (type === 'delete') return 'rgba(255, 165, 2, 0.1)';
+    if (type === 'equals') return colors.accent;
     if (type === 'memory') return '#1d1d35';
-    if (type === 'constant') return '#1e2a40';
-    return '#252540';
+    if (type === 'constant') return colors.bgCard;
+    return colors.bgSecondary;
   }, [type, shift]);
   
   const fg = useMemo(() => {
-    if (type === 'equals') return '#00ffaa';
-    if (type === 'clear') return '#ff6666';
-    if (type === 'delete') return '#ffaa00';
-    if (type === 'shift') return shift ? '#00ffaa' : '#88aa88';
-    if (type === 'function') return '#88bbee';
+    if (type === 'equals') return colors.bgPrimary;
+    if (type === 'clear') return colors.danger;
+    if (type === 'delete') return colors.warning;
+    if (type === 'shift') return shift ? colors.accent : '#88aa88';
+    if (type === 'function') return colors.purpleGlow;
     if (type === 'operator') return '#eecc88';
-    if (type === 'memory') return '#aaaacc';
+    if (type === 'memory') return colors.textSecondary;
     if (type === 'constant') return '#77ccdd';
-    return '#e0e0f0';
+    return colors.textPrimary;
   }, [type, shift]);
   
   const fs = useMemo(() => {
@@ -84,50 +84,44 @@ const CalculatorButton = React.memo(({ label, secondaryLabel, action, value, typ
   const shadowStyle = useMemo(() => {
     if (type === 'equals') {
       return {
-        shadowColor: '#00ffaa',
-        shadowOffset: { width: 0, height: 0 },
-        shadowOpacity: 0.4,
-        shadowRadius: 1,
-        elevation: 1,
+        shadowColor: colors.accent,
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.3,
+        shadowRadius: 4,
+        elevation: 4,
         borderBottomWidth: 0,
       };
     }
     if (type === 'clear') {
       return {
-        shadowColor: '#ff5555',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 6,
-        borderBottomWidth: 4,
-        borderBottomColor: '#1a0a0a',
+        shadowColor: colors.danger,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 2,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 71, 87, 0.2)',
       };
     }
     if (type === 'delete') {
       return {
-        shadowColor: '#ffaa00',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.3,
-        shadowRadius: 6,
-        elevation: 6,
-        borderBottomWidth: 4,
-        borderBottomColor: '#1a1a00',
+        shadowColor: colors.warning,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.2,
+        shadowRadius: 2,
+        elevation: 2,
+        borderBottomWidth: 1,
+        borderBottomColor: 'rgba(255, 165, 2, 0.2)',
       };
     }
     return {
       shadowColor: '#000',
-      shadowOffset: { width: 0, height: 3 },
-      shadowOpacity: 0.5,
-      shadowRadius: 4,
-      elevation: 5,
-      borderBottomWidth: 3,
-      borderBottomColor: 'rgba(0,0,0,0.4)',
-      borderLeftWidth: 1,
-      borderLeftColor: 'rgba(255,255,255,0.05)',
-      borderRightWidth: 1,
-      borderRightColor: 'rgba(0,0,0,0.2)',
-      borderTopWidth: 1,
-      borderTopColor: 'rgba(255,255,255,0.1)',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.2,
+      shadowRadius: 2,
+      elevation: 2,
+      borderBottomWidth: 1,
+      borderBottomColor: 'rgba(0,0,0,0.3)',
     };
   }, [type]);
 
@@ -156,9 +150,6 @@ const CalculatorButton = React.memo(({ label, secondaryLabel, action, value, typ
         style={[styles.bt, {
           color: fg,
           fontSize: fs,
-          textShadowColor: 'rgba(0,0,0,0.8)',
-          textShadowOffset: { width: 0, height: 2 },
-          textShadowRadius: 4,
           letterSpacing: -0.6,
         }]}
         numberOfLines={1}
@@ -366,13 +357,7 @@ export default function CalculatorScreen() {
   const press = useCallback((action, val) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
-    if (isPrompt) {
-      setIsPrompt(false);
-      setDisplay('');
-      setExpression('');
-    }
-    
-    if (action === 'shift') { 
+    if (action === 'shift') {
       setShift(p => !p); 
       return; 
     }
@@ -380,6 +365,21 @@ export default function CalculatorScreen() {
       setIsRadian(p => !p); 
       return; 
     }
+
+    if (isPrompt) {
+      if (action === 'delete' || action === 'equals') return;
+
+      setIsPrompt(false);
+      if (action === 'operator') {
+        const startVal = 'Ans' + val;
+        setDisplay(startVal);
+        setExpression(startVal);
+        return;
+      }
+      setDisplay('');
+      setExpression('');
+    }
+
     if (action === 'clear') {
       setDisplay('');
       setExpression('');
@@ -525,11 +525,11 @@ export default function CalculatorScreen() {
       >
         <Text style={styles.currentExpr} numberOfLines={2} adjustsFontSizeToFit>
           {String(display)}
-          {isPrompt && <BlinkCursor />}
+          {(!isFinished || isPrompt) && <BlinkCursor />}
         </Text>
       </View>
     </React.Fragment>
-  ), [calculatorHistory, display, isPrompt]);
+  ), [calculatorHistory, display, isPrompt, isFinished]);
 
   return (
     <SafeAreaView style={styles.safe} edges={['top', 'left', 'right']}>
@@ -693,15 +693,11 @@ const styles = StyleSheet.create({
     alignItems: 'stretch',
   },
   historyExpr: {
-    color: colors.accent,
-    fontSize: 24,
+    color: colors.textSecondary,
+    fontSize: 18,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'left',
-    fontWeight: '700',
-    textShadowColor: 'rgba(0, 212, 170, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
-    opacity: 0.8,
+    fontWeight: '600',
   },
   historyResultContainer: {
     flexDirection: 'row',
@@ -711,7 +707,7 @@ const styles = StyleSheet.create({
   },
   historyEqual: {
     color: colors.accent,
-    fontSize: 20,
+    fontSize: 18,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     marginRight: 8,
@@ -723,16 +719,13 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '700',
     textAlign: 'right',
-    textShadowColor: 'rgba(0, 212, 170, 0.3)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
   },
   divider: {
     height: 1,
     backgroundColor: colors.border,
-    marginVertical: 6,
-    marginHorizontal: 4,
-    borderStyle: 'dashed',
+    marginVertical: 4,
+    marginHorizontal: 8,
+    opacity: 0.5,
   },
   currentSection: {
     paddingBottom: 16,
@@ -743,14 +736,11 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-start',
   },
   currentExpr: {
-    color: colors.accent,
+    color: colors.white,
     fontSize: 42,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     textAlign: 'left',
-    fontWeight: '900',
-    textShadowColor: 'rgba(0, 212, 170, 0.6)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 15,
+    fontWeight: '700',
   },
   kb: {
     paddingBottom: 0,
@@ -767,7 +757,6 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    transform: [{ perspective: 1000 }],
   },
   highlightedBtn: {
     borderWidth: 1.5,
@@ -775,7 +764,7 @@ const styles = StyleSheet.create({
   },
   bt: {
     fontFamily: Platform.OS === 'ios' ? 'SF Pro Display' : 'sans-serif',
-    fontWeight: '900',
+    fontWeight: '600',
     textAlign: 'center',
   },
   secondaryLabel: {

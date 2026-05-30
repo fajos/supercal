@@ -22,7 +22,6 @@ import { ErrorCard } from '../components/ErrorCard';
 import { solveThermal } from '../solvers/thermalSolver';
 import { useHistory } from '../utils/history';
 import { BackHeader } from '../components/BackHeader';
-import { ModeChip } from '../components/ModeChip';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 const isTablet = SCREEN_WIDTH >= 600;
@@ -87,6 +86,13 @@ export default function ThermalScreen() {
     }, 600);
   };
 
+  // Operation buttons with symbols and formulas
+  const operations = [
+    { id: 'specificHeat', label: 'Specific Heat', symbol: 'Q', formula: 'Q = m·c·ΔT' },
+    { id: 'latentHeat', label: 'Latent Heat', symbol: 'Q', formula: 'Q = m·L' },
+    { id: 'gasLaws', label: 'Gas Laws', symbol: 'PV', formula: 'P₁V₁/T₁ = P₂V₂/T₂' },
+  ];
+
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
       <KeyboardAvoidingView
@@ -99,68 +105,178 @@ export default function ThermalScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeGrid}>
-              {[
-                { id: 'specificHeat', label: 'Heat' },
-                { id: 'latentHeat', label: 'Latent' },
-                { id: 'gasLaws', label: 'Gas Laws' },
-              ].map(m => (
-                <ModeChip
-                  key={m.id}
-                  label={m.label}
-                  active={mode === m.id}
+            {/* Operation Selector Grid */}
+            <View style={styles.operationGrid}>
+              {operations.map(op => (
+                <TouchableOpacity
+                  key={op.id}
+                  style={[
+                    styles.operationBtn,
+                    mode === op.id && styles.operationBtnActive,
+                  ]}
                   onPress={() => {
                     Haptics.selectionAsync();
-                    setMode(m.id);
+                    setMode(op.id);
                     setResult(null);
                   }}
-                  style={styles.modeBtn}
-                />
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.operationSymbol,
+                    mode === op.id && styles.operationSymbolActive,
+                  ]}>
+                    {op.symbol}
+                  </Text>
+                  <Text style={[
+                    styles.operationLabel,
+                    mode === op.id && styles.operationLabelActive,
+                  ]} numberOfLines={2} adjustsFontSizeToFit>
+                    {op.label}
+                  </Text>
+                  <Text style={[
+                    styles.operationFormula,
+                    mode === op.id && styles.operationFormulaActive,
+                  ]} numberOfLines={1} adjustsFontSizeToFit>
+                    {op.formula}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
 
+            <Text style={styles.sectionLabel}>Input Parameters</Text>
+
             {mode === 'specificHeat' && (
               <>
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (m) kg:</Text>
-                <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" />
+                <Text style={styles.inputLabel}>Mass, m (kg):</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={mass} 
+                  onChangeText={setMass} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter mass"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Spec. Heat (c) J/kg·K:</Text>
-                <TextInput style={styles.input} value={specificHeat} onChangeText={setSpecificHeat} keyboardType="decimal-pad" />
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Specific Heat, c (J/kg·K):</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={specificHeat} 
+                  onChangeText={setSpecificHeat} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter specific heat capacity"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Temp Change (Δθ) K:</Text>
-                <TextInput style={styles.input} value={deltaTemp} onChangeText={setDeltaTemp} keyboardType="decimal-pad" />
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Temperature Change, ΔT (K):</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={deltaTemp} 
+                  onChangeText={setDeltaTemp} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter temperature change"
+                  placeholderTextColor={colors.textSecondary}
+                />
               </>
             )}
 
             {mode === 'latentHeat' && (
               <>
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (m) kg:</Text>
-                <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" />
+                <Text style={styles.inputLabel}>Mass, m (kg):</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={mass} 
+                  onChangeText={setMass} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter mass"
+                  placeholderTextColor={colors.textSecondary}
+                />
 
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Latent Heat (L) J/kg:</Text>
-                <TextInput style={styles.input} value={latentHeat} onChangeText={setLatentHeat} keyboardType="decimal-pad" />
+                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Specific Latent Heat, L (J/kg):</Text>
+                <TextInput 
+                  style={styles.input} 
+                  value={latentHeat} 
+                  onChangeText={setLatentHeat} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter latent heat"
+                  placeholderTextColor={colors.textSecondary}
+                />
               </>
             )}
 
             {mode === 'gasLaws' && (
               <>
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>P1 (Pa), V1, T1 (K):</Text>
-                <View style={styles.row}>
-                  <TextInput style={[styles.input, { flex: 1 }]} value={p1} onChangeText={setP1} keyboardType="decimal-pad" placeholder="P1" placeholderTextColor={colors.textSecondary} />
-                  <TextInput style={[styles.input, { flex: 1 }]} value={v1} onChangeText={setV1} keyboardType="decimal-pad" placeholder="V1" placeholderTextColor={colors.textSecondary} />
-                  <TextInput style={[styles.input, { flex: 1 }]} value={t1} onChangeText={setT1} keyboardType="decimal-pad" placeholder="T1" placeholderTextColor={colors.textSecondary} />
+                <Text style={styles.subsectionLabel}>Initial State (1)</Text>
+                
+                <View style={styles.gasRow}>
+                  <View style={styles.gasInputGroup}>
+                    <Text style={styles.gasLabel}>P₁ (Pa)</Text>
+                    <TextInput 
+                      style={styles.gasInput} 
+                      value={p1} 
+                      onChangeText={setP1} 
+                      keyboardType="decimal-pad" 
+                      placeholder="Pressure"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  </View>
+                  <View style={styles.gasInputGroup}>
+                    <Text style={styles.gasLabel}>V₁ (m³)</Text>
+                    <TextInput 
+                      style={styles.gasInput} 
+                      value={v1} 
+                      onChangeText={setV1} 
+                      keyboardType="decimal-pad" 
+                      placeholder="Volume"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  </View>
+                  <View style={styles.gasInputGroup}>
+                    <Text style={styles.gasLabel}>T₁ (K)</Text>
+                    <TextInput 
+                      style={styles.gasInput} 
+                      value={t1} 
+                      onChangeText={setT1} 
+                      keyboardType="decimal-pad" 
+                      placeholder="Temp"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  </View>
                 </View>
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>P2 (Pa), T2 (K) [Find V2]:</Text>
-                <View style={styles.row}>
-                  <TextInput style={[styles.input, { flex: 1 }]} value={p2} onChangeText={setP2} keyboardType="decimal-pad" placeholder="P2" placeholderTextColor={colors.textSecondary} />
-                  <TextInput style={[styles.input, { flex: 1 }]} value={t2} onChangeText={setT2} keyboardType="decimal-pad" placeholder="T2" placeholderTextColor={colors.textSecondary} />
+
+                <Text style={[styles.subsectionLabel, { marginTop: 16 }]}>Final State (2)</Text>
+                
+                <View style={styles.gasRow}>
+                  <View style={styles.gasInputGroup}>
+                    <Text style={styles.gasLabel}>P₂ (Pa)</Text>
+                    <TextInput 
+                      style={styles.gasInput} 
+                      value={p2} 
+                      onChangeText={setP2} 
+                      keyboardType="decimal-pad" 
+                      placeholder="Pressure"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  </View>
+                  <View style={styles.gasInputGroup}>
+                    <Text style={styles.gasLabel}>T₂ (K)</Text>
+                    <TextInput 
+                      style={styles.gasInput} 
+                      value={t2} 
+                      onChangeText={setT2} 
+                      keyboardType="decimal-pad" 
+                      placeholder="Temp"
+                      placeholderTextColor={colors.textSecondary}
+                    />
+                  </View>
                 </View>
+                
+                <Text style={styles.hintText}>Leave one value empty to solve for it</Text>
               </>
             )}
 
             <SolveButton
               onPress={handleSolve}
-              label="🔥 CALCULATE"
+              label="🌡️ CALCULATE THERMAL"
               loading={loading}
             />
           </InputCard>
@@ -172,9 +288,38 @@ export default function ThermalScreen() {
               {result.steps.map((step, idx) => (
                 <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
                   {step.content.map((item, i) => {
-                    if (item.type === 'highlight') return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
-                    if (item.type === 'formula') return <Text key={i} style={styles.formulaText}>{item.text}</Text>;
-                    return <Text key={i} style={styles.stepText}>{item.text}</Text>;
+                    switch (item.type) {
+                      case 'formula':
+                        return (
+                          <View key={i} style={styles.formulaBox}>
+                            <Text style={styles.formulaText}>{item.text}</Text>
+                          </View>
+                        );
+                      case 'highlight':
+                        return (
+                          <Text key={i} style={styles.highlightText}>
+                            {item.text}
+                          </Text>
+                        );
+                      case 'result':
+                        return (
+                          <View key={i} style={styles.resultBox}>
+                            <Text style={styles.resultText}>{item.text}</Text>
+                          </View>
+                        );
+                      case 'badge':
+                        return (
+                          <View key={i} style={styles.inlineBadge}>
+                            <Text style={styles.inlineBadgeText}>{item.text}</Text>
+                          </View>
+                        );
+                      default:
+                        return (
+                          <Text key={i} style={styles.stepText}>
+                            {item.text}
+                          </Text>
+                        );
+                    }
                   })}
                 </StepCard>
               ))}
@@ -193,8 +338,13 @@ export default function ThermalScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgPrimary },
-  flex: { flex: 1 },
+  container: { 
+    flex: 1, 
+    backgroundColor: colors.bgPrimary 
+  },
+  flex: { 
+    flex: 1 
+  },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
@@ -213,22 +363,205 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  modeGrid: {
+  
+  // Operation Grid Styles
+  operationGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     justifyContent: 'center',
-    gap: 8,
-    marginBottom: 16,
+    gap: 10,
+    marginBottom: 20,
+    width: '100%',
+    paddingHorizontal: 4,
   },
-  modeBtn: {
-    minWidth: '28%',
+  operationBtn: {
+    flex: 1,
+    maxWidth: 120,
+    aspectRatio: 0.85,
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 10,
+  },
+  operationBtnActive: {
+    backgroundColor: colors.accentBg,
+    borderColor: colors.accent,
+    borderWidth: 2,
+  },
+  operationSymbol: {
+    color: colors.textSecondary,
+    fontSize: 22,
+    fontWeight: '700',
+    marginBottom: 6,
+  },
+  operationSymbolActive: {
+    color: colors.accent,
+  },
+  operationLabel: {
+    color: colors.textSecondary,
+    fontSize: 11,
+    fontWeight: '600',
+    textAlign: 'center',
+    lineHeight: 14,
+    marginBottom: 4,
+  },
+  operationLabelActive: {
+    color: colors.accentGlow,
+    fontWeight: '700',
+  },
+  operationFormula: {
+    color: colors.textSecondary,
+    fontSize: 8,
+    fontWeight: '500',
+    textAlign: 'center',
+    opacity: 0.6,
+  },
+  operationFormulaActive: {
+    color: colors.accent,
+    opacity: 0.9,
+  },
+  
+  // Section Labels
+  sectionLabel: {
+    fontSize: 13,
+    color: colors.textSecondary,
+    fontWeight: '600',
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+    marginBottom: 12,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  subsectionLabel: {
+    fontSize: 14,
+    color: colors.white,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  
+  // Input Styles
+  inputLabel: { 
+    fontSize: 13, 
+    color: colors.textSecondary, 
+    marginBottom: 8 
+  },
+  input: { 
+    backgroundColor: colors.bgInput, 
+    borderWidth: 1.5, 
+    borderColor: colors.border, 
+    borderRadius: 14, 
+    color: colors.white, 
+    fontSize: 16, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    padding: 14, 
+    textAlign: 'center', 
+    width: '100%' 
+  },
+  
+  // Gas Laws Input Styles
+  gasRow: { 
+    flexDirection: 'row', 
+    gap: 8, 
+    width: '100%' 
+  },
+  gasInputGroup: {
     flex: 1,
   },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
-  input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
-  row: { flexDirection: 'row', gap: 8, width: '100%' },
-  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
-  highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
-  formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
-  finalText: { color: colors.white, fontSize: 20, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
+  gasLabel: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    marginBottom: 4,
+    textAlign: 'center',
+  },
+  gasInput: {
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 12,
+    color: colors.white,
+    fontSize: 14,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    padding: 12,
+    textAlign: 'center',
+  },
+  hintText: {
+    fontSize: 11,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginTop: 8,
+    fontStyle: 'italic',
+    opacity: 0.7,
+  },
+  
+  // Step Content Styles
+  stepText: { 
+    color: colors.textPrimary, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    lineHeight: 22 
+  },
+  highlightText: { 
+    color: colors.accentGlow, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '600', 
+    lineHeight: 22 
+  },
+  formulaBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  formulaText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  resultBox: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  resultText: {
+    color: colors.purpleGlow,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inlineBadge: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginVertical: 4,
+  },
+  inlineBadgeText: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  
+  // Final Answer
+  finalText: { 
+    color: colors.white, 
+    fontSize: 20, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '700' 
+  },
 });

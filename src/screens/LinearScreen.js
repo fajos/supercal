@@ -68,12 +68,16 @@ export default function LinearScreen() {
             parseFloat(c2) || 0
           );
 
-          shareText = `Linear System (2x2) Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}\n\nSolved with SuperCalc`;
+          const solX = result.x !== null ? result.x.toFixed(4) : 'N/A';
+          const solY = result.y !== null ? result.y.toFixed(4) : 'N/A';
+          const resStr = result.result || `x=${solX}, y=${solY}`;
+
+          shareText = `Linear System (2x2) Result:\nEq1: ${a1}x + ${b1}y = ${c1}\nEq2: ${a2}x + ${b2}y = ${c2}\nSolution: ${resStr}\n\nSolved with SuperCalc`;
 
           historyData = {
             type: 'linear_2x2',
             input: { a1, b1, c1, a2, b2, c2 },
-            result: { x: result.x, y: result.y },
+            result: { x: result.x, y: result.y, resStr },
             timestamp: new Date().toISOString(),
           };
         } else {
@@ -83,7 +87,12 @@ export default function LinearScreen() {
             parseFloat(a3_3) || 0, parseFloat(b3_3) || 0, parseFloat(c3_3) || 0, parseFloat(d3_3) || 0
           );
 
-          shareText = `Linear System (3x3) Result:\nEq1: ${a1_3}x + ${b1_3}y + ${c1_3}z = ${d1_3}\nEq2: ${a2_3}x + ${b2_3}y + ${c2_3}z = ${d2_3}\nEq3: ${a3_3}x + ${b3_3}y + ${c3_3}z = ${d3_3}\nSolution: x=${result.x.toFixed(4)}, y=${result.y.toFixed(4)}, z=${result.z.toFixed(4)}\n\nSolved with SuperCalc`;
+          const solX = result.x !== null ? result.x.toFixed(4) : 'N/A';
+          const solY = result.y !== null ? result.y.toFixed(4) : 'N/A';
+          const solZ = result.z !== null ? result.z.toFixed(4) : 'N/A';
+          const resStr = result.error ? result.error : `x=${solX}, y=${solY}, z=${solZ}`;
+
+          shareText = `Linear System (3x3) Result:\nEq1: ${a1_3}x + ${b1_3}y + ${c1_3}z = ${d1_3}\nEq2: ${a2_3}x + ${b2_3}y + ${c2_3}z = ${d2_3}\nEq3: ${a3_3}x + ${b3_3}y + ${c3_3}z = ${d3_3}\nSolution: ${resStr}\n\nSolved with SuperCalc`;
 
           historyData = {
             type: 'linear_3x3',
@@ -92,7 +101,7 @@ export default function LinearScreen() {
               eq2: [a2_3, b2_3, c2_3, d2_3],
               eq3: [a3_3, b3_3, c3_3, d3_3]
             },
-            result: { x: result.x, y: result.y, z: result.z },
+            result: { x: result.x, y: result.y, z: result.z, error: result.error },
             timestamp: new Date().toISOString(),
           };
         }
@@ -115,6 +124,12 @@ export default function LinearScreen() {
   const renderContent = (content) => {
     return content.map((item, idx) => {
       switch (item.type) {
+        case 'formula':
+          return (
+            <View key={idx} style={styles.formulaBox}>
+              <Text style={styles.formulaText}>{item.text}</Text>
+            </View>
+          );
         case 'highlight':
           return (
             <Text key={idx} style={styles.highlightText}>
@@ -125,6 +140,12 @@ export default function LinearScreen() {
           return (
             <View key={idx} style={styles.resultBox}>
               <Text style={styles.resultText}>{item.text}</Text>
+            </View>
+          );
+        case 'badge':
+          return (
+            <View key={idx} style={styles.inlineBadge}>
+              <Text style={styles.inlineBadgeText}>{item.text}</Text>
             </View>
           );
         default:
@@ -320,19 +341,25 @@ export default function LinearScreen() {
               ))}
 
               <FinalAnswer label="🎯 Solution" shareText={solution.shareText}>
-                <View>
-                  <Text style={styles.finalText}>
-                    x = {solution.x.toFixed(mode === '3x3' ? 6 : 4)}
-                  </Text>
-                  <Text style={styles.finalText}>
-                    y = {solution.y.toFixed(mode === '3x3' ? 6 : 4)}
-                  </Text>
-                  {mode === '3x3' && (
+                {solution.x !== null && solution.x !== undefined ? (
+                  <View>
                     <Text style={styles.finalText}>
-                      z = {solution.z.toFixed(6)}
+                      x = {solution.x.toFixed(mode === '3x3' ? 6 : 4)}
                     </Text>
-                  )}
-                </View>
+                    <Text style={styles.finalText}>
+                      y = {solution.y.toFixed(mode === '3x3' ? 6 : 4)}
+                    </Text>
+                    {mode === '3x3' && (
+                      <Text style={styles.finalText}>
+                        z = {solution.z.toFixed(6)}
+                      </Text>
+                    )}
+                  </View>
+                ) : (
+                  <Text style={styles.finalText}>
+                    {solution.error || solution.result || 'No solution found'}
+                  </Text>
+                )}
               </FinalAnswer>
             </View>
           )}
@@ -448,16 +475,49 @@ const styles = StyleSheet.create({
   },
   resultBox: {
     backgroundColor: colors.purpleBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
     alignSelf: 'flex-start',
-    marginVertical: 2,
+    marginVertical: 6,
+    width: '100%',
   },
   resultText: {
-    color: '#c4b5fd',
+    color: colors.purpleGlow,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 14,
+    fontWeight: '700',
+  },
+  formulaBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  formulaText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inlineBadge: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginVertical: 4,
+  },
+  inlineBadgeText: {
+    color: colors.accent,
+    fontSize: 11,
     fontWeight: '600',
   },
   finalText: {

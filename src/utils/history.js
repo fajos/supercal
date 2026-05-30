@@ -8,7 +8,7 @@ export function HistoryProvider({ children }) {
 
   const addToHistory = useCallback(async (entry) => {
     setHistory((prev) => {
-      const updated = [entry, ...prev].slice(0, 50);
+      const updated = [entry, ...prev].slice(0, 200);
       // Save to AsyncStorage (fire and forget)
       AsyncStorage.setItem('calcHistory', JSON.stringify(updated)).catch(() => {});
       return updated;

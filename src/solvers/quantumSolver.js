@@ -9,10 +9,10 @@ export function solveQuantum(mode, params) {
 
   switch (mode) {
     case 'photon_e':
-      // 1. GIVEN VALUES
+      // 1. GIVEN
       steps.push({
-        step: 'GIVEN VALUES',
-        badge: 'input',
+        step: 'GIVEN',
+        badge: 'primary',
         content: [
           { type: 'text', text: 'We identify the properties of the photon:' },
           { type: 'text', text: `• Frequency (f): ${f} Hz` },
@@ -20,13 +20,13 @@ export function solveQuantum(mode, params) {
         ],
       });
 
-      // 2. EQUATIONS
+      // 2. FORMULA
       steps.push({
-        step: 'EQUATIONS',
-        badge: 'formula',
+        step: 'FORMULA',
+        badge: 'secondary',
         content: [
           { type: 'text', text: 'The energy of a single photon is directly proportional to its frequency (Planck-Einstein Relation):' },
-          { type: 'highlight', text: 'E = h · f' },
+          { type: 'formula', text: 'E = h · f' },
         ],
       });
 
@@ -35,21 +35,21 @@ export function solveQuantum(mode, params) {
       const energyEV = energy / 1.602e-19;
       steps.push({
         step: 'CALCULATION',
-        badge: 'math',
+        badge: 'primary',
         content: [
           { type: 'text', text: `E = (${h.toExponential(3)}) × (${f})` },
-          { type: 'highlight', text: `E = ${energy.toExponential(4)} Joules` },
+          { type: 'result', text: `E = ${energy.toExponential(4)} Joules` },
           { type: 'text', text: 'Converting to electron-volts (1 eV = 1.602 × 10⁻¹⁹ J):' },
-          { type: 'highlight', text: `E ≈ ${energyEV.toFixed(4)} eV` },
+          { type: 'result', text: `E ≈ ${energyEV.toFixed(4)} eV` },
         ],
       });
 
-      // 4. INTERPRETATION / ANALYSIS
+      // 4. ANALYSIS
       steps.push({
-        step: 'INTERPRETATION / ANALYSIS',
-        badge: 'insight',
+        step: 'ANALYSIS',
+        badge: 'secondary',
         content: [
-          { type: 'text', text: `This photon carries ${energyEV.toFixed(2)} eV of energy.` },
+          { type: 'text', text: `✅ This photon carries ${energyEV.toFixed(2)} eV of energy.` },
           { type: 'text', text: '' },
           { type: 'text', text: '💡 QUANTUM INSIGHT: Energy is quantized! Light is not just a continuous wave but a stream of discrete "packets" called photons. Higher frequency means each individual packet packs more punch (energy).' },
         ],
@@ -58,10 +58,10 @@ export function solveQuantum(mode, params) {
       break;
 
     case 'de_broglie':
-      // 1. GIVEN VALUES
+      // 1. GIVEN
       steps.push({
-        step: 'GIVEN VALUES',
-        badge: 'input',
+        step: 'GIVEN',
+        badge: 'primary',
         content: [
           { type: 'text', text: 'We identify the particle\'s mass and velocity:' },
           { type: 'text', text: `• Mass (m): ${mass} kg` },
@@ -69,13 +69,13 @@ export function solveQuantum(mode, params) {
         ],
       });
 
-      // 2. EQUATIONS
+      // 2. FORMULA
       steps.push({
-        step: 'EQUATIONS',
-        badge: 'formula',
+        step: 'FORMULA',
+        badge: 'secondary',
         content: [
           { type: 'text', text: 'The de Broglie hypothesis states that matter has wave-like properties:' },
-          { type: 'highlight', text: 'λ = h / p = h / (m · v)' },
+          { type: 'formula', text: 'λ = h / p = h / (m · v)' },
         ],
       });
 
@@ -84,20 +84,20 @@ export function solveQuantum(mode, params) {
       const wavelength = h / momentum;
       steps.push({
         step: 'CALCULATION',
-        badge: 'math',
+        badge: 'primary',
         content: [
           { type: 'text', text: `1. Momentum (p) = ${mass} × ${v} = ${momentum.toExponential(3)} kg·m/s` },
           { type: 'text', text: `2. Wavelength (λ) = ${h.toExponential(3)} / ${momentum.toExponential(3)}` },
-          { type: 'highlight', text: `λ = ${wavelength.toExponential(4)} meters` },
+          { type: 'result', text: `λ = ${wavelength.toExponential(4)} meters` },
         ],
       });
 
-      // 4. INTERPRETATION / ANALYSIS
+      // 4. ANALYSIS
       steps.push({
-        step: 'INTERPRETATION / ANALYSIS',
-        badge: 'insight',
+        step: 'ANALYSIS',
+        badge: 'secondary',
         content: [
-          { type: 'text', text: `The particle has a de Broglie wavelength of ${wavelength.toExponential(2)} meters.` },
+          { type: 'text', text: `✅ The particle has a de Broglie wavelength of ${wavelength.toExponential(2)} meters.` },
           { type: 'text', text: '' },
           { type: 'text', text: '💡 WAVE-PARTICLE DUALITY: Everything in the universe exhibits both wave and particle properties. For large objects (like humans), the wavelength is so small it is undetectable. For subatomic particles like electrons, this "waviness" is fundamental to their behavior in atoms.' },
         ],

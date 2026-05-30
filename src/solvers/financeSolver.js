@@ -4,29 +4,75 @@ export function solveFinance(mode, params) {
   const steps = [];
   let result;
 
+  // Helper function for superscripts
+  const getSuperscript = (num) => {
+    const superscripts = {
+      '0': '⁰', '1': '¹', '2': '²', '3': '³', '4': '⁴',
+      '5': '⁵', '6': '⁶', '7': '⁷', '8': '⁸', '9': '⁹',
+      '.': '·', '-': '⁻'
+    };
+    return String(num).split('').map(digit => superscripts[digit] || digit).join('');
+  };
+
   switch (mode) {
     case 'compound': {
-      // A = P(1 + r/n)^(nt)
-      const amount = principal * Math.pow(1 + r / compoundFreq, compoundFreq * time);
+      const n = compoundFreq;
+      const nt = n * time;
+      const amount = principal * Math.pow(1 + r / n, nt);
       const interestEarned = amount - principal;
       
       steps.push({
-        step: 'COMPOUND INTEREST',
+        step: 'GIVEN',
         badge: 'primary',
         content: [
-          { type: 'text', text: '💰 Compound Interest Formula' },
-          { type: 'text', text: 'A = P(1 + r/n)^(nt)' },
-          { type: 'text', text: `P = $${principal} (principal)` },
-          { type: 'text', text: `r = ${rate}% = ${r} (annual rate)` },
-          { type: 'text', text: `n = ${compoundFreq} (compounds per year)` },
-          { type: 'text', text: `t = ${time} years` },
+          { type: 'text', text: '📊 Compound Interest Calculation' },
+          { type: 'text', text: `• Principal (P): $${principal.toLocaleString()}` },
+          { type: 'text', text: `• Annual Rate (r): ${rate}%` },
+          { type: 'text', text: `• Compounding Frequency (n): ${n} times per year` },
+          { type: 'text', text: `• Time (t): ${time} years` },
+        ],
+      });
+
+      steps.push({
+        step: 'FORMULA',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: 'Compound Interest Formula:' },
+          { type: 'formula', text: 'A = P(1 + r/n)ⁿᵗ' },
+          { type: 'text', text: 'Where A = Final Amount, P = Principal' },
+        ],
+      });
+
+      const ratePerPeriod = (r / n).toFixed(6);
+      const growthFactor = (1 + r / n).toFixed(6);
+      
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'primary',
+        content: [
+          { type: 'text', text: 'Step 1: Calculate rate per period' },
+          { type: 'text', text: `r/n = ${r} / ${n} = ${ratePerPeriod}` },
           { type: 'text', text: '' },
-          { type: 'text', text: `Step 1: r/n = ${r}/${compoundFreq} = ${(r / compoundFreq).toFixed(6)}` },
-          { type: 'text', text: `Step 2: nt = ${compoundFreq} × ${time} = ${compoundFreq * time}` },
-          { type: 'text', text: `Step 3: (1 + r/n)^(nt) = (${(1 + r / compoundFreq).toFixed(6)})^${compoundFreq * time} = ${Math.pow(1 + r / compoundFreq, compoundFreq * time).toFixed(4)}` },
-          { type: 'text', text: `Step 4: A = ${principal} × ${Math.pow(1 + r / compoundFreq, compoundFreq * time).toFixed(4)}` },
-          { type: 'highlight', text: `A = $${amount.toFixed(2)}` },
-          { type: 'text', text: `Interest earned: $${interestEarned.toFixed(2)}` },
+          { type: 'text', text: 'Step 2: Calculate growth factor' },
+          { type: 'text', text: `(1 + r/n) = 1 + ${ratePerPeriod} = ${growthFactor}` },
+          { type: 'text', text: '' },
+          { type: 'text', text: 'Step 3: Calculate total periods' },
+          { type: 'text', text: `n × t = ${n} × ${time} = ${nt}` },
+          { type: 'text', text: '' },
+          { type: 'text', text: 'Step 4: Apply compound interest formula' },
+          { type: 'text', text: `A = ${principal} × (${growthFactor})^${nt}` },
+          { type: 'text', text: `A = ${principal} × ${Math.pow(1 + r / n, nt).toFixed(6)}` },
+          { type: 'result', text: `A = $${amount.toFixed(2)}` },
+        ],
+      });
+
+      steps.push({
+        step: 'ANALYSIS',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: `💰 Total Interest Earned: $${interestEarned.toFixed(2)}` },
+          { type: 'text', text: `📈 Return on Investment: ${((interestEarned / principal) * 100).toFixed(2)}%` },
+          { type: 'text', text: '💡 Compounding more frequently (higher n) increases your yield due to earning interest on interest.' },
         ],
       });
       result = amount;
@@ -34,24 +80,53 @@ export function solveFinance(mode, params) {
     }
 
     case 'simple': {
-      // I = Prt, A = P + I
       const simpleInterest = principal * r * time;
       const totalSimple = principal + simpleInterest;
       
       steps.push({
-        step: 'SIMPLE INTEREST',
+        step: 'GIVEN',
         badge: 'primary',
         content: [
-          { type: 'text', text: '💰 Simple Interest Formula' },
-          { type: 'text', text: 'I = Prt, A = P + I' },
-          { type: 'text', text: `P = $${principal}` },
-          { type: 'text', text: `r = ${rate}% = ${r}` },
-          { type: 'text', text: `t = ${time} years` },
+          { type: 'text', text: '📊 Simple Interest Calculation' },
+          { type: 'text', text: `• Principal (P): $${principal.toLocaleString()}` },
+          { type: 'text', text: `• Rate (r): ${rate}%` },
+          { type: 'text', text: `• Time (t): ${time} years` },
+        ],
+      });
+
+      steps.push({
+        step: 'FORMULA',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: 'Simple Interest Formulas:' },
+          { type: 'formula', text: 'I = P · r · t' },
+          { type: 'formula', text: 'A = P + I' },
+          { type: 'text', text: 'Where I = Interest, A = Total Amount' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'primary',
+        content: [
+          { type: 'text', text: 'Step 1: Calculate the interest' },
+          { type: 'text', text: `I = ${principal} × ${r} × ${time}` },
+          { type: 'text', text: `I = ${principal} × ${(r * time).toFixed(4)}` },
+          { type: 'result', text: `I = $${simpleInterest.toFixed(2)}` },
           { type: 'text', text: '' },
-          { type: 'text', text: `Interest: I = ${principal} × ${r} × ${time}` },
-          { type: 'highlight', text: `I = $${simpleInterest.toFixed(2)}` },
-          { type: 'text', text: `Total: A = ${principal} + ${simpleInterest.toFixed(2)}` },
-          { type: 'highlight', text: `A = $${totalSimple.toFixed(2)}` },
+          { type: 'text', text: 'Step 2: Add interest to principal' },
+          { type: 'text', text: `A = ${principal} + ${simpleInterest.toFixed(2)}` },
+          { type: 'result', text: `A = $${totalSimple.toFixed(2)}` },
+        ],
+      });
+
+      steps.push({
+        step: 'ANALYSIS',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: `💰 Total Interest: $${simpleInterest.toFixed(2)}` },
+          { type: 'text', text: '💡 Simple interest only earns on the original principal, not on accumulated interest.' },
+          { type: 'text', text: '📊 Best for short-term loans or when you want predictable returns.' },
         ],
       });
       result = totalSimple;
@@ -59,7 +134,6 @@ export function solveFinance(mode, params) {
     }
 
     case 'loan': {
-      // PMT = P * [r(1+r)^n] / [(1+r)^n - 1]
       const monthlyRate = r / 12;
       const numPayments = time * 12;
       const monthlyPayment = principal * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
@@ -68,20 +142,53 @@ export function solveFinance(mode, params) {
       const totalInterest = totalPaid - principal;
       
       steps.push({
-        step: 'LOAN AMORTIZATION',
+        step: 'GIVEN',
         badge: 'primary',
         content: [
-          { type: 'text', text: '💰 Loan Payment Formula' },
-          { type: 'text', text: 'PMT = P × [r(1+r)^n] / [(1+r)^n - 1]' },
-          { type: 'text', text: `Loan amount: $${principal}` },
-          { type: 'text', text: `Annual rate: ${rate}%` },
-          { type: 'text', text: `Monthly rate: ${rate}%/12 = ${(monthlyRate * 100).toFixed(4)}%` },
-          { type: 'text', text: `Number of payments: ${time} × 12 = ${numPayments}` },
-          { type: 'highlight', text: `Monthly Payment: $${monthlyPayment.toFixed(2)}` },
-          { type: 'text', text: `Total paid: $${totalPaid.toFixed(2)}` },
-          { type: 'text', text: `Total interest: $${totalInterest.toFixed(2)}` },
+          { type: 'text', text: '📊 Loan Payment Calculation' },
+          { type: 'text', text: `• Loan Amount: $${principal.toLocaleString()}` },
+          { type: 'text', text: `• Annual Interest Rate: ${rate}%` },
+          { type: 'text', text: `• Loan Term: ${time} years (${numPayments} months)` },
+        ],
+      });
+
+      steps.push({
+        step: 'FORMULA',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: 'Monthly Payment Formula (Amortization):' },
+          { type: 'formula', text: 'PMT = P × [r(1 + r)ⁿ] / [(1 + r)ⁿ − 1]' },
+          { type: 'text', text: 'Where r = monthly rate, n = number of payments' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'primary',
+        content: [
+          { type: 'text', text: 'Step 1: Calculate monthly interest rate' },
+          { type: 'text', text: `r = ${rate}% / 12 = ${(monthlyRate * 100).toFixed(4)}%` },
           { type: 'text', text: '' },
-          { type: 'text', text: '💡 Tip: Making extra payments reduces total interest!' },
+          { type: 'text', text: 'Step 2: Calculate number of payments' },
+          { type: 'text', text: `n = ${time} × 12 = ${numPayments} months` },
+          { type: 'text', text: '' },
+          { type: 'text', text: 'Step 3: Apply loan payment formula' },
+          { type: 'text', text: `Monthly Payment = ${principal} × [${monthlyRate.toFixed(6)}(1 + ${monthlyRate.toFixed(6)})^${numPayments}] / [(1 + ${monthlyRate.toFixed(6)})^${numPayments} − 1]` },
+          { type: 'result', text: `Monthly Payment = $${monthlyPayment.toFixed(2)}` },
+          { type: 'text', text: '' },
+          { type: 'text', text: 'Step 4: Calculate total cost' },
+          { type: 'text', text: `Total Paid = $${monthlyPayment.toFixed(2)} × ${numPayments} = $${totalPaid.toFixed(2)}` },
+        ],
+      });
+
+      steps.push({
+        step: 'ANALYSIS',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: `💰 Total Interest Cost: $${totalInterest.toFixed(2)}` },
+          { type: 'text', text: `📊 Interest as % of Principal: ${((totalInterest / principal) * 100).toFixed(1)}%` },
+          { type: 'text', text: '💡 Making extra payments or paying bi-weekly can significantly reduce total interest paid.' },
+          { type: 'text', text: '💡 Even one extra payment per year can reduce a 30-year mortgage by several years.' },
         ],
       });
       result = monthlyPayment;
@@ -89,9 +196,9 @@ export function solveFinance(mode, params) {
     }
 
     case 'savings': {
-      // FV = P(1+r/n)^(nt) + PMT[((1+r/n)^(nt) - 1)/(r/n)]
-      const ratePerPeriod = r / compoundFreq;
-      const totalPeriods = compoundFreq * time;
+      const n = compoundFreq;
+      const ratePerPeriod = r / n;
+      const totalPeriods = n * time;
       const compoundFactor = Math.pow(1 + ratePerPeriod, totalPeriods);
       const futureValue = principal * compoundFactor +
                          payment * ((compoundFactor - 1) / ratePerPeriod);
@@ -99,21 +206,57 @@ export function solveFinance(mode, params) {
       const totalInterestEarned = futureValue - totalContributions;
       
       steps.push({
-        step: 'SAVINGS GOAL',
+        step: 'GIVEN',
         badge: 'primary',
         content: [
-          { type: 'text', text: '💰 Future Value with Regular Contributions' },
-          { type: 'text', text: 'FV = P(1+r/n)^(nt) + PMT[((1+r/n)^(nt) - 1)/(r/n)]' },
-          { type: 'text', text: `Initial deposit: $${principal}` },
-          { type: 'text', text: `Regular contribution: $${payment}` },
-          { type: 'text', text: `Annual rate: ${rate}%` },
-          { type: 'text', text: `Compounds per year: ${compoundFreq}` },
-          { type: 'text', text: `Time: ${time} years (${totalPeriods} periods)` },
+          { type: 'text', text: '📊 Savings Growth Calculation' },
+          { type: 'text', text: `• Initial Deposit: $${principal.toLocaleString()}` },
+          { type: 'text', text: `• Regular Contribution: $${payment} per period` },
+          { type: 'text', text: `• Annual Rate: ${rate}%` },
+          { type: 'text', text: `• Compounding: ${n} times per year` },
+          { type: 'text', text: `• Time: ${time} years (${totalPeriods} periods)` },
+        ],
+      });
+
+      steps.push({
+        step: 'FORMULA',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: 'Future Value with Regular Contributions:' },
+          { type: 'formula', text: 'FV = P(1 + r/n)ⁿᵗ + PMT[((1 + r/n)ⁿᵗ − 1) / (r/n)]' },
+          { type: 'text', text: 'First term: Growth of initial principal' },
+          { type: 'text', text: 'Second term: Growth of regular contributions' },
+        ],
+      });
+
+      steps.push({
+        step: 'CALCULATION',
+        badge: 'primary',
+        content: [
+          { type: 'text', text: 'Step 1: Calculate growth of initial principal' },
+          { type: 'text', text: `P(1 + r/n)ⁿᵗ = ${principal} × (1 + ${ratePerPeriod.toFixed(6)})^${totalPeriods}` },
+          { type: 'text', text: `= ${principal} × ${compoundFactor.toFixed(6)}` },
+          { type: 'text', text: `= $${(principal * compoundFactor).toFixed(2)}` },
           { type: 'text', text: '' },
-          { type: 'text', text: `Growth factor: (1 + ${ratePerPeriod.toFixed(6)})^${totalPeriods} = ${compoundFactor.toFixed(4)}` },
-          { type: 'highlight', text: `Future Value: $${futureValue.toFixed(2)}` },
-          { type: 'text', text: `Total contributions: $${totalContributions.toFixed(2)}` },
-          { type: 'text', text: `Interest earned: $${totalInterestEarned.toFixed(2)}` },
+          { type: 'text', text: 'Step 2: Calculate growth of contributions' },
+          { type: 'text', text: `PMT[((1 + r/n)ⁿᵗ − 1) / (r/n)]` },
+          { type: 'text', text: `= ${payment} × (${compoundFactor.toFixed(6)} − 1) / ${ratePerPeriod.toFixed(6)}` },
+          { type: 'text', text: `= $${(payment * ((compoundFactor - 1) / ratePerPeriod)).toFixed(2)}` },
+          { type: 'text', text: '' },
+          { type: 'text', text: 'Step 3: Total future value' },
+          { type: 'result', text: `FV = $${futureValue.toFixed(2)}` },
+        ],
+      });
+
+      steps.push({
+        step: 'ANALYSIS',
+        badge: 'secondary',
+        content: [
+          { type: 'text', text: `💰 Total Contributions: $${totalContributions.toFixed(2)}` },
+          { type: 'text', text: `📈 Interest Earned: $${totalInterestEarned.toFixed(2)}` },
+          { type: 'text', text: `📊 Return: ${((totalInterestEarned / totalContributions) * 100).toFixed(1)}% on contributions` },
+          { type: 'text', text: '💡 Starting early and being consistent are the keys to building wealth through compound interest.' },
+          { type: 'text', text: '💡 Even small regular contributions can grow significantly over long periods.' },
         ],
       });
       result = futureValue;

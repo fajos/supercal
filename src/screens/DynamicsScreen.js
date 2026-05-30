@@ -51,7 +51,15 @@ export default function DynamicsScreen() {
         };
         const solverResult = solveDynamics(mode, params);
 
-        const shareText = `Dynamics Result (${mode}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
+        const modeLabels = {
+          newton2: "Newton's 2nd Law",
+          friction: 'Friction',
+          inclinedPlane: 'Inclined Plane',
+          momentum: 'Momentum',
+          weight: 'Weight'
+        };
+
+        const shareText = `Dynamics Result (${modeLabels[mode]}):\nInput: ${JSON.stringify(params)}\nResult: ${solverResult.result}\n\nSolved with SuperCalc`;
 
         setResult({ ...solverResult, shareText });
 
@@ -75,11 +83,49 @@ export default function DynamicsScreen() {
 
   const renderContent = (content) => {
     return content.map((item, idx) => {
-      if (item.type === 'highlight') return <Text key={idx} style={styles.highlightText}>{item.text}</Text>;
-      if (item.type === 'formula') return <Text key={idx} style={styles.formulaText}>{item.text}</Text>;
-      return <Text key={idx} style={styles.stepText}>{item.text}</Text>;
+      switch (item.type) {
+        case 'formula':
+          return (
+            <View key={idx} style={styles.formulaBox}>
+              <Text style={styles.formulaText}>{item.text}</Text>
+            </View>
+          );
+        case 'highlight':
+          return (
+            <Text key={idx} style={styles.highlightText}>
+              {item.text}
+            </Text>
+          );
+        case 'result':
+          return (
+            <View key={idx} style={styles.resultBox}>
+              <Text style={styles.resultText}>{item.text}</Text>
+            </View>
+          );
+        case 'badge':
+          return (
+            <View key={idx} style={styles.inlineBadge}>
+              <Text style={styles.inlineBadgeText}>{item.text}</Text>
+            </View>
+          );
+        default:
+          return (
+            <Text key={idx} style={styles.stepText}>
+              {item.text}
+            </Text>
+          );
+      }
     });
   };
+
+  // Operation buttons configuration with symbols
+  const operations = [
+    { id: 'newton2', label: '2nd Law', symbol: 'F=ma' },
+    { id: 'friction', label: 'Friction', symbol: 'μ' },
+    { id: 'inclinedPlane', label: 'Incline', symbol: '∠' },
+    { id: 'momentum', label: 'Momentum', symbol: 'p' },
+    { id: 'weight', label: 'Weight', symbol: 'W' },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -93,57 +139,109 @@ export default function DynamicsScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeGrid}>
-              {[
-                { id: 'newton2', label: "Newton's 2nd" },
-                { id: 'friction', label: 'Friction' },
-                { id: 'inclinedPlane', label: 'Inclined Plane' },
-                { id: 'momentum', label: 'Momentum' },
-                { id: 'weight', label: 'Weight' },
-              ].map(m => (
-                <ModeChip
-                  key={m.id}
-                  label={m.label}
-                  active={mode === m.id}
+            {/* Operation Selector Grid */}
+            <View style={styles.operationGrid}>
+              {operations.map(op => (
+                <TouchableOpacity
+                  key={op.id}
+                  style={[
+                    styles.operationBtn,
+                    mode === op.id && styles.operationBtnActive,
+                  ]}
                   onPress={() => {
                     Haptics.selectionAsync();
-                    setMode(m.id);
+                    setMode(op.id);
                     setResult(null);
                   }}
-                  style={styles.modeBtn}
-                />
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.operationSymbol,
+                    mode === op.id && styles.operationSymbolActive,
+                  ]}>
+                    {op.symbol}
+                  </Text>
+                  <Text style={[
+                    styles.operationLabel,
+                    mode === op.id && styles.operationLabelActive,
+                  ]} numberOfLines={1} adjustsFontSizeToFit>
+                    {op.label}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
 
             <Text style={[styles.inputLabel, { marginTop: 12 }]}>Mass (kg):</Text>
-            <TextInput style={styles.input} value={mass} onChangeText={setMass} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+            <TextInput 
+              style={styles.input} 
+              value={mass} 
+              onChangeText={setMass} 
+              keyboardType="decimal-pad" 
+              placeholder="Enter mass"
+              placeholderTextColor={colors.textSecondary} 
+            />
 
             <Text style={[styles.inputLabel, { marginTop: 12 }]}>
-              {mode === 'momentum' ? 'Force (N) - for impulse:' : 'Applied Force (N):'}
+              {mode === 'momentum' ? 'Force (N) − for impulse:' : 'Applied Force (N):'}
             </Text>
-            <TextInput style={styles.input} value={force} onChangeText={setForce} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+            <TextInput 
+              style={styles.input} 
+              value={force} 
+              onChangeText={setForce} 
+              keyboardType="decimal-pad" 
+              placeholder="Enter force"
+              placeholderTextColor={colors.textSecondary} 
+            />
 
             {mode === 'friction' || mode === 'inclinedPlane' ? (
               <>
                 <Text style={[styles.inputLabel, { marginTop: 12 }]}>Coefficient of Friction (μ):</Text>
-                <TextInput style={styles.input} value={friction} onChangeText={setFriction} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={friction} 
+                  onChangeText={setFriction} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter coefficient"
+                  placeholderTextColor={colors.textSecondary} 
+                />
               </>
             ) : null}
 
             {mode === 'inclinedPlane' ? (
               <>
                 <Text style={[styles.inputLabel, { marginTop: 12 }]}>Angle of Incline (degrees):</Text>
-                <TextInput style={styles.input} value={angle} onChangeText={setAngle} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={angle} 
+                  onChangeText={setAngle} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter angle"
+                  placeholderTextColor={colors.textSecondary} 
+                />
               </>
             ) : null}
 
             {mode === 'momentum' ? (
               <>
                 <Text style={[styles.inputLabel, { marginTop: 12 }]}>Initial Velocity (m/s):</Text>
-                <TextInput style={styles.input} value={velocity} onChangeText={setVelocity} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={velocity} 
+                  onChangeText={setVelocity} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter velocity"
+                  placeholderTextColor={colors.textSecondary} 
+                />
 
                 <Text style={[styles.inputLabel, { marginTop: 12 }]}>Time of Force Application (s):</Text>
-                <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={time} 
+                  onChangeText={setTime} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter time"
+                  placeholderTextColor={colors.textSecondary} 
+                />
               </>
             ) : null}
 
@@ -175,8 +273,13 @@ export default function DynamicsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgPrimary },
-  flex: { flex: 1 },
+  container: { 
+    flex: 1, 
+    backgroundColor: colors.bgPrimary 
+  },
+  flex: { 
+    flex: 1 
+  },
   scrollContent: {
     padding: 16,
     paddingBottom: 40,
@@ -195,21 +298,137 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 800,
   },
-  modeGrid: {
+  
+  // Operation Grid Styles
+  operationGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 8,
     marginBottom: 16,
+    width: '100%',
   },
-  modeBtn: {
-    minWidth: '30%',
-    flex: 1,
+  operationBtn: {
+    width: '18%', // 5 buttons per row
+    minWidth: 60,
+    aspectRatio: 1, // Makes it square
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 6,
   },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
-  input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
-  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
-  highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
-  formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
-  finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
+  operationBtnActive: {
+    backgroundColor: colors.accentBg,
+    borderColor: colors.accent,
+  },
+  operationSymbol: {
+    color: colors.textSecondary,
+    fontSize: 16,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  operationSymbolActive: {
+    color: colors.accent,
+  },
+  operationLabel: {
+    color: colors.textSecondary,
+    fontSize: 9,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  operationLabelActive: {
+    color: colors.accentGlow,
+    fontWeight: '600',
+  },
+  
+  // Input Styles
+  inputLabel: { 
+    fontSize: 13, 
+    color: colors.textSecondary, 
+    marginBottom: 8 
+  },
+  input: { 
+    backgroundColor: colors.bgInput, 
+    borderWidth: 1.5, 
+    borderColor: colors.border, 
+    borderRadius: 14, 
+    color: colors.white, 
+    fontSize: 16, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    padding: 14, 
+    textAlign: 'center' 
+  },
+  
+  // Step Content Styles
+  stepText: { 
+    color: colors.textPrimary, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    lineHeight: 22 
+  },
+  highlightText: { 
+    color: colors.accentGlow, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '600', 
+    lineHeight: 22 
+  },
+  formulaBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  formulaText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  resultBox: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  resultText: {
+    color: colors.purpleGlow,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  inlineBadge: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    borderRadius: 12,
+    alignSelf: 'flex-start',
+    marginVertical: 4,
+  },
+  inlineBadgeText: {
+    color: colors.accent,
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  
+  // Final Answer
+  finalText: { 
+    color: colors.white, 
+    fontSize: 22, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '700' 
+  },
 });

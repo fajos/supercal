@@ -75,6 +75,16 @@ export default function SimultaneousScreen() {
   const renderContent = (content) => {
     return content.map((item, idx) => {
       if (item.type === 'highlight') return <Text key={idx} style={styles.highlightText}>{item.text}</Text>;
+      if (item.type === 'result') return (
+        <View key={idx} style={styles.resultBox}>
+          <Text style={styles.resultText}>{item.text}</Text>
+        </View>
+      );
+      if (item.type === 'formula') return (
+        <View key={idx} style={styles.formulaBox}>
+          <Text style={styles.formulaText}>{item.text}</Text>
+        </View>
+      );
       return <Text key={idx} style={styles.stepText}>{item.text}</Text>;
     });
   };
@@ -208,5 +218,35 @@ const styles = StyleSheet.create({
   sep: { color: colors.textSecondary, fontSize: 12 },
   stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
   highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
+  resultBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginVertical: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+  },
+  resultText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  formulaBox: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginVertical: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
+  },
+  formulaText: {
+    color: colors.purpleGlow,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
   finalText: { color: colors.white, fontSize: 18, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 30 },
 });

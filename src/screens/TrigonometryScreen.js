@@ -74,11 +74,11 @@ export default function TrigonometryScreen() {
   const renderContent = (content) => {
     return content.map((item, idx) => {
       switch (item.type) {
-        case 'highlight':
+        case 'formula':
           return (
-            <Text key={idx} style={styles.highlightText}>
-              {item.text}
-            </Text>
+            <View key={idx} style={styles.formulaBox}>
+              <Text style={styles.formulaText}>{item.text}</Text>
+            </View>
           );
         case 'result':
           return (
@@ -283,7 +283,7 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
   resultBox: {
-    backgroundColor: colors.purpleBg,
+    backgroundColor: colors.accentBg,
     paddingHorizontal: 10,
     paddingVertical: 4,
     borderRadius: 8,
@@ -291,7 +291,21 @@ const styles = StyleSheet.create({
     marginVertical: 2,
   },
   resultText: {
-    color: '#c4b5fd',
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  formulaBox: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginVertical: 2,
+  },
+  formulaText: {
+    color: colors.purpleGlow,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 14,
     fontWeight: '600',

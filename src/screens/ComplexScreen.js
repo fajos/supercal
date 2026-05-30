@@ -48,15 +48,15 @@ export default function ComplexScreen() {
         const z2 = { real: parseFloat(real2) || 0, imag: parseFloat(imag2) || 0 };
         const solverResult = solveComplexOperation(operation, z1, z2);
 
-        const z1Str = `${z1.real}${z1.imag >= 0 ? '+' : '-'}${Math.abs(z1.imag)}i`;
-        const z2Str = `${z2.real}${z2.imag >= 0 ? '+' : '-'}${Math.abs(z2.imag)}i`;
+        const z1Str = `${z1.real}${z1.imag >= 0 ? '+' : '−'}${Math.abs(z1.imag)}i`;
+        const z2Str = `${z2.real}${z2.imag >= 0 ? '+' : '−'}${Math.abs(z2.imag)}i`;
 
         let opLabel = operation.charAt(0).toUpperCase() + operation.slice(1);
         let resStr = typeof solverResult.result === 'object'
-          ? `${solverResult.result.real} ${solverResult.result.imag >= 0 ? '+' : '-'} ${Math.abs(solverResult.result.imag)}i`
+          ? `${solverResult.result.real} ${solverResult.result.imag >= 0 ? '+' : '−'} ${Math.abs(solverResult.result.imag)}i`
           : solverResult.result;
 
-        const shareText = `Complex Number Result (${opLabel}):\nZ1: ${z1Str}${showSecondInput ? `\nZ2: ${z2Str}` : ''}\nResult: ${resStr}\n\nSolved with SuperCalc`;
+        const shareText = `Complex Number Result (${opLabel}):\nZ₁: ${z1Str}${showSecondInput ? `\nZ₂: ${z2Str}` : ''}\nResult: ${resStr}\n\nSolved with SuperCalc`;
 
         setResult({ ...solverResult, shareText });
 
@@ -80,12 +80,37 @@ export default function ComplexScreen() {
 
   const renderContent = (content) => {
     return content.map((item, idx) => {
-      if (item.type === 'highlight') return <Text key={idx} style={styles.highlightText}>{item.text}</Text>;
+      if (item.type === 'formula') {
+        return (
+          <View key={idx} style={styles.formulaBox}>
+            <Text style={styles.formulaText}>{item.text}</Text>
+          </View>
+        );
+      }
+      if (item.type === 'result') {
+        return (
+          <View key={idx} style={styles.resultBox}>
+            <Text style={styles.resultText}>{item.text}</Text>
+          </View>
+        );
+      }
       return <Text key={idx} style={styles.stepText}>{item.text}</Text>;
     });
   };
 
-  const showSecondInput = ['add', 'subtract', 'multiply', 'divide'].includes(operation);
+  const showSecondInput = ['add', 'subtract', 'multiply', 'divide', 'power'].includes(operation);
+
+  // Operation buttons with fixed width and no overflow
+  const operations = [
+    { id: 'add', label: 'Add', symbol: '+' },
+    { id: 'subtract', label: 'Subtract', symbol: '−' },
+    { id: 'multiply', label: 'Multiply', symbol: '×' },
+    { id: 'divide', label: 'Divide', symbol: '÷' },
+    { id: 'conjugate', label: 'Conjugate', symbol: 'z*' },
+    { id: 'magnitude', label: 'Magnitude', symbol: '|z|' },
+    { id: 'argument', label: 'Argument', symbol: 'θ' },
+    { id: 'power', label: 'Power', symbol: 'zⁿ' },
+  ];
 
   return (
     <SafeAreaView style={styles.container} edges={['top']}>
@@ -99,42 +124,102 @@ export default function ComplexScreen() {
           </View>
 
           <InputCard style={isTablet && styles.tabletInputCard}>
-            <View style={styles.modeGrid}>
-              {[
-                { id: 'add', label: 'Add' },
-                { id: 'multiply', label: 'Multiply' },
-                { id: 'conjugate', label: 'Conjugate' },
-                { id: 'magnitude', label: 'Magnitude' },
-              ].map(op => (
-                <ModeChip
+            {/* Operation Selector Grid */}
+            <View style={styles.operationGrid}>
+              {operations.map(op => (
+                <TouchableOpacity
                   key={op.id}
-                  label={op.label}
-                  active={operation === op.id}
+                  style={[
+                    styles.operationBtn,
+                    operation === op.id && styles.operationBtnActive,
+                  ]}
                   onPress={() => {
                     setOperation(op.id);
                     setResult(null);
                   }}
-                  style={styles.modeBtn}
-                />
+                  activeOpacity={0.7}
+                >
+                  <Text style={[
+                    styles.operationSymbol,
+                    operation === op.id && styles.operationSymbolActive,
+                  ]}>
+                    {op.symbol}
+                  </Text>
+                  <Text style={[
+                    styles.operationLabel,
+                    operation === op.id && styles.operationLabelActive,
+                  ]} numberOfLines={1} adjustsFontSizeToFit>
+                    {op.label}
+                  </Text>
+                </TouchableOpacity>
               ))}
             </View>
 
+            <Text style={styles.sectionLabel}>First Complex Number (Z₁)</Text>
+            
             <Text style={styles.inputLabel}>Real part (a):</Text>
-            <TextInput style={styles.input} value={real1} onChangeText={setReal1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+            <TextInput 
+              style={styles.input} 
+              value={real1} 
+              onChangeText={setReal1} 
+              keyboardType="decimal-pad" 
+              placeholder="Enter real part"
+              placeholderTextColor={colors.textSecondary} 
+            />
 
             <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (b):</Text>
-            <TextInput style={styles.input} value={imag1} onChangeText={setImag1} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+            <TextInput 
+              style={styles.input} 
+              value={imag1} 
+              onChangeText={setImag1} 
+              keyboardType="decimal-pad" 
+              placeholder="Enter imaginary part"
+              placeholderTextColor={colors.textSecondary} 
+            />
 
             {showSecondInput && (
-              <>
-                <Text style={[styles.inputLabel, { marginTop: 12, marginBottom: 4, fontWeight: '600' }]}>Second Number:</Text>
-                <Text style={styles.inputLabel}>Real part (c):</Text>
-                <TextInput style={styles.input} value={real2} onChangeText={setReal2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+  <>
+    <Text style={[styles.sectionLabel, { marginTop: 16 }]}>
+      {operation === 'power' ? 'Power (n)' : 'Second Complex Number (Z₂)'}
+    </Text>
+    
+    {operation === 'power' ? (
+      <>
+        <Text style={styles.inputLabel}>Exponent (integer):</Text>
+        <TextInput 
+          style={styles.input} 
+          value={real2} 
+          onChangeText={setReal2} 
+          keyboardType="number-pad" 
+          placeholder="Enter exponent"
+          placeholderTextColor={colors.textSecondary} 
+        />
+      </>
+    ) : (
+      <>
+        <Text style={styles.inputLabel}>Real part (c):</Text>
+        <TextInput 
+          style={styles.input} 
+          value={real2} 
+          onChangeText={setReal2} 
+          keyboardType="decimal-pad" 
+          placeholder="Enter real part"
+          placeholderTextColor={colors.textSecondary} 
+        />
 
-                <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (d):</Text>
-                <TextInput style={styles.input} value={imag2} onChangeText={setImag2} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
-              </>
-            )}
+        <Text style={[styles.inputLabel, { marginTop: 12 }]}>Imaginary part (d):</Text>
+        <TextInput 
+          style={styles.input} 
+          value={imag2} 
+          onChangeText={setImag2} 
+          keyboardType="decimal-pad" 
+          placeholder="Enter imaginary part"
+          placeholderTextColor={colors.textSecondary} 
+        />
+      </>
+    )}
+  </>
+)}
 
             <SolveButton
               onPress={handleSolve}
@@ -155,7 +240,7 @@ export default function ComplexScreen() {
               <FinalAnswer label="🎯 Result" shareText={result.shareText}>
                 <Text style={styles.finalText}>
                   {typeof result.result === 'object'
-                    ? `${result.result.real} ${result.result.imag >= 0 ? '+' : '-'} ${Math.abs(result.result.imag)}i`
+                    ? `${result.result.real} ${result.result.imag >= 0 ? '+' : '−'} ${Math.abs(result.result.imag)}i`
                     : result.result}
                 </Text>
               </FinalAnswer>
@@ -168,27 +253,145 @@ export default function ComplexScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bgPrimary },
-  scrollView: { flex: 1 },
-  scrollContent: { padding: 16, paddingBottom: 40, alignItems: 'center' },
-  headerContainer: { width: '100%', maxWidth: 800 },
-  tabletInputCard: { maxWidth: 600, width: '100%' },
-  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  modeGrid: {
+  container: { 
+    flex: 1, 
+    backgroundColor: colors.bgPrimary 
+  },
+  scrollView: { 
+    flex: 1 
+  },
+  scrollContent: { 
+    padding: 16, 
+    paddingBottom: 40, 
+    alignItems: 'center' 
+  },
+  headerContainer: { 
+    width: '100%', 
+    maxWidth: 800 
+  },
+  tabletInputCard: { 
+    maxWidth: 600, 
+    width: '100%' 
+  },
+  solutionArea: { 
+    gap: 0, 
+    width: '100%', 
+    maxWidth: 800 
+  },
+  
+  // Operation Grid Styles
+  operationGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 16,
+    marginBottom: 20,
     width: '100%',
   },
-  modeBtn: {
-    minWidth: '22%',
-    flex: 1,
+  operationBtn: {
+    width: '22%', // Fixed width percentage
+    minWidth: 70,
+    aspectRatio: 1, // Makes it square
+    backgroundColor: colors.bgInput,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 8,
   },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8 },
-  input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center' },
-  stepText: { color: '#c8c8d8', fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
-  highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
-  finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
+  operationBtnActive: {
+    backgroundColor: colors.accentBg,
+    borderColor: colors.accent,
+  },
+  operationSymbol: {
+    color: colors.textSecondary,
+    fontSize: 18,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  operationSymbolActive: {
+    color: colors.accent,
+  },
+  operationLabel: {
+    color: colors.textSecondary,
+    fontSize: 10,
+    fontWeight: '500',
+    textAlign: 'center',
+  },
+  operationLabelActive: {
+    color: colors.accentGlow,
+    fontWeight: '600',
+  },
+  
+  // Section Labels
+  sectionLabel: {
+    fontSize: 14,
+    color: colors.white,
+    fontWeight: '600',
+    marginBottom: 12,
+    marginTop: 4,
+  },
+  
+  // Input Styles
+  inputLabel: { 
+    fontSize: 13, 
+    color: colors.textSecondary, 
+    marginBottom: 8 
+  },
+  input: { 
+    backgroundColor: colors.bgInput, 
+    borderWidth: 1.5, 
+    borderColor: colors.border, 
+    borderRadius: 14, 
+    color: colors.white, 
+    fontSize: 16, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    padding: 14, 
+    textAlign: 'center' 
+  },
+  
+  // Step Content Styles
+  stepText: { 
+    color: colors.textPrimary, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    lineHeight: 22 
+  },
+  resultBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginVertical: 2,
+  },
+  resultText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  formulaBox: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginVertical: 2,
+  },
+  formulaText: {
+    color: colors.purpleGlow,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  
+  // Final Answer
+  finalText: { 
+    color: colors.white, 
+    fontSize: 22, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '700' 
+  },
 });

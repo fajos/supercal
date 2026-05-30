@@ -3,47 +3,47 @@
 export function solveDerivative(expression, variable = 'x') {
   const steps = [];
   
-  // STEP 1: Introduction
+  // 1. GIVEN
   steps.push({
-    step: 'STEP 1',
+    step: 'GIVEN',
     badge: 'primary',
     content: [
       { type: 'text', text: '📐 DIFFERENTIATION SETUP' },
       { type: 'text', text: `Function: f(${variable}) = ${expression}` },
-      { type: 'text', text: `Finding: f'(${variable}) = d/d${variable}[f(${variable})]` },
+      { type: 'text', text: `Finding: f′(${variable}) = d/d${variable}[f(${variable})]` },
       { type: 'text', text: '' },
       { type: 'text', text: 'The derivative tells us the instantaneous rate of change:' },
-      { type: 'text', text: `f'(x) = lim[h→0] (f(x+h) - f(x))/h` },
+      { type: 'formula', text: "f′(x) = lim(h→0) [f(x+h) − f(x)] / h" },
     ],
   });
 
-  // STEP 2: Parse the expression
+  // 2. FORMULA
   const terms = parseExpression(expression, variable);
   
   steps.push({
-    step: 'STEP 2',
+    step: 'FORMULA',
     badge: 'secondary',
     content: [
       { type: 'text', text: '🔍 IDENTIFYING TERMS' },
       { type: 'text', text: 'Break down the function into individual terms:' },
       ...terms.map(term => ({ type: 'text', text: `  • ${term.original}` })),
       { type: 'text', text: '' },
-      { type: 'text', text: 'We\'ll differentiate each term separately using the Sum Rule:' },
-      { type: 'highlight', text: 'd/dx[f(x) + g(x)] = f\'(x) + g\'(x)' },
+      { type: 'text', text: "We'll differentiate each term separately using the Sum Rule:" },
+      { type: 'formula', text: "d/dx[f(x) + g(x)] = f′(x) + g′(x)" },
     ],
   });
 
-  // STEP 3: Differentiate each term with explanations
+  // 3. CALCULATION
   const differentiated = terms.map((term, idx) => {
     const result = differentiateTerm(term, variable);
     
     steps.push({
-      step: `TERM ${idx + 1}`,
+      step: 'CALCULATION',
       badge: 'primary',
       content: [
         { type: 'text', text: `Differentiating: ${term.original}` },
         ...result.explanation,
-        { type: 'highlight', text: `d/d${variable}[${term.original}] = ${result.derivative}` },
+        { type: 'result', text: `d/d${variable}[${term.original}] = ${result.derivative}` },
       ],
     });
     
@@ -52,20 +52,28 @@ export function solveDerivative(expression, variable = 'x') {
 
   // STEP 4: Combine results
   const nonZeroTerms = differentiated.filter(t => t.derivative !== '0');
-  let finalDerivative;
+  let displayDerivative;
+  let evalDerivative;
   
   if (nonZeroTerms.length === 0) {
-    finalDerivative = '0';
+    displayDerivative = '0';
+    evalDerivative = '0';
   } else {
-    finalDerivative = nonZeroTerms
+    displayDerivative = nonZeroTerms
       .map(t => t.derivative)
       .join(' + ')
       .replace(/\+\s*-/g, '- ');
+    
+    evalDerivative = nonZeroTerms
+      .map(t => t.evalDerivative || t.derivative)
+      .join('+')
+      .replace(/\+\-/g, '-')
+      .replace(/\+\s*-/g, '-');
   }
 
   steps.push({
-    step: 'STEP 4',
-    badge: 'secondary',
+    step: 'CALCULATION',
+    badge: 'primary',
     content: [
       { type: 'text', text: '📝 COMBINING RESULTS' },
       { type: 'text', text: 'Add all the individual derivatives together:' },
@@ -73,43 +81,44 @@ export function solveDerivative(expression, variable = 'x') {
         ({ type: 'text', text: `  d/dx[${t.original}] = ${t.derivative}` })
       ),
       { type: 'text', text: '' },
-      { type: 'highlight', text: `f'(${variable}) = ${finalDerivative}` },
+      { type: 'result', text: `f′(${variable}) = ${displayDerivative}` },
     ],
   });
 
   // STEP 5: Simplify
-  const simplified = simplifyExpression(finalDerivative);
+  const simplified = simplifyExpression(displayDerivative);
   
-  if (simplified !== finalDerivative) {
+  if (simplified !== displayDerivative) {
     steps.push({
-      step: 'STEP 5',
-      badge: 'warning',
+      step: 'CALCULATION',
+      badge: 'primary',
       content: [
         { type: 'text', text: '✨ SIMPLIFYING' },
         { type: 'text', text: 'Combine like terms and simplify:' },
-        { type: 'highlight', text: `f'(${variable}) = ${simplified}` },
+        { type: 'result', text: `f′(${variable}) = ${simplified}` },
       ],
     });
-    finalDerivative = simplified;
+    displayDerivative = simplified;
   }
 
-  // STEP 6: Understanding the result
+  // 4. ANALYSIS
   steps.push({
-    step: 'INTERPRETATION',
-    badge: 'primary',
+    step: 'ANALYSIS',
+    badge: 'secondary',
     content: [
       { type: 'text', text: '💡 INTERPRETING THE DERIVATIVE' },
-      { type: 'text', text: `f'(${variable}) = ${finalDerivative} tells us:` },
+      { type: 'text', text: `f′(${variable}) = ${displayDerivative} tells us:` },
       { type: 'text', text: '• The slope of the tangent line at any point x' },
       { type: 'text', text: '• The instantaneous rate of change' },
-      { type: 'text', text: '• Positive f\'(x) → f(x) is increasing' },
-      { type: 'text', text: '• Negative f\'(x) → f(x) is decreasing' },
-      { type: 'text', text: '• f\'(x) = 0 → possible maximum, minimum, or inflection point' },
+      { type: 'text', text: '• Positive f′(x) → f(x) is increasing' },
+      { type: 'text', text: '• Negative f′(x) → f(x) is decreasing' },
+      { type: 'text', text: '• f′(x) = 0 → possible maximum, minimum, or inflection point' },
     ],
   });
 
   return {
-    derivative: finalDerivative,
+    derivative: displayDerivative,
+    evalDerivative: evalDerivative,
     steps,
     rawTerms: terms,
     differentiatedTerms: differentiated,
@@ -134,14 +143,14 @@ function parseExpression(expr, variable) {
     if (ch === '(') depth++;
     if (ch === ')') depth--;
     
-    if ((ch === '+' || ch === '-') && depth === 0 && currentTerm.length > 0) {
+    if ((ch === '+' || ch === '−' || ch === '-') && depth === 0 && currentTerm.length > 0) {
       terms.push({
         original: currentTerm,
         coefficient: extractCoefficient(currentTerm, variable),
         exponent: extractExponent(currentTerm, variable),
         type: classifyTerm(currentTerm, variable),
       });
-      currentTerm = ch === '-' ? '-' : '';
+      currentTerm = (ch === '−' || ch === '-') ? '-' : '';
     } else {
       currentTerm += ch;
     }
@@ -164,16 +173,16 @@ function extractCoefficient(term, variable) {
   if (term.includes('sin(') || term.includes('cos(') || term.includes('tan(') ||
       term.includes('log(') || term.includes('ln(') || term.includes('e^')) {
     const match = term.match(/^(-?\d*\.?\d*)\*/);
-    return match ? parseFloat(match[1]) : 1;
+    return match ? parseFloat(match[1].replace('−', '-')) : 1;
   }
   
-  // For polynomial terms: ax^n
+  // For polynomial terms: axⁿ
   const withoutVar = term.replace(new RegExp(variable + '(\\^\\d+)?', 'g'), '');
-  if (withoutVar === '' || withoutVar === '-') {
-    return withoutVar === '-' ? -1 : 1;
+  if (withoutVar === '' || withoutVar === '−' || withoutVar === '-') {
+    return withoutVar === '−' || withoutVar === '-' ? -1 : 1;
   }
   const cleaned = withoutVar.replace(/\*$/, '');
-  return parseFloat(cleaned) || (cleaned === '-' ? -1 : 1);
+  return parseFloat(cleaned.replace('−', '-')) || (cleaned === '−' || cleaned === '-' ? -1 : 1);
 }
 
 function extractExponent(term, variable) {
@@ -208,7 +217,7 @@ function differentiateTerm(term, variable) {
     case 'constant': {
       explanation.push({ type: 'text', text: 'The derivative of a constant is always 0.' });
       explanation.push({ type: 'text', text: 'This is because a constant function has zero rate of change.' });
-      return { ...term, derivative: '0', explanation };
+      return { ...term, derivative: '0', evalDerivative: '0', explanation };
     }
     
     case 'power': {
@@ -217,23 +226,26 @@ function differentiateTerm(term, variable) {
       const newCoef = coef * exp;
       const newExp = exp - 1;
       
-      explanation.push({ type: 'text', text: 'Using the Power Rule: d/dx[x^n] = n·x^(n-1)' });
-      explanation.push({ type: 'text', text: `Coefficient: ${coef}` });
-      explanation.push({ type: 'text', text: `Exponent: ${exp}` });
-      explanation.push({ type: 'text', text: `Step 1: Multiply by exponent: ${coef} × ${exp} = ${newCoef}` });
-      explanation.push({ type: 'text', text: `Step 2: Subtract 1 from exponent: ${exp} - 1 = ${newExp}` });
+      explanation.push({ type: 'text', text: 'Using the Power Rule:' });
+      explanation.push({ type: 'formula', text: 'd/dx[xⁿ] = n·xⁿ⁻¹' });
+      explanation.push({ type: 'text', text: `Coefficient: ${coef}, Exponent: ${exp}` });
+      explanation.push({ type: 'text', text: `Step 1: Multiply coefficient by exponent: ${coef} · ${exp} = ${newCoef}` });
+      explanation.push({ type: 'text', text: `Step 2: Subtract 1 from exponent: ${exp} − 1 = ${newExp}` });
       
-      let result;
+      let displayResult, evalResult;
       if (newExp === 0) {
-        result = `${newCoef}`;
-        explanation.push({ type: 'text', text: 'x^0 = 1, so the variable disappears.' });
+        displayResult = `${newCoef}`;
+        evalResult = `${newCoef}`;
+        explanation.push({ type: 'text', text: 'x⁰ = 1, so the variable disappears.' });
       } else if (newExp === 1) {
-        result = `${newCoef}${variable}`;
+        displayResult = `${newCoef}${variable}`;
+        evalResult = `${newCoef}*${variable}`;
       } else {
-        result = `${newCoef}${variable}^${newExp}`;
+        displayResult = `${newCoef}${variable}^${newExp}`;
+        evalResult = `${newCoef}*${variable}^${newExp}`;
       }
       
-      return { ...term, derivative: result, explanation };
+      return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
     }
     
     case 'sine': {
@@ -241,7 +253,8 @@ function differentiateTerm(term, variable) {
       const inner = innerMatch ? innerMatch[1] : variable;
       const coef = term.coefficient;
       
-      explanation.push({ type: 'text', text: 'Using the derivative rule: d/dx[sin(u)] = cos(u) · u\'' });
+      explanation.push({ type: 'text', text: 'Using the Trigonometric Rule:' });
+      explanation.push({ type: 'formula', text: 'd/dx[sin(u)] = cos(u) · u′' });
       explanation.push({ type: 'text', text: `Inner function: u = ${inner}` });
       
       if (inner !== variable) {
@@ -250,14 +263,16 @@ function differentiateTerm(term, variable) {
           variable
         );
         explanation.push({ type: 'text', text: 'Applying the Chain Rule...' });
-        explanation.push({ type: 'text', text: `u' = ${innerDeriv.derivative}` });
+        explanation.push({ type: 'text', text: `u′ = ${innerDeriv.derivative}` });
         
-        let result = `${coef}*cos(${inner})*${innerDeriv.derivative}`;
-        return { ...term, derivative: result, explanation };
+        let displayResult = `${coef}*cos(${inner})*${innerDeriv.derivative}`;
+        let evalResult = `${coef}*Math.cos(${inner})*${innerDeriv.evalDerivative}`;
+        return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
       }
       
-      const result = coef === 1 ? `cos(${inner})` : `${coef}*cos(${inner})`;
-      return { ...term, derivative: result, explanation };
+      const displayResult = coef === 1 ? `cos(${inner})` : `${coef}*cos(${inner})`;
+      const evalResult = coef === 1 ? `Math.cos(${inner})` : `${coef}*Math.cos(${inner})`;
+      return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
     }
     
     case 'cosine': {
@@ -265,7 +280,8 @@ function differentiateTerm(term, variable) {
       const inner = innerMatch ? innerMatch[1] : variable;
       const coef = term.coefficient;
       
-      explanation.push({ type: 'text', text: 'Using the derivative rule: d/dx[cos(u)] = -sin(u) · u\'' });
+      explanation.push({ type: 'text', text: 'Using the Trigonometric Rule:' });
+      explanation.push({ type: 'formula', text: 'd/dx[cos(u)] = −sin(u) · u′' });
       explanation.push({ type: 'text', text: `Inner function: u = ${inner}` });
       
       if (inner !== variable) {
@@ -274,16 +290,20 @@ function differentiateTerm(term, variable) {
           variable
         );
         explanation.push({ type: 'text', text: 'Applying the Chain Rule...' });
-        explanation.push({ type: 'text', text: `u' = ${innerDeriv.derivative}` });
+        explanation.push({ type: 'text', text: `u′ = ${innerDeriv.derivative}` });
         
-        const result = coef === 1 
+        const displayResult = coef === 1 
           ? `-sin(${inner})*${innerDeriv.derivative}`
           : `${-coef}*sin(${inner})*${innerDeriv.derivative}`;
-        return { ...term, derivative: result, explanation };
+        const evalResult = coef === 1 
+          ? `-1*Math.sin(${inner})*${innerDeriv.evalDerivative}`
+          : `${-coef}*Math.sin(${inner})*${innerDeriv.evalDerivative}`;
+        return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
       }
       
-      const result = coef === 1 ? `-sin(${inner})` : `${-coef}*sin(${inner})`;
-      return { ...term, derivative: result, explanation };
+      const displayResult = coef === 1 ? `-sin(${inner})` : `${-coef}*sin(${inner})`;
+      const evalResult = coef === 1 ? `-1*Math.sin(${inner})` : `${-coef}*Math.sin(${inner})`;
+      return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
     }
     
     case 'exponential': {
@@ -291,7 +311,8 @@ function differentiateTerm(term, variable) {
       const exponent = match ? match[1] : variable;
       const coef = term.coefficient;
       
-      explanation.push({ type: 'text', text: 'Using: d/dx[e^u] = e^u · u\'' });
+      explanation.push({ type: 'text', text: 'Using the Exponential Rule:' });
+      explanation.push({ type: 'formula', text: 'd/dx[eᵘ] = eᵘ · u′' });
       
       if (exponent !== variable) {
         const innerDeriv = differentiateTerm(
@@ -301,14 +322,18 @@ function differentiateTerm(term, variable) {
         explanation.push({ type: 'text', text: 'Chain Rule: differentiate the exponent' });
         explanation.push({ type: 'text', text: `d/dx[${exponent}] = ${innerDeriv.derivative}` });
         
-        const result = coef === 1
+        const displayResult = coef === 1
           ? `e^(${exponent})*${innerDeriv.derivative}`
           : `${coef}*e^(${exponent})*${innerDeriv.derivative}`;
-        return { ...term, derivative: result, explanation };
+        const evalResult = coef === 1
+          ? `Math.exp(${exponent})*${innerDeriv.evalDerivative}`
+          : `${coef}*Math.exp(${exponent})*${innerDeriv.evalDerivative}`;
+        return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
       }
       
-      const result = coef === 1 ? `e^${variable}` : `${coef}*e^${variable}`;
-      return { ...term, derivative: result, explanation };
+      const displayResult = coef === 1 ? `e^${variable}` : `${coef}*e^${variable}`;
+      const evalResult = coef === 1 ? `Math.exp(${variable})` : `${coef}*Math.exp(${variable})`;
+      return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
     }
     
     case 'natural_log': {
@@ -316,28 +341,33 @@ function differentiateTerm(term, variable) {
       const inner = match ? match[1] : variable;
       const coef = term.coefficient;
       
-      explanation.push({ type: 'text', text: 'Using: d/dx[ln(u)] = u\'/u' });
+      explanation.push({ type: 'text', text: 'Using the Logarithmic Rule:' });
+      explanation.push({ type: 'formula', text: 'd/dx[ln(u)] = u′/u' });
       
       if (inner !== variable) {
         const innerDeriv = differentiateTerm(
           { original: inner, coefficient: 1, exponent: 1, type: 'power' },
           variable
         );
-        explanation.push({ type: 'text', text: `u' = ${innerDeriv.derivative}` });
+        explanation.push({ type: 'text', text: `u′ = ${innerDeriv.derivative}` });
         
-        const result = coef === 1
+        const displayResult = coef === 1
           ? `(${innerDeriv.derivative})/(${inner})`
           : `${coef}*(${innerDeriv.derivative})/(${inner})`;
-        return { ...term, derivative: result, explanation };
+        const evalResult = coef === 1
+          ? `(${innerDeriv.evalDerivative})/(${inner})`
+          : `${coef}*(${innerDeriv.evalDerivative})/(${inner})`;
+        return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
       }
       
-      const result = coef === 1 ? `1/${variable}` : `${coef}/${variable}`;
-      return { ...term, derivative: result, explanation };
+      const displayResult = coef === 1 ? `1/${variable}` : `${coef}/${variable}`;
+      const evalResult = coef === 1 ? `1/${variable}` : `${coef}/${variable}`;
+      return { ...term, derivative: displayResult, evalDerivative: evalResult, explanation };
     }
     
     default:
       explanation.push({ type: 'text', text: 'Using the basic differentiation rules.' });
-      return { ...term, derivative: `d/dx[${term.original}]`, explanation };
+      return { ...term, derivative: `d/dx[${term.original}]`, evalDerivative: '0', explanation };
   }
 }
 
@@ -345,8 +375,9 @@ function simplifyExpression(expr) {
   // Basic simplification: clean up the expression
   let simplified = expr
     .replace(/\+ -/g, '- ')
+    .replace(/\+\s*-/g, '- ')
     .replace(/1\*/g, '')
-    .replace(/\*1/g, '')
+    .replace(/\*1(?![0-9])/g, '')
     .replace(/\^1(?![0-9])/g, '')
     .replace(/x\^0/g, '1');
   
@@ -356,14 +387,15 @@ function simplifyExpression(expr) {
 export function solveIntegral(expression, variable = 'x', lower = 0, upper = 1) {
   const steps = [];
   
+  // 1. GIVEN
   steps.push({
-    step: 'STEP 1',
+    step: 'GIVEN',
     badge: 'primary',
     content: [
       { type: 'text', text: '📐 DEFINITE INTEGRAL SETUP' },
       { type: 'text', text: `Integrand: f(${variable}) = ${expression}` },
-      { type: 'text', text: `Bounds: ${variable} from ${lower} to ${upper}` },
-      { type: 'highlight', text: `∫[${lower}, ${upper}] (${expression}) d${variable}` },
+      { type: 'text', text: `Bounds: ${variable} ∈ [${lower}, ${upper}]` },
+      { type: 'formula', text: `∫[${lower} to ${upper}] (${expression}) d${variable}` },
       { type: 'text', text: '' },
       { type: 'text', text: 'The definite integral represents:' },
       { type: 'text', text: '• The area under the curve (if f(x) ≥ 0)' },
@@ -371,92 +403,105 @@ export function solveIntegral(expression, variable = 'x', lower = 0, upper = 1) 
     ],
   });
 
-  // STEP 2: Find antiderivative
-  const derivResult = solveDerivative(expression, variable);
-  // For integration, we need to reverse the derivative process
+  // 2. FORMULA
   const terms = parseExpression(expression, variable);
   
   steps.push({
-    step: 'STEP 2',
+    step: 'FORMULA',
     badge: 'secondary',
     content: [
       { type: 'text', text: '🔍 FINDING THE ANTIDERIVATIVE' },
-      { type: 'text', text: 'Use the Power Rule in reverse: ∫x^n dx = x^(n+1)/(n+1) + C' },
-      { type: 'text', text: 'Break into terms and integrate each one:' },
+      { type: 'text', text: 'Use the Power Rule in reverse:' },
+      { type: 'formula', text: '∫ xⁿ dx = xⁿ⁺¹/(n+1) + C' },
+      { type: 'text', text: 'We break the function into terms and integrate each one:' },
     ],
   });
 
+  // 3. CALCULATION
   const antiderivativeTerms = [];
-  let antiderivativeStr = '';
+  let displayAntiderivative = '';
+  let evalAntiderivative = '';
   
   for (const term of terms) {
     const integrated = integrateTerm(term, variable);
     antiderivativeTerms.push(integrated);
     
     steps.push({
-      step: `TERM`,
+      step: 'CALCULATION',
       badge: 'primary',
       content: [
         { type: 'text', text: `∫ ${term.original} d${variable}` },
         ...integrated.explanation,
-        { type: 'highlight', text: `= ${integrated.antiderivative}` },
+        { type: 'result', text: `= ${integrated.antiderivative}` },
       ],
     });
   }
 
-  // Combine antiderivative
-  antiderivativeStr = antiderivativeTerms
+  // Combine antiderivative for display
+  displayAntiderivative = antiderivativeTerms
+    .filter(t => t.antiderivative !== '0')
     .map(t => t.antiderivative)
     .join(' + ')
     .replace(/\+\s*-/g, '- ');
 
+  // Combine antiderivative for evaluation
+  evalAntiderivative = antiderivativeTerms
+    .filter(t => t.antiderivative !== '0')
+    .map(t => t.evalAntiderivative || t.antiderivative)
+    .join('+')
+    .replace(/\+\-/g, '-');
+
+  if (!displayAntiderivative) displayAntiderivative = '0';
+  if (!evalAntiderivative) evalAntiderivative = '0';
+
   steps.push({
-    step: 'STEP 3',
-    badge: 'secondary',
+    step: 'CALCULATION',
+    badge: 'primary',
     content: [
       { type: 'text', text: '📝 ANTIDERIVATIVE (INDEFINITE INTEGRAL)' },
-      { type: 'highlight', text: `F(${variable}) = ${antiderivativeStr} + C` },
+      { type: 'result', text: `F(${variable}) = ${displayAntiderivative} + C` },
       { type: 'text', text: 'C is the constant of integration (not needed for definite integrals).' },
     ],
   });
 
-  // STEP 4: Evaluate using FTC
+  // 4. FORMULA
   steps.push({
-    step: 'STEP 4',
-    badge: 'primary',
+    step: 'FORMULA',
+    badge: 'secondary',
     content: [
       { type: 'text', text: '📊 APPLY THE FUNDAMENTAL THEOREM OF CALCULUS' },
-      { type: 'text', text: '∫[a,b] f(x)dx = F(b) - F(a)' },
+      { type: 'formula', text: '∫[a to b] f(x) dx = F(b) − F(a)' },
       { type: 'text', text: `where F is the antiderivative and a=${lower}, b=${upper}` },
     ],
   });
 
-  // Numerical evaluation
-  const fUpper = evaluateExpression(antiderivativeStr, variable, upper);
-  const fLower = evaluateExpression(antiderivativeStr, variable, lower);
+  // 5. CALCULATION - Use the evaluable expression
+  const fUpper = evaluateExpression(evalAntiderivative, variable, upper);
+  const fLower = evaluateExpression(evalAntiderivative, variable, lower);
   const result = fUpper - fLower;
 
   steps.push({
-    step: 'STEP 5',
-    badge: 'secondary',
+    step: 'CALCULATION',
+    badge: 'primary',
     content: [
       { type: 'text', text: 'Calculate F(upper) and F(lower):' },
-      { type: 'text', text: `F(${upper}) = ${antiderivativeStr} evaluated at ${variable}=${upper}` },
-      { type: 'highlight', text: `F(${upper}) = ${fUpper.toFixed(6)}` },
+      { type: 'text', text: `F(${upper}) = ${displayAntiderivative} evaluated at ${variable}=${upper}` },
+      { type: 'result', text: `F(${upper}) = ${fUpper.toFixed(6)}` },
       { type: 'text', text: '' },
-      { type: 'text', text: `F(${lower}) = ${antiderivativeStr} evaluated at ${variable}=${lower}` },
-      { type: 'highlight', text: `F(${lower}) = ${fLower.toFixed(6)}` },
+      { type: 'text', text: `F(${lower}) = ${displayAntiderivative} evaluated at ${variable}=${lower}` },
+      { type: 'result', text: `F(${lower}) = ${fLower.toFixed(6)}` },
     ],
   });
 
+  // 6. ANALYSIS
   steps.push({
-    step: 'FINAL',
-    badge: 'warning',
+    step: 'ANALYSIS',
+    badge: 'secondary',
     content: [
-      { type: 'text', text: '📊 DEFINITE INTEGRAL RESULT' },
-      { type: 'text', text: `∫[${lower}, ${upper}] f(x)dx = F(${upper}) - F(${lower})` },
-      { type: 'text', text: `= ${fUpper.toFixed(6)} - ${fLower.toFixed(6)}` },
-      { type: 'highlight', text: `= ${result.toFixed(6)}` },
+      { type: 'text', text: '✅ DEFINITE INTEGRAL RESULT' },
+      { type: 'text', text: `∫[${lower}, ${upper}] f(x)dx = F(${upper}) − F(${lower})` },
+      { type: 'text', text: `= ${fUpper.toFixed(6)} − ${fLower.toFixed(6)}` },
+      { type: 'result', text: `= ${result.toFixed(6)}` },
       { type: 'text', text: '' },
       { type: 'text', text: '💡 This value represents the net area between the curve and x-axis.' },
     ],
@@ -464,7 +509,7 @@ export function solveIntegral(expression, variable = 'x', lower = 0, upper = 1) 
 
   return {
     value: result,
-    antiderivative: antiderivativeStr,
+    antiderivative: displayAntiderivative,
     steps,
   };
 }
@@ -476,97 +521,107 @@ function integrateTerm(term, variable) {
     case 'constant': {
       const coef = term.coefficient;
       explanation.push({ type: 'text', text: '∫ k dx = kx + C (constant rule)' });
-      const result = coef === 1 ? variable : `${coef}${variable}`;
-      return { ...term, antiderivative: result, explanation };
+      const displayResult = coef === 1 ? variable : `${coef}${variable}`;
+      const evalResult = coef === 1 ? variable : `${coef}*${variable}`;
+      return { ...term, antiderivative: displayResult, evalAntiderivative: evalResult, explanation };
     }
     
     case 'power': {
       const coef = term.coefficient;
       const exp = term.exponent;
       const newExp = exp + 1;
+      const newCoef = coef / newExp;
       
-      explanation.push({ type: 'text', text: 'Using Power Rule in reverse: ∫ x^n dx = x^(n+1)/(n+1)' });
+      explanation.push({ type: 'text', text: 'Using Power Rule in reverse:' });
+      explanation.push({ type: 'formula', text: '∫ xⁿ dx = xⁿ⁺¹/(n+1)' });
       explanation.push({ type: 'text', text: `New exponent: ${exp} + 1 = ${newExp}` });
-      explanation.push({ type: 'text', text: `New coefficient: ${coef}/${newExp} = ${coef/newExp}` });
+      explanation.push({ type: 'text', text: `New coefficient: ${coef}/${newExp} = ${newCoef.toFixed(4)}` });
       
-      const result = `(${coef/newExp})${variable}^${newExp}`;
-      return { ...term, antiderivative: result, explanation };
+      let displayResult, evalResult;
+      if (Math.abs(newCoef - 1) < 0.000001) {
+        displayResult = `${variable}^${newExp}`;
+        evalResult = `${variable}^${newExp}`;
+      } else if (Math.abs(newCoef + 1) < 0.000001) {
+        displayResult = `-${variable}^${newExp}`;
+        evalResult = `-1*${variable}^${newExp}`;
+      } else {
+        displayResult = `${newCoef.toFixed(4)}${variable}^${newExp}`;
+        evalResult = `(${newCoef})*${variable}^${newExp}`;
+      }
+      
+      return { ...term, antiderivative: displayResult, evalAntiderivative: evalResult, explanation };
     }
     
     case 'sine': {
-      explanation.push({ type: 'text', text: '∫ sin(x) dx = -cos(x) + C' });
+      explanation.push({ type: 'text', text: '∫ sin(x) dx = −cos(x) + C' });
       const coef = term.coefficient;
-      const result = coef === 1 ? `-cos(${variable})` : `${-coef}*cos(${variable})`;
-      return { ...term, antiderivative: result, explanation };
+      const displayResult = coef === 1 ? `-cos(${variable})` : `${-coef}cos(${variable})`;
+      const evalResult = coef === 1 ? `-1*Math.cos(${variable})` : `(${-coef})*Math.cos(${variable})`;
+      return { ...term, antiderivative: displayResult, evalAntiderivative: evalResult, explanation };
     }
     
     case 'cosine': {
       explanation.push({ type: 'text', text: '∫ cos(x) dx = sin(x) + C' });
       const coef = term.coefficient;
-      const result = coef === 1 ? `sin(${variable})` : `${coef}*sin(${variable})`;
-      return { ...term, antiderivative: result, explanation };
+      const displayResult = coef === 1 ? `sin(${variable})` : `${coef}sin(${variable})`;
+      const evalResult = coef === 1 ? `Math.sin(${variable})` : `${coef}*Math.sin(${variable})`;
+      return { ...term, antiderivative: displayResult, evalAntiderivative: evalResult, explanation };
     }
     
     case 'exponential': {
-      explanation.push({ type: 'text', text: '∫ e^x dx = e^x + C' });
-      const result = `e^${variable}`;
-      return { ...term, antiderivative: result, explanation };
+      explanation.push({ type: 'text', text: '∫ eˣ dx = eˣ + C' });
+      const displayResult = `e^${variable}`;
+      const evalResult = `Math.exp(${variable})`;
+      return { ...term, antiderivative: displayResult, evalAntiderivative: evalResult, explanation };
     }
     
     case 'natural_log': {
-      explanation.push({ type: 'text', text: '∫ ln(x) dx = x·ln(x) - x + C (integration by parts)' });
-      const result = `${variable}*ln(${variable}) - ${variable}`;
-      return { ...term, antiderivative: result, explanation };
+      explanation.push({ type: 'text', text: '∫ ln(x) dx = x·ln(x) − x + C (integration by parts)' });
+      const displayResult = `${variable}ln(${variable})-${variable}`;
+      const evalResult = `${variable}*Math.log(${variable})-${variable}`;
+      return { ...term, antiderivative: displayResult, evalAntiderivative: evalResult, explanation };
     }
     
     default:
       explanation.push({ type: 'text', text: 'Standard integration rules applied.' });
-      return { ...term, antiderivative: `∫${term.original} d${variable}`, explanation };
+      return { ...term, antiderivative: `∫${term.original} d${variable}`, evalAntiderivative: '0', explanation };
   }
 }
 
 export function evaluateExpression(expr, variable, value) {
   try {
-    // 1. Initial cleanup: remove spaces and handle standard math notation
-    let processed = expr.replace(/\s+/g, '');
-
-    // 2. Replace variable with value in parentheses to handle negatives and powers safely
-    // We use a RegExp that doesn't use boundaries because variables are often attached to numbers (e.g., 2x)
-    processed = processed.replace(new RegExp(variable, 'g'), `(${value})`);
-
-    // 3. Handle implied multiplication (the most common cause of NaN/eval errors)
-    // Number followed by parenthesis: 2(3) -> 2*(3)
-    processed = processed.replace(/(\d)(\()/g, '$1*$2');
-    // Parenthesis followed by number: (2)3 -> (2)*3
-    processed = processed.replace(/(\))(\d)/g, '$1*$2');
-    // Parenthesis followed by parenthesis: (1)(2) -> (1)*(2)
-    processed = processed.replace(/(\))(\()/g, '$1*$2');
-
-    // 4. Mathematical translations to JavaScript Math object
-    processed = processed
-      .replace(/\^/g, '**')
-      .replace(/sin/g, 'Math.sin')
-      .replace(/cos/g, 'Math.cos')
-      .replace(/tan/g, 'Math.tan')
-      .replace(/asin|sin⁻¹/g, 'Math.asin')
-      .replace(/acos|cos⁻¹/g, 'Math.acos')
-      .replace(/atan|tan⁻¹/g, 'Math.atan')
-      .replace(/ln/g, 'Math.log')
-      .replace(/log/g, 'Math.log10')
-      .replace(/exp/g, 'Math.exp')
-      .replace(/\be\b/g, 'Math.E')
-      .replace(/π/g, 'Math.PI');
-
-    // 5. Final pass for implied multiplication with Math functions
-    // e.g. 2Math.sin -> 2*Math.sin
-    processed = processed.replace(/(\d)(Math\.)/g, '$1*$2');
-    processed = processed.replace(/(\))(Math\.)/g, '$1*$2');
-
+    console.log('=== EVALUATION START ===');
+    console.log('Expression:', expr);
+    console.log('Variable:', variable);
+    console.log('Value:', value);
+    
+    let jsExpr = expr;
+    
+    // Remove spaces
+    jsExpr = jsExpr.replace(/\s+/g, '');
+    
+    // Replace variable with the value
+    const varRegex = new RegExp(variable, 'g');
+    jsExpr = jsExpr.replace(varRegex, `(${value})`);
+    
+    // Replace ^ with ** for exponentiation
+    jsExpr = jsExpr.replace(/\^/g, '**');
+    
+    console.log('JavaScript to evaluate:', jsExpr);
+    
+    // Evaluate
     // eslint-disable-next-line no-eval
-    const result = eval(processed);
-    return typeof result === 'number' ? result : NaN;
+    const result = eval(jsExpr);
+    console.log('Result:', result);
+    console.log('=== EVALUATION END ===');
+    
+    if (typeof result === 'number' && !isNaN(result) && isFinite(result)) {
+      return result;
+    }
+    
+    return NaN;
   } catch (err) {
-    console.warn('Evaluation failed for:', expr, 'Processed as:', processed, err);
+    console.warn('Evaluation error:', err.message);
     return NaN;
   }
-}   
+}

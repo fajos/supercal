@@ -27,14 +27,14 @@ export function solveTrig(func, value) {
 
   // STEP 1: Understanding the equation
   steps.push({
-    step: 'STEP 1',
+    step: 'GIVEN',
     badge: 'primary',
     content: [
-      { type: 'text', text: '📐 UNDERSTANDING THE EQUATION' },
-      { type: 'highlight', text: `${func}(x) = ${value}` },
+      { type: 'text', text: '📐 Problem Statement:' },
+      { type: 'formula', text: `${func}(x) = ${value}` },
       { type: 'text', text: '' },
-      { type: 'text', text: `The ${func} function gives the ${getFunctionDescription(func)}.` },
-      { type: 'text', text: `We need to find all angles x where ${func}(x) equals ${value}.` },
+      { type: 'text', text: `The ${func} function represents the ${getFunctionDescription(func)}.` },
+      { type: 'text', text: `Goal: Find all angles x that satisfy this equality.` },
     ],
   });
 
@@ -45,11 +45,11 @@ export function solveTrig(func, value) {
 
   if (isSpecialAngle) {
     steps.push({
-      step: 'STEP 2',
+      step: 'FORMULA',
       badge: 'secondary',
       content: [
-        { type: 'text', text: '⭐ SPECIAL ANGLE DETECTED!' },
-        { type: 'text', text: `${value} is a well-known trigonometric value.` },
+        { type: 'text', text: '⭐ Special Angle Detected!' },
+        { type: 'text', text: `${value} corresponds to a known standard angle.` },
         ...getSpecialAngleInfo(func, value, isSpecialAngle[1]),
       ],
     });
@@ -57,15 +57,13 @@ export function solveTrig(func, value) {
 
   // STEP 3: Find principal value
   steps.push({
-    step: isSpecialAngle ? 'STEP 3' : 'STEP 2',
+    step: 'CALCULATION',
     badge: 'primary',
     content: [
-      { type: 'text', text: '🔍 FINDING THE PRINCIPAL VALUE' },
-      { type: 'text', text: `Using the inverse ${func} function (arc${func} or ${func}⁻¹):` },
-      { type: 'text', text: `x = arc${func}(${value})` },
-      { type: 'text', text: '' },
-      { type: 'text', text: `The principal value range for arc${func} is:` },
-      { type: 'highlight', text: getPrincipalRange(func) },
+      { type: 'text', text: 'Step 1: Determine the principal value using the inverse function.' },
+      { type: 'text', text: `We need to find x such that ${func}(x) = ${value}.` },
+      { type: 'text', text: `x₁ = ${func}⁻¹(${value})` },
+      { type: 'text', text: `Principal range for ${func}⁻¹ is ${getPrincipalRange(func)}.` },
     ],
   });
 
@@ -81,32 +79,28 @@ export function solveTrig(func, value) {
   const principalDeg = (principal * 180) / Math.PI;
 
   steps.push({
-    step: isSpecialAngle ? 'STEP 4' : 'STEP 3',
-    badge: 'secondary',
+    step: 'CALCULATION',
+    badge: 'primary',
     content: [
-      { type: 'text', text: '📊 PRINCIPAL SOLUTION' },
-      { type: 'result', text: `x₁ = ${principal.toFixed(6)} radians` },
-      { type: 'result', text: `x₁ = ${principalDeg.toFixed(4)}°` },
+      { type: 'text', text: 'Step 2: Evaluate the inverse function.' },
+      { type: 'result', text: `x₁ ≈ ${principal.toFixed(6)} rad` },
+      { type: 'text', text: 'Step 3: Convert radians to degrees.' },
+      { type: 'text', text: `x₁ (deg) = ${principal.toFixed(6)} × (180/π)` },
+      { type: 'result', text: `x₁ ≈ ${principalDeg.toFixed(4)}°` },
       ...(isSpecialAngle ? [
-        { type: 'text', text: '' },
-        { type: 'highlight', text: `In terms of π: ${isSpecialAngle[1].frac}` },
+        { type: 'text', text: 'Step 4: Express in exact radical/fractional form.' },
+        { type: 'text', text: `Exact x₁ = ${isSpecialAngle[1].frac}` },
       ] : []),
     ],
   });
 
   // STEP 4/5: Quadrant analysis and second solution
   if (func === 'sin' || func === 'cos') {
-    const quadrantStep = isSpecialAngle ? 'STEP 5' : 'STEP 4';
-    
     steps.push({
-      step: quadrantStep,
-      badge: 'primary',
+      step: 'ANALYSIS',
+      badge: 'secondary',
       content: [
-        { type: 'text', text: '🎯 QUADRANT ANALYSIS' },
-        { type: 'text', text: `The ${func} function is positive in quadrants ${getPositiveQuadrants(func)}` },
-        { type: 'text', text: `and negative in quadrants ${getNegativeQuadrants(func)}.` },
-        { type: 'text', text: '' },
-        { type: 'text', text: `Since ${func}(x) = ${value} is ${value >= 0 ? 'positive' : 'negative'}:` },
+        { type: 'text', text: '🎯 Quadrant & Symmetry' },
         { type: 'text', text: getQuadrantExplanation(func, value) },
       ],
     });
@@ -116,18 +110,15 @@ export function solveTrig(func, value) {
       const secondaryDeg = (secondary * 180) / Math.PI;
       
       steps.push({
-        step: isSpecialAngle ? 'STEP 6' : 'STEP 5',
-        badge: 'secondary',
+        step: 'CALCULATION',
+        badge: 'primary',
         content: [
-          { type: 'text', text: '🔄 SECOND SOLUTION IN [0, 2π)' },
-          { type: 'text', text: 'For sine, the second solution in [0, 2π) is:' },
-          { type: 'text', text: 'x₂ = π - arcsin(value)' },
-          { type: 'text', text: `x₂ = π - ${principal.toFixed(6)}` },
-          { type: 'text', text: `x₂ = ${secondary.toFixed(6)} radians` },
-          { type: 'text', text: `x₂ = ${secondaryDeg.toFixed(4)}°` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Why? Because sin(π - θ) = sin(θ)' },
-          { type: 'text', text: 'This comes from the symmetry of the sine curve.' },
+          { type: 'text', text: 'Step 1: Use symmetry for sine (x₂ = π - x₁).' },
+          { type: 'text', text: `x₂ = 3.14159 - ${principal.toFixed(6)}` },
+          { type: 'result', text: `x₂ ≈ ${secondary.toFixed(6)} rad` },
+          { type: 'text', text: 'Step 2: Convert x₂ to degrees.' },
+          { type: 'text', text: `x₂ (deg) = ${secondary.toFixed(6)} × (180/π)` },
+          { type: 'result', text: `x₂ ≈ ${secondaryDeg.toFixed(4)}°` },
         ],
       });
 
@@ -136,89 +127,50 @@ export function solveTrig(func, value) {
       const secondaryDeg = (secondary * 180) / Math.PI;
       
       steps.push({
-        step: isSpecialAngle ? 'STEP 6' : 'STEP 5',
-        badge: 'secondary',
+        step: 'CALCULATION',
+        badge: 'primary',
         content: [
-          { type: 'text', text: '🔄 SECOND SOLUTION IN [0, 2π)' },
-          { type: 'text', text: 'For cosine, the second solution in [0, 2π) is:' },
-          { type: 'text', text: 'x₂ = 2π - arccos(value)' },
-          { type: 'text', text: `x₂ = 2π - ${principal.toFixed(6)}` },
-          { type: 'text', text: `x₂ = ${secondary.toFixed(6)} radians` },
-          { type: 'text', text: `x₂ = ${secondaryDeg.toFixed(4)}°` },
-          { type: 'text', text: '' },
-          { type: 'text', text: '💡 Why? Because cos(2π - θ) = cos(θ)' },
-          { type: 'text', text: 'This comes from the symmetry of the cosine curve.' },
+          { type: 'text', text: 'Step 1: Use symmetry for cosine (x₂ = 2π - x₁).' },
+          { type: 'text', text: `x₂ = 6.28318 - ${principal.toFixed(6)}` },
+          { type: 'result', text: `x₂ ≈ ${secondary.toFixed(6)} rad` },
+          { type: 'text', text: 'Step 2: Convert x₂ to degrees.' },
+          { type: 'text', text: `x₂ (deg) = ${secondary.toFixed(6)} × (180/π)` },
+          { type: 'result', text: `x₂ ≈ ${secondaryDeg.toFixed(4)}°` },
         ],
       });
     }
 
     // General solution
     steps.push({
-      step: isSpecialAngle ? 'STEP 7' : 'STEP 6',
-      badge: 'primary',
+      step: 'ANALYSIS',
+      badge: 'secondary',
       content: [
-        { type: 'text', text: '♾️ GENERAL SOLUTION (ALL SOLUTIONS)' },
-        { type: 'text', text: `Since ${func} has period 2π, we add 2πk to each solution:` },
-        { type: 'text', text: `where k is any integer (k ∈ ℤ)` },
-        { type: 'text', text: '' },
+        { type: 'text', text: `Periodic nature (T = 2π):` },
+        ...(func === 'sin' ? [
+          { type: 'result', text: `x = ${principal.toFixed(4)} + 2πk` },
+          { type: 'result', text: `x = ${secondary.toFixed(4)} + 2πk` },
+          { type: 'text', text: `(k ∈ ℤ)` }
+        ] : [
+          { type: 'result', text: `x = ±${principal.toFixed(4)} + 2πk` },
+          { type: 'text', text: `(k ∈ ℤ)` }
+        ])
       ],
     });
 
     if (func === 'sin') {
       general = `x = ${principal.toFixed(4)} + 2πk  OR  x = ${secondary.toFixed(4)} + 2πk`;
-      steps[steps.length - 1].content.push(
-        { type: 'highlight', text: `Solution Set:` },
-        { type: 'result', text: `x₁ = ${principal.toFixed(4)} + 2πk` },
-        { type: 'result', text: `x₂ = ${secondary.toFixed(4)} + 2πk` },
-        { type: 'text', text: `where k ∈ ℤ (any integer)` },
-      );
     } else {
-      // For cosine, we can write more elegantly as ±
       general = `x = ±${principal.toFixed(4)} + 2πk`;
-      steps[steps.length - 1].content.push(
-        { type: 'highlight', text: `Compact Form:` },
-        { type: 'result', text: `x = ±${principal.toFixed(4)} + 2πk` },
-        { type: 'text', text: `where k ∈ ℤ (any integer)` },
-        { type: 'text', text: '' },
-        { type: 'text', text: 'This compact form includes both solutions:' },
-        { type: 'text', text: `When +: x = ${principal.toFixed(4)} + 2πk` },
-        { type: 'text', text: `When -: x = ${-principal.toFixed(4)} + 2πk = ${(2*Math.PI - principal).toFixed(4)} + 2πk` },
-      );
     }
 
   } else if (func === 'tan') {
-    // Tangent has period π
     steps.push({
-      step: isSpecialAngle ? 'STEP 5' : 'STEP 4',
-      badge: 'primary',
-      content: [
-        { type: 'text', text: '🎯 UNDERSTANDING TANGENT\'S PERIOD' },
-        { type: 'text', text: 'Unlike sine and cosine, tangent has period π (not 2π).' },
-        { type: 'text', text: 'This means tan(x + π) = tan(x) for all x.' },
-        { type: 'text', text: '' },
-        { type: 'text', text: 'Tangent is positive in quadrants I and III (where sin and cos have same sign).' },
-        { type: 'text', text: 'Tangent is negative in quadrants II and IV (where sin and cos have opposite signs).' },
-      ],
-    });
-
-    steps.push({
-      step: isSpecialAngle ? 'STEP 6' : 'STEP 5',
+      step: 'ANALYSIS',
       badge: 'secondary',
       content: [
-        { type: 'text', text: '♾️ GENERAL SOLUTION' },
-        { type: 'text', text: 'Since tan has period π, the general solution is:' },
-        { type: 'text', text: `x = arctan(${value}) + πk` },
-        { type: 'text', text: `x = ${principal.toFixed(4)} + πk` },
-        { type: 'text', text: '' },
+        { type: 'text', text: 'Tangent has period π. General solution:' },
         { type: 'result', text: `x = ${principal.toFixed(4)} + πk` },
-        { type: 'text', text: `where k ∈ ℤ (any integer)` },
-        { type: 'text', text: '' },
-        { type: 'text', text: '💡 This single formula gives ALL solutions!' },
-        { type: 'text', text: 'For example:' },
-        { type: 'text', text: `k = 0: x = ${principal.toFixed(4)}` },
-        { type: 'text', text: `k = 1: x = ${(principal + Math.PI).toFixed(4)}` },
-        { type: 'text', text: `k = -1: x = ${(principal - Math.PI).toFixed(4)}` },
-        { type: 'text', text: '...and so on for any integer k.' },
+        { type: 'text', text: '(k ∈ ℤ)' },
       ],
     });
 
@@ -228,31 +180,26 @@ export function solveTrig(func, value) {
 
   // Final step: Verification
   steps.push({
-    step: 'VERIFICATION',
-    badge: 'warning',
+    step: 'ANALYSIS',
+    badge: 'secondary',
     content: [
       { type: 'text', text: '✅ VERIFICATION' },
       { type: 'text', text: `Check: ${func}(${principal.toFixed(4)})` },
-      { type: 'text', text: `= ${Math[func](principal).toFixed(6)}` },
-      { type: 'text', text: `≈ ${value} ✓` },
+      { type: 'result', text: `≈ ${Math[func](principal).toFixed(6)}` },
       ...(secondary !== null ? [
-        { type: 'text', text: '' },
         { type: 'text', text: `Check: ${func}(${secondary.toFixed(4)})` },
-        { type: 'text', text: `= ${Math[func](secondary).toFixed(6)}` },
-        { type: 'text', text: `≈ ${value} ✓` },
+        { type: 'result', text: `≈ ${Math[func](secondary).toFixed(6)}` },
       ] : []),
     ],
   });
 
   // Unit circle visualization hint
   steps.push({
-    step: 'VISUAL',
-    badge: 'primary',
+    step: 'ANALYSIS',
+    badge: 'secondary',
     content: [
       { type: 'text', text: '🎨 UNIT CIRCLE VISUALIZATION' },
-      { type: 'text', text: 'Imagine the unit circle (radius = 1):' },
       { type: 'text', text: getUnitCircleDescription(func, value, principal, secondary) },
-      { type: 'text', text: '' },
       { type: 'text', text: '💡 TIP: Draw the unit circle and mark these angles to understand better!' },
     ],
   });

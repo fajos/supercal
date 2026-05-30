@@ -73,9 +73,9 @@ export default function ExponentialScreen() {
           <InputCard style={isTablet && styles.tabletInputCard}>
             <View style={styles.modeRow}>
               {[
-                { id: 'exponential', label: 'a^x = b' },
-                { id: 'logarithmic', label: 'log_a(x) = b' },
-                { id: 'natural', label: 'e^x / ln(x)' },
+                { id: 'exponential', label: 'aˣ = b' },
+                { id: 'logarithmic', label: 'logₐ(x) = b' },
+                { id: 'natural', label: 'eˣ / ln(x)' },
                 { id: 'growth', label: 'Growth' },
               ].map(m => (
                 <TouchableOpacity
@@ -90,26 +90,57 @@ export default function ExponentialScreen() {
 
             {mode !== 'growth' ? (
               <>
-                <Text style={styles.inputLabel}>{mode === 'natural' ? 'Not applicable' : 'Base a:'}</Text>
+                <Text style={styles.inputLabel}>
+                  {mode === 'natural' ? 'Not applicable' : 'Base a:'}
+                </Text>
                 <TextInput
                   style={[styles.input, mode === 'natural' && styles.disabledInput]}
                   value={base}
                   onChangeText={setBase}
                   keyboardType="decimal-pad"
+                  placeholder={mode === 'natural' ? 'e ≈ 2.71828' : 'Enter base'}
                   placeholderTextColor={colors.textSecondary}
                   editable={mode !== 'natural'}
                 />
                 <Text style={styles.inputLabel}>Value b:</Text>
-                <TextInput style={styles.input} value={value} onChangeText={setValue} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={value} 
+                  onChangeText={setValue} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter value"
+                  placeholderTextColor={colors.textSecondary} 
+                />
               </>
             ) : (
               <>
                 <Text style={styles.inputLabel}>Initial Amount (P):</Text>
-                <TextInput style={styles.input} value={principal} onChangeText={setPrincipal} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={principal} 
+                  onChangeText={setPrincipal} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter principal"
+                  placeholderTextColor={colors.textSecondary} 
+                />
                 <Text style={styles.inputLabel}>Rate (%):</Text>
-                <TextInput style={styles.input} value={rate} onChangeText={setRate} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={rate} 
+                  onChangeText={setRate} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter rate"
+                  placeholderTextColor={colors.textSecondary} 
+                />
                 <Text style={styles.inputLabel}>Time periods (t):</Text>
-                <TextInput style={styles.input} value={time} onChangeText={setTime} keyboardType="decimal-pad" placeholderTextColor={colors.textSecondary} />
+                <TextInput 
+                  style={styles.input} 
+                  value={time} 
+                  onChangeText={setTime} 
+                  keyboardType="decimal-pad" 
+                  placeholder="Enter time"
+                  placeholderTextColor={colors.textSecondary} 
+                />
               </>
             )}
 
@@ -160,17 +191,90 @@ const styles = StyleSheet.create({
     maxWidth: 600,
     width: '100%',
   },
-  modeRow: { flexDirection: 'row', gap: 6, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  modeBtn: { flex: 1, minWidth: '22%', paddingVertical: 10, backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 12, alignItems: 'center' },
-  modeBtnActive: { backgroundColor: colors.accentBg, borderColor: colors.accent },
-  modeText: { color: colors.textSecondary, fontSize: 11, fontWeight: '500', textAlign: 'center' },
-  modeTextActive: { color: colors.accentGlow, fontWeight: '600' },
-  inputLabel: { fontSize: 13, color: colors.textSecondary, marginBottom: 8, marginTop: 12 },
-  input: { backgroundColor: colors.bgInput, borderWidth: 1.5, borderColor: colors.border, borderRadius: 14, color: colors.white, fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', padding: 14, textAlign: 'center', width: '100%' },
-  disabledInput: { opacity: 0.5, backgroundColor: colors.bgCard },
-  finalText: { color: colors.white, fontSize: 22, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700' },
-  solutionArea: { gap: 0, width: '100%', maxWidth: 800 },
-  stepText: { color: colors.textPrimary, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', lineHeight: 22 },
-  highlightText: { color: colors.accentGlow, fontSize: 14, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '600', lineHeight: 22 },
-  formulaText: { color: '#ffd93d', fontSize: 16, fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', fontWeight: '700', lineHeight: 24, textAlign: 'center', marginVertical: 4 },
+  modeRow: { 
+    flexDirection: 'row', 
+    gap: 6, 
+    marginBottom: 16, 
+    flexWrap: 'wrap', 
+    justifyContent: 'center' 
+  },
+  modeBtn: { 
+    flex: 1, 
+    minWidth: '22%', 
+    paddingVertical: 10, 
+    backgroundColor: colors.bgInput, 
+    borderWidth: 1.5, 
+    borderColor: colors.border, 
+    borderRadius: 12, 
+    alignItems: 'center' 
+  },
+  modeBtnActive: { 
+    backgroundColor: colors.accentBg, 
+    borderColor: colors.accent 
+  },
+  modeText: { 
+    color: colors.textSecondary, 
+    fontSize: 11, 
+    fontWeight: '500', 
+    textAlign: 'center' 
+  },
+  modeTextActive: { 
+    color: colors.accentGlow, 
+    fontWeight: '600' 
+  },
+  inputLabel: { 
+    fontSize: 13, 
+    color: colors.textSecondary, 
+    marginBottom: 8, 
+    marginTop: 12 
+  },
+  input: { 
+    backgroundColor: colors.bgInput, 
+    borderWidth: 1.5, 
+    borderColor: colors.border, 
+    borderRadius: 14, 
+    color: colors.white, 
+    fontSize: 16, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    padding: 14, 
+    textAlign: 'center', 
+    width: '100%' 
+  },
+  disabledInput: { 
+    opacity: 0.5, 
+    backgroundColor: colors.bgCard 
+  },
+  finalText: { 
+    color: colors.white, 
+    fontSize: 22, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '700' 
+  },
+  solutionArea: { 
+    gap: 0, 
+    width: '100%', 
+    maxWidth: 800 
+  },
+  stepText: { 
+    color: colors.textPrimary, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    lineHeight: 22 
+  },
+  highlightText: { 
+    color: colors.accentGlow, 
+    fontSize: 14, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '600', 
+    lineHeight: 22 
+  },
+  formulaText: { 
+    color: '#ffd93d', 
+    fontSize: 16, 
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace', 
+    fontWeight: '700', 
+    lineHeight: 24, 
+    textAlign: 'center', 
+    marginVertical: 4 
+  },
 });

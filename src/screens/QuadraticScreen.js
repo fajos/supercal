@@ -72,6 +72,12 @@ export default function QuadraticScreen() {
   const renderContent = (content) => {
     return content.map((item, idx) => {
       switch (item.type) {
+        case 'formula':
+          return (
+            <View key={idx} style={styles.formulaBox}>
+              <Text style={styles.formulaText}>{item.text}</Text>
+            </View>
+          );
         case 'highlight':
           return (
             <Text key={idx} style={styles.highlightText}>
@@ -306,17 +312,37 @@ const styles = StyleSheet.create({
   },
   resultBox: {
     backgroundColor: colors.purpleBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
     alignSelf: 'flex-start',
-    marginVertical: 2,
+    marginVertical: 6,
+    width: '100%',
   },
   resultText: {
-    color: '#c4b5fd',
+    color: colors.purpleGlow,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  formulaBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  formulaText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
   },
   inlineBadge: {
     backgroundColor: colors.accentBg,

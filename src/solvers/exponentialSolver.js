@@ -4,7 +4,7 @@ export function solveExponential(type, params) {
 
   switch(type) {
     case 'exponential': {
-      // a^x = b → x = ln(b)/ln(a)
+      // aˣ = b → x = ln(b)/ln(a)
       const { base, value } = params;
       
       if (base <= 0 || base === 1) {
@@ -20,13 +20,13 @@ export function solveExponential(type, params) {
         step: 'EXPONENTIAL EQUATION',
         badge: 'primary',
         content: [
-          { type: 'text', text: '📊 Exponential Equation: a^x = b' },
-          { type: 'highlight', text: `${base}^x = ${value}` },
+          { type: 'text', text: '📊 Exponential Equation: aˣ = b' },
+          { type: 'highlight', text: `${base}ˣ = ${value}` },
           { type: 'text', text: '' },
           { type: 'text', text: 'Step 1: Take natural log (ln) of both sides' },
-          { type: 'formula', text: `ln(${base}^x) = ln(${value})` },
+          { type: 'formula', text: `ln(${base}ˣ) = ln(${value})` },
           { type: 'text', text: '' },
-          { type: 'text', text: 'Step 2: Use power property: ln(a^x) = x·ln(a)' },
+          { type: 'text', text: 'Step 2: Use power property: ln(aˣ) = x·ln(a)' },
           { type: 'formula', text: `x·ln(${base}) = ln(${value})` },
           { type: 'text', text: '' },
           { type: 'text', text: 'Step 3: Calculate the logarithms' },
@@ -61,10 +61,10 @@ export function solveExponential(type, params) {
         badge: 'primary',
         content: [
           { type: 'text', text: '📊 Logarithmic Equation: log_a(x) = b' },
-          { type: 'highlight', text: `log_${logBase}(x) = ${logValue}` },
+          { type: 'highlight', text: `log${getSubscript(logBase)}(x) = ${logValue}` },
           { type: 'text', text: '' },
           { type: 'text', text: 'Step 1: Convert to exponential form' },
-          { type: 'text', text: 'Remember: log_a(x) = b ⟺ a^b = x' },
+          { type: 'text', text: 'Remember: log_a(x) = b ⟺ aᵇ = x' },
           { type: 'formula', text: `${logBase}^${logValue} = x` },
           { type: 'text', text: '' },
           { type: 'text', text: 'Step 2: Calculate' },
@@ -72,7 +72,7 @@ export function solveExponential(type, params) {
           { type: 'highlight', text: `x = ${solution.toFixed(6)}` },
           { type: 'text', text: '' },
           { type: 'text', text: 'Verification:' },
-          { type: 'text', text: `log_${logBase}(${solution.toFixed(4)}) = ${(Math.log(solution) / Math.log(logBase)).toFixed(6)} ≈ ${logValue} ✓` },
+          { type: 'text', text: `log${getSubscript(logBase)}(${solution.toFixed(4)}) = ${(Math.log(solution) / Math.log(logBase)).toFixed(6)} ≈ ${logValue} ✓` },
         ],
       });
       result = solution;
@@ -80,7 +80,7 @@ export function solveExponential(type, params) {
     }
 
     case 'natural': {
-      // e^x = b or ln(x) = b
+      // eˣ = b or ln(x) = b
       const { value: natValue, isExp } = params;
       
       steps.push({
@@ -88,23 +88,23 @@ export function solveExponential(type, params) {
         badge: 'primary',
         content: [
           { type: 'text', text: '📊 Natural Exponential/Logarithm' },
-          { type: 'text', text: `e ≈ 2.71828 (Euler's number)` },
+          { type: 'text', text: 'e ≈ 2.71828 (Euler\'s number)' },
           { type: 'text', text: '' },
         ],
       });
 
       if (isExp) {
-        // e^x = b
+        // eˣ = b
         if (natValue <= 0) {
-          throw new Error('e^x > 0 for all real x. No solution for non-positive values.');
+          throw new Error('eˣ > 0 for all real x. No solution for non-positive values.');
         }
         const solution = Math.log(natValue);
         
         steps[0].content.push(
-          { type: 'highlight', text: `e^x = ${natValue}` },
+          { type: 'highlight', text: `eˣ = ${natValue}` },
           { type: 'text', text: '' },
           { type: 'text', text: 'Take natural log of both sides:' },
-          { type: 'text', text: `ln(e^x) = ln(${natValue})` },
+          { type: 'text', text: `ln(eˣ) = ln(${natValue})` },
           { type: 'text', text: `x = ln(${natValue})` },
           { type: 'highlight', text: `x = ${solution.toFixed(6)}` },
         );
@@ -156,7 +156,7 @@ export function solveExponential(type, params) {
           { type: 'text', text: `A = ${principal}·e^(${actualRate.toFixed(4)} × ${time})` },
           { type: 'highlight', text: `A = ${continuous.toFixed(2)}` },
           { type: 'text', text: '' },
-          { type: 'text', text: `Periodic (annual) compounding:` },
+          { type: 'text', text: 'Periodic (annual) compounding:' },
           { type: 'text', text: `A = ${principal}(1 + ${r.toFixed(4)})^${time}` },
           { type: 'highlight', text: `A = ${periodic.toFixed(2)}` },
           { type: 'text', text: '' },
@@ -169,4 +169,13 @@ export function solveExponential(type, params) {
   }
 
   return { result, steps };
+}
+
+// Helper function for subscript numbers
+function getSubscript(num) {
+  const subscripts = {
+    '0': '₀', '1': '₁', '2': '₂', '3': '₃', '4': '₄',
+    '5': '₅', '6': '₆', '7': '₇', '8': '₈', '9': '₉'
+  };
+  return String(num).split('').map(digit => subscripts[digit] || digit).join('');
 }

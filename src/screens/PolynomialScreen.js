@@ -52,7 +52,7 @@ export default function PolynomialScreen() {
         }
 
         const result = solvePolynomial(coefficients);
-        const shareText = `Polynomial Result:\nDegree: ${deg}\nCoefficients: ${coefficients.join(', ')}\nRoots: ${result.roots.map((r, i) => `x${i+1}=${typeof r === 'string' ? r : r.toFixed(6)}`).join(', ')}\n\nSolved with SuperCalc`;
+        const shareText = `Polynomial Result:\nDegree: ${deg}\nCoefficients: ${coefficients.join(', ')}\nRoots: ${result.roots.map((r, i) => `x${getSubscript(i+1)}=${typeof r === 'string' ? r : r.toFixed(6)}`).join(', ')}\n\nSolved with SuperCalc`;
 
         setSolution({ ...result, shareText });
 
@@ -81,16 +81,56 @@ export default function PolynomialScreen() {
     setCoeffs(newCoeffs);
   };
 
+  // Helper function to convert numbers to superscript
+  const getSuperscript = (num) => {
+    const superscripts = {
+      '0': '⁰',
+      '1': '¹',
+      '2': '²',
+      '3': '³',
+      '4': '⁴',
+      '5': '⁵',
+      '6': '⁶',
+      '7': '⁷',
+      '8': '⁸',
+      '9': '⁹'
+    };
+    return String(num).split('').map(digit => superscripts[digit] || digit).join('');
+  };
+
+  // Helper function to convert numbers to subscript
+  const getSubscript = (num) => {
+    const subscripts = {
+      '0': '₀',
+      '1': '₁',
+      '2': '₂',
+      '3': '₃',
+      '4': '₄',
+      '5': '₅',
+      '6': '₆',
+      '7': '₇',
+      '8': '₈',
+      '9': '₉'
+    };
+    return String(num).split('').map(digit => subscripts[digit] || digit).join('');
+  };
+
   const getCoeffLabel = (index, deg) => {
     const power = deg - index;
     if (power === 0) return 'constant term';
     if (power === 1) return 'x term';
-    return `x^${power} term`;
+    return `x${getSuperscript(power)} term`; // Now shows x², x³, etc.
   };
 
   const renderContent = (content) => {
     return content.map((item, idx) => {
       switch (item.type) {
+        case 'formula':
+          return (
+            <View key={idx} style={styles.formulaBox}>
+              <Text style={styles.formulaText}>{item.text}</Text>
+            </View>
+          );
         case 'highlight':
           return (
             <Text key={idx} style={styles.highlightText}>
@@ -208,7 +248,7 @@ export default function PolynomialScreen() {
                 {solution.roots.map((root, idx) => (
                   <View key={idx}>
                     <Text style={styles.finalText}>
-                      x{idx + 1} = {typeof root === 'string' ? root : root.toFixed(6)}
+                      x{getSubscript(idx + 1)} = {typeof root === 'string' ? root : root.toFixed(6)}
                     </Text>
                   </View>
                 ))}
@@ -351,17 +391,37 @@ const styles = StyleSheet.create({
   },
   resultBox: {
     backgroundColor: colors.purpleBg,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
     borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
     alignSelf: 'flex-start',
-    marginVertical: 2,
+    marginVertical: 6,
+    width: '100%',
   },
   resultText: {
+    color: colors.purpleGlow,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  formulaBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+    alignSelf: 'flex-start',
+    marginVertical: 6,
+    width: '100%',
+  },
+  formulaText: {
     color: colors.accent,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   inlineBadge: {
     backgroundColor: colors.accentBg,

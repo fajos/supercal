@@ -238,8 +238,19 @@ export default function MatrixScreen() {
             {result.steps.map((step, idx) => (
               <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
                 {step.content.map((item, i) => {
-                  if (item.type === 'highlight') {
-                    return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
+                  if (item.type === 'formula') {
+                    return (
+                      <View key={i} style={styles.formulaBox}>
+                        <Text style={styles.formulaText}>{item.text}</Text>
+                      </View>
+                    );
+                  }
+                  if (item.type === 'result') {
+                    return (
+                      <View key={i} style={styles.resultBox}>
+                        <Text style={styles.resultText}>{item.text}</Text>
+                      </View>
+                    );
                   }
                   return <Text key={i} style={styles.stepText}>{item.text}</Text>;
                 })}
@@ -344,6 +355,36 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     fontWeight: '600',
     lineHeight: 22,
+  },
+  resultBox: {
+    backgroundColor: colors.accentBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginVertical: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.accent,
+  },
+  resultText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  formulaBox: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+    marginVertical: 4,
+    borderLeftWidth: 4,
+    borderLeftColor: colors.purpleGlow,
+  },
+  formulaText: {
+    color: colors.purpleGlow,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
   },
   finalValue: {
     color: colors.white,

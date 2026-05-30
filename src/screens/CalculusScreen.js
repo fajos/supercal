@@ -29,7 +29,7 @@ const isTablet = SCREEN_WIDTH >= 600;
 
 export default function CalculusScreen() {
   const [mode, setMode] = useState('derivative');
-  const [expression, setExpression] = useState('x^3 + 2x^2 - 5x + 1');
+  const [expression, setExpression] = useState('x³ + 2x² − 5x + 1');
   const [variable, setVariable] = useState('x');
   const [point, setPoint] = useState('0');
   const [upperBound, setUpperBound] = useState('5');
@@ -48,12 +48,12 @@ export default function CalculusScreen() {
         if (mode === 'derivative') {
           const derivResult = solveDerivative(expression, variable);
 
-          // Evaluate at point if provided
+          // Evaluate at point if provided - use evalDerivative for calculation
           let pointValue = null;
           const evalPoint = parseFloat(point);
           if (!isNaN(evalPoint)) {
             pointValue = evaluateExpression(
-              derivResult.derivative,
+              derivResult.evalDerivative, // Use the evaluable version
               variable,
               evalPoint
             );
@@ -154,7 +154,7 @@ export default function CalculusScreen() {
               style={styles.exprInput}
               value={expression}
               onChangeText={setExpression}
-              placeholder="e.g., x^3 + 2x^2 - 5x + 1"
+              placeholder="e.g., x³ + 2x² − 5x + 1"
               placeholderTextColor={colors.textSecondary}
             />
 
@@ -206,8 +206,19 @@ export default function CalculusScreen() {
               {result.steps.map((step, idx) => (
                 <StepCard key={idx} step={step.step} badge={step.badge} index={idx}>
                   {step.content.map((item, i) => {
-                    if (item.type === 'highlight') {
-                      return <Text key={i} style={styles.highlightText}>{item.text}</Text>;
+                    if (item.type === 'formula') {
+                      return (
+                        <View key={i} style={styles.formulaRow}>
+                          <Text style={styles.formulaText}>{item.text}</Text>
+                        </View>
+                      );
+                    }
+                    if (item.type === 'result') {
+                      return (
+                        <View key={i} style={styles.resultBox}>
+                          <Text style={styles.resultText}>{item.text}</Text>
+                        </View>
+                      );
                     }
                     return <Text key={i} style={styles.stepText}>{item.text}</Text>;
                   })}
@@ -221,16 +232,16 @@ export default function CalculusScreen() {
                 {result.type === 'derivative' && (
                   <View style={styles.finalContainer}>
                     <Text style={styles.finalExpr}>
-                      f'({variable}) = {result.expression}
+                      f′({variable}) = {result.expression}
                     </Text>
                     {result.pointValue !== null && !isNaN(result.pointValue) && (
                       <Text style={styles.finalPoint}>
-                        f'({point}) = {result.pointValue.toFixed(6)}
+                        f′({point}) = {result.pointValue.toFixed(6)}
                       </Text>
                     )}
                     {result.pointValue !== null && isNaN(result.pointValue) && (
                       <Text style={[styles.finalPoint, { color: colors.error }]}>
-                        f'({point}) = Calculation Error
+                        f′({point}) = Calculation Error
                       </Text>
                     )}
                   </View>
@@ -251,9 +262,9 @@ export default function CalculusScreen() {
 
           <View style={styles.helpCard}>
             <Text style={styles.helpTitle}>💡 Examples</Text>
-            <Text style={styles.helpText}>• Polynomials: x^3, 2x^2 - 5x + 1</Text>
+            <Text style={styles.helpText}>• Polynomials: x³, 2x² − 5x + 1</Text>
             <Text style={styles.helpText}>• Trig: sin(x), cos(2x)</Text>
-            <Text style={styles.helpText}>• Exponential: e^x, 2^x</Text>
+            <Text style={styles.helpText}>• Exponential: eˣ, 2ˣ</Text>
             <Text style={styles.helpText}>• Log: log(x), ln(x)</Text>
           </View>
         </ScrollView>
@@ -307,12 +318,34 @@ const styles = StyleSheet.create({
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
     lineHeight: 22,
   },
-  highlightText: {
-    color: colors.accentGlow,
+  formulaRow: {
+    backgroundColor: colors.purpleBg,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 12,
+    marginVertical: 4,
+    borderLeftWidth: 3,
+    borderLeftColor: colors.purpleGlow,
+  },
+  formulaText: {
+    color: colors.purpleGlow,
     fontSize: 14,
     fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
-    fontWeight: '600',
-    lineHeight: 22,
+    fontWeight: '700',
+  },
+  resultBox: {
+    backgroundColor: 'rgba(0, 212, 170, 0.1)',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    alignSelf: 'flex-start',
+    marginVertical: 4,
+  },
+  resultText: {
+    color: colors.accent,
+    fontFamily: Platform.OS === 'ios' ? 'Menlo' : 'monospace',
+    fontSize: 14,
+    fontWeight: '700',
   },
   finalExpr: {
     color: colors.white,
