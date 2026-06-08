@@ -301,13 +301,12 @@ export default function ConstantsScreen() {
                 <Text style={styles.featureItem}>📚 16 Physical Constants Reference</Text>
                 <Text style={styles.featureItem}>🔄 8-Category Unit Converter</Text>
                 <Text style={styles.featureItem}>📊 Step-by-Step Solutions</Text>
-                <Text style={styles.featureItem}>🎨 Beautiful Dark Theme UI</Text>
               </View>
             </View>
 
             <View style={styles.footerInfo}>
               <Text style={styles.copyrightText}>© 2026 Fajostech. All rights reserved.</Text>
-              <Text style={styles.madeWithText}>Made with ⚛️ React Native & Expo</Text>
+              <Text style={styles.madeWithText}>Made with ❤️ for students, engineers, and science lovers.</Text>
             </View>
           </View>
         )}
